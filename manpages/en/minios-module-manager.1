@@ -1,0 +1,63 @@
+.TH MINIOS-MODULE-MANAGER 1 "August 2026" "MiniOS" "User Commands"
+.SH NAME
+minios-module-manager \- inspect, create and manage MiniOS modules
+.SH SYNOPSIS
+.B minios-module-manager
+.RI [ module-file ]
+.SH DESCRIPTION
+.B MiniOS Module Manager
+is a GTK 3 interface for MiniOS module composition and module creation.
+It runs as the desktop user and delegates privileged or filesystem-sensitive
+operations to MiniOS Tools through fixed argument vectors.
+.PP
+The application has two primary workspaces: Modules and Create.
+The Modules workspace distinguishes the modules composing the running system
+from those selected for the next boot.
+.SH MODULES
+.TP 4
+.B Running Now
+Shows the authoritative ordered runtime module composition reported by MiniOS
+Tools. Runtime activation and deactivation are available only when the mounted
+root union is AUFS.
+.TP 4
+.B Next Boot
+Shows the authoritative ordered module composition selected by the current
+MiniOS boot rules. User modules can be added to or removed from durable module
+storage when MiniOS Tools reports that such storage is available.
+.PP
+Selecting a module opens read-only details. When its backing source file is
+available, the details also show its SquashFS contents and allow extraction to
+a new directory. Extraction is an explicit operation and never overwrites an
+existing destination.
+.SH CREATE
+The Create workspace provides reviewed workflows for repository or local Debian
+packages, installation scripts, an interactive chroot, existing folders, and
+the current session changes.
+.PP
+Every workflow separates configuration, review, execution, and result. Creating
+a module does not activate it or add it to the next boot automatically.
+.PP
+The interactive chroot uses an embedded VTE terminal and the protected
+.BR chroot2sb (1)
+prepare/shell/finish/cancel lifecycle. Current-session capture uses cancellable
+.BR savechanges (1)
+and its standard MiniOS exclusion policy.
+.SH FILE OPENING AND DRAG AND DROP
+A local SquashFS module opened from the file manager is inspected only. It is
+not activated and is not added to Next Boot.
+.PP
+Drag and drop is an input shortcut. One module opens inspection, Debian package
+files populate Packages, a directory populates Folder, and another regular file
+populates Installation Script. Dropping an item never executes code or changes
+module composition by itself.
+.SH PRIVILEGES
+The graphical application is never run as root. Operations that require
+privilege are started through pkexec and the relevant MiniOS Tools backend.
+.SH SEE ALSO
+.BR sb (1),
+.BR dir2sb (1),
+.BR sb2dir (1),
+.BR apt2sb (1),
+.BR script2sb (1),
+.BR chroot2sb (1),
+.BR savechanges (1)

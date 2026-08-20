@@ -1,0 +1,248 @@
+# Italian translations for PACKAGE package
+# Copyright (C) 2026 Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: minios-module-manager 1.0.0\n"
+"POT-Creation-Date: 2026-08-20 14:28+0300\n"
+"PO-Revision-Date: 2026-08-20 11:28+0000\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. type: TH
+#: en/minios-module-manager.1:1
+#, no-wrap
+msgid "MINIOS-MODULE-MANAGER"
+msgstr "MINIOS-MODULE-MANAGER"
+
+#. type: TH
+#: en/minios-module-manager.1:1
+#, no-wrap
+msgid "August 2026"
+msgstr "Agosto 2026"
+
+#. type: TH
+#: en/minios-module-manager.1:1
+#, no-wrap
+msgid "MiniOS"
+msgstr "MiniOS"
+
+#. type: TH
+#: en/minios-module-manager.1:1
+#, no-wrap
+msgid "User Commands"
+msgstr "Comandi utente"
+
+#. type: SH
+#: en/minios-module-manager.1:2
+#, no-wrap
+msgid "NAME"
+msgstr "NOME"
+
+#. type: Plain text
+#: en/minios-module-manager.1:4
+msgid "minios-module-manager - inspect, create and manage MiniOS modules"
+msgstr "minios-module-manager - ispeziona, crea e gestisce i moduli MiniOS"
+
+#. type: SH
+#: en/minios-module-manager.1:4
+#, no-wrap
+msgid "SYNOPSIS"
+msgstr "SINTASSI"
+
+#. type: Plain text
+#: en/minios-module-manager.1:7
+msgid "B<minios-module-manager> [I<module-file>]"
+msgstr "B<minios-module-manager> [I<module-file>]"
+
+#. type: SH
+#: en/minios-module-manager.1:7
+#, no-wrap
+msgid "DESCRIPTION"
+msgstr "DESCRIZIONE"
+
+#. type: Plain text
+#: en/minios-module-manager.1:12
+msgid ""
+"B<MiniOS Module Manager> is a GTK 3 interface for MiniOS module composition "
+"and module creation.  It runs as the desktop user and delegates privileged "
+"or filesystem-sensitive operations to MiniOS Tools through fixed argument "
+"vectors."
+msgstr ""
+"B<MiniOS Module Manager> è un'interfaccia GTK 3 per la composizione e la "
+"creazione di moduli MiniOS. Viene eseguito come utente desktop e delega le "
+"operazioni privilegiate o sensibili al filesystem agli strumenti MiniOS "
+"tramite vettori di argomenti fissi."
+
+#. type: Plain text
+#: en/minios-module-manager.1:16
+msgid ""
+"The application has two primary workspaces: Modules and Create.  The Modules "
+"workspace distinguishes the modules composing the running system from those "
+"selected for the next boot."
+msgstr ""
+"L'applicazione offre due aree di lavoro principali: Moduli e Crea. L'area "
+"Moduli distingue i moduli che compongono il sistema in esecuzione da quelli "
+"selezionati per il prossimo avvio."
+
+#. type: SH
+#: en/minios-module-manager.1:16
+#, no-wrap
+msgid "MODULES"
+msgstr "MODULI"
+
+#. type: TP
+#: en/minios-module-manager.1:17
+#, no-wrap
+msgid "B<Running Now>"
+msgstr "B<Attualmente in esecuzione>"
+
+#. type: Plain text
+#: en/minios-module-manager.1:22
+msgid ""
+"Shows the authoritative ordered runtime module composition reported by "
+"MiniOS Tools. Runtime activation and deactivation are available only when "
+"the mounted root union is AUFS."
+msgstr ""
+"Mostra la composizione dei moduli runtime autorevole e ordinata riportata "
+"dagli strumenti MiniOS. L'attivazione e la disattivazione a runtime sono "
+"disponibili solo quando la root union montata è AUFS."
+
+#. type: TP
+#: en/minios-module-manager.1:22
+#, no-wrap
+msgid "B<Next Boot>"
+msgstr "B<Prossimo avvio>"
+
+#. type: Plain text
+#: en/minios-module-manager.1:27
+msgid ""
+"Shows the authoritative ordered module composition selected by the current "
+"MiniOS boot rules. User modules can be added to or removed from durable "
+"module storage when MiniOS Tools reports that such storage is available."
+msgstr ""
+"Mostra la composizione dei moduli, autorevole e ordinata, selezionata dalle "
+"regole di avvio correnti di MiniOS. I moduli utente possono essere aggiunti "
+"o rimossi dallo storage dei moduli persistente quando gli strumenti MiniOS "
+"segnalano che tale storage è disponibile."
+
+#. type: Plain text
+#: en/minios-module-manager.1:32
+msgid ""
+"Selecting a module opens read-only details. When its backing source file is "
+"available, the details also show its SquashFS contents and allow extraction "
+"to a new directory. Extraction is an explicit operation and never overwrites "
+"an existing destination."
+msgstr ""
+"La selezione di un modulo apre i dettagli in sola lettura. Quando il file "
+"sorgente di supporto è disponibile, i dettagli mostrano anche il contenuto "
+"SquashFS e consentono l'estrazione in una nuova directory. L'estrazione è "
+"un'operazione esplicita e non sovrascrive mai una destinazione esistente."
+
+#. type: SH
+#: en/minios-module-manager.1:32
+#, no-wrap
+msgid "CREATE"
+msgstr "CREA"
+
+#. type: Plain text
+#: en/minios-module-manager.1:36
+msgid ""
+"The Create workspace provides reviewed workflows for repository or local "
+"Debian packages, installation scripts, an interactive chroot, existing "
+"folders, and the current session changes."
+msgstr ""
+"L'area di lavoro Crea offre flussi di lavoro revisionati per pacchetti "
+"Debian da repository o locali, script di installazione, un chroot "
+"interattivo, cartelle esistenti e le modifiche della sessione corrente."
+
+#. type: Plain text
+#: en/minios-module-manager.1:39
+msgid ""
+"Every workflow separates configuration, review, execution, and result. "
+"Creating a module does not activate it or add it to the next boot "
+"automatically."
+msgstr ""
+"Ogni flusso di lavoro separa configurazione, revisione, esecuzione e "
+"risultato. La creazione di un modulo non lo attiva né lo aggiunge "
+"automaticamente al prossimo avvio."
+
+#. type: Plain text
+#: en/minios-module-manager.1:45
+msgid ""
+"The interactive chroot uses an embedded VTE terminal and the protected "
+"B<chroot2sb>(1)  prepare/shell/finish/cancel lifecycle. Current-session "
+"capture uses cancellable B<savechanges>(1)  and its standard MiniOS "
+"exclusion policy."
+msgstr ""
+"Il chroot interattivo utilizza un terminale VTE integrato e il ciclo di vita "
+"protetto B<chroot2sb>(1) prepara/shell/fine/annulla. L'acquisizione della "
+"sessione corrente utilizza B<savechanges>(1) annullabile e la sua politica "
+"di esclusione MiniOS standard."
+
+#. type: SH
+#: en/minios-module-manager.1:45
+#, no-wrap
+msgid "FILE OPENING AND DRAG AND DROP"
+msgstr "APERTURA FILE E DRAG AND DROP"
+
+#. type: Plain text
+#: en/minios-module-manager.1:48
+msgid ""
+"A local SquashFS module opened from the file manager is inspected only. It "
+"is not activated and is not added to Next Boot."
+msgstr ""
+"Un modulo SquashFS locale aperto dal file manager viene solo ispezionato. "
+"Non viene attivato e non viene aggiunto al prossimo avvio."
+
+#. type: Plain text
+#: en/minios-module-manager.1:53
+msgid ""
+"Drag and drop is an input shortcut. One module opens inspection, Debian "
+"package files populate Packages, a directory populates Folder, and another "
+"regular file populates Installation Script. Dropping an item never executes "
+"code or changes module composition by itself."
+msgstr ""
+"Il drag and drop è una scorciatoia di input. Un modulo apre l'ispezione, i "
+"file di pacchetti Debian popolano Pacchetti, una directory popola Cartella e "
+"un altro file regolare popola Script di installazione. Il trascinamento di "
+"un elemento non esegue mai codice né modifica la composizione dei moduli da "
+"solo."
+
+#. type: SH
+#: en/minios-module-manager.1:53
+#, no-wrap
+msgid "PRIVILEGES"
+msgstr "PRIVILEGI"
+
+#. type: Plain text
+#: en/minios-module-manager.1:56
+msgid ""
+"The graphical application is never run as root. Operations that require "
+"privilege are started through pkexec and the relevant MiniOS Tools backend."
+msgstr ""
+"L'applicazione grafica non viene mai eseguita come root. Le operazioni che "
+"richiedono privilegi vengono avviate tramite pkexec e il backend MiniOS "
+"Tools appropriato."
+
+#. type: SH
+#: en/minios-module-manager.1:56
+#, no-wrap
+msgid "SEE ALSO"
+msgstr "VEDERE ANCHE"
+
+#. type: Plain text
+#: en/minios-module-manager.1:63
+msgid ""
+"B<sb>(1), B<dir2sb>(1), B<sb2dir>(1), B<apt2sb>(1), B<script2sb>(1), "
+"B<chroot2sb>(1), B<savechanges>(1)"
+msgstr ""
+"B<sb>(1), B<dir2sb>(1), B<sb2dir>(1), B<apt2sb>(1), B<script2sb>(1), "
+"B<chroot2sb>(1), B<savechanges>(1)"

@@ -1,0 +1,69 @@
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MINIOS\-MODULE\-MANAGER 1 "August 2026" MiniOS Benutzerbefehle
+.SH NAME
+minios\-module\-manager \- MiniOS\-Module inspizieren, erstellen und verwalten
+.SH ÜBERSICHT
+\fBminios\-module\-manager\fP [\fIModul\-Datei\fP]
+.SH BESCHREIBUNG
+\fBMiniOS Module Manager\fP ist eine GTK\-3\-Oberfläche zur Zusammenstellung und
+Erstellung von MiniOS\-Modulen. Das Programm wird als Desktop\-Benutzer
+ausgeführt und delegiert privilegierte oder dateisystemkritische Operationen
+über feste Argumentvektoren an MiniOS Tools.
+.PP
+Die Anwendung bietet zwei Hauptarbeitsbereiche: Module und Erstellen. Im
+Arbeitsbereich Module werden die aktuell laufenden Systemmodule von denen
+unterschieden, die für den nächsten Systemstart ausgewählt sind.
+.SH MODULE
+.TP  4
+\fBLäuft jetzt\fP
+Zeigt die maßgebliche, geordnete Laufzeit\-Modulzusammenstellung an, wie sie
+von MiniOS Tools gemeldet wird. Die Aktivierung und Deaktivierung zur
+Laufzeit ist nur möglich, wenn das eingehängte Root\-Union\-Dateisystem AUFS
+ist.
+.TP  4
+\fBNächster Start\fP
+Zeigt die maßgebliche, geordnete Modulzusammenstellung an, die durch die
+aktuellen MiniOS\-Startregeln ausgewählt wurde. Benutzermodule können zu
+einem persistenten Modulspeicher hinzugefügt oder daraus entfernt werden,
+wenn MiniOS Tools meldet, dass ein solcher Speicher verfügbar ist.
+.PP
+Die Auswahl eines Moduls öffnet eine schreibgeschützte Detailansicht. Ist
+die zugehörige Quelldatei verfügbar, werden zusätzlich deren
+SquashFS\-Inhalte angezeigt und das Extrahieren in ein neues Verzeichnis
+ermöglicht. Das Extrahieren ist ein expliziter Vorgang und überschreibt
+niemals ein vorhandenes Ziel.
+.SH ERSTELLEN
+Der Arbeitsbereich Erstellen bietet geprüfte Arbeitsabläufe für Repository\-
+oder lokale Debian\-Pakete, Installationsskripte, eine interaktive
+Chroot\-Umgebung, vorhandene Ordner sowie Änderungen der aktuellen Sitzung.
+.PP
+Jeder Arbeitsablauf trennt Konfiguration, Überprüfung, Ausführung und
+Ergebnis. Das Erstellen eines Moduls aktiviert dieses nicht und fügt es auch
+nicht automatisch zum nächsten Systemstart hinzu.
+.PP
+Die interaktive Chroot\-Umgebung verwendet ein eingebettetes VTE\-Terminal und
+den geschützten \fBchroot2sb\fP(1)\-Lebenszyklus
+(prepare/shell/finish/cancel). Die Erfassung der aktuellen Sitzung nutzt das
+abbrechbare \fBsavechanges\fP(1) und dessen Standardausschlussrichtlinie von
+MiniOS.
+.SH "DATEIÖFFNEN UND DRAG & DROP"
+Ein lokales SquashFS\-Modul, das über den Dateimanager geöffnet wird, wird
+nur inspiziert. Es wird nicht aktiviert und nicht zum nächsten Start
+hinzugefügt.
+.PP
+Drag & Drop ist eine Eingabeabkürzung. Ein Modul öffnet die Inspektion,
+Debian\-Paketdateien füllen Pakete, ein Verzeichnis füllt Ordner und eine
+andere reguläre Datei füllt das Installationsskript. Das Ablegen eines
+Elements führt niemals eigenständig Code aus oder ändert die
+Modulzusammenstellung.
+.SH BERECHTIGUNGEN
+Die grafische Anwendung wird niemals als root ausgeführt. Vorgänge, die
+erhöhte Rechte erfordern, werden über pkexec und das jeweilige
+MiniOS\-Tools\-Backend gestartet.
+.SH "SIEHE AUCH"
+\fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
+\fBchroot2sb\fP(1), \fBsavechanges\fP(1)

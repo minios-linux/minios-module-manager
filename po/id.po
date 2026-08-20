@@ -1,0 +1,1512 @@
+# Translations for minios-module-manager.
+# Copyright (C) 2026 MiniOS Linux
+# This file is distributed under the same license as the minios-module-manager package.
+msgid ""
+msgstr ""
+"Project-Id-Version: minios-module-manager 1.0.0\n"
+"Report-Msgid-Bugs-To: support@minios.dev\n"
+"POT-Creation-Date: 2026-08-20 15:37+0300\n"
+"PO-Revision-Date: 2026-08-20 10:10+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: lib/minios_module_manager/backend.py:49
+msgid "module record is not an object"
+msgstr "rekaman modul bukan objek"
+
+#: lib/minios_module_manager/backend.py:56
+msgid "module name is invalid"
+msgstr "nama modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:58
+#: lib/minios_module_manager/backend.py:60
+msgid "module mountpoint is invalid"
+msgstr "mountpoint modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:62
+msgid "module source is invalid"
+msgstr "sumber modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:64
+msgid "module origin is invalid"
+msgstr "asal modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:66
+msgid "module removability is invalid"
+msgstr "removability modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:75
+#: lib/minios_module_manager/backend.py:105
+#: lib/minios_module_manager/backend.py:201
+msgid "sb returned invalid JSON: {}"
+msgstr "sb mengembalikan JSON yang tidak valid: {}"
+
+#: lib/minios_module_manager/backend.py:78
+#: lib/minios_module_manager/backend.py:108
+msgid "sb result is not an object"
+msgstr "hasil sb bukan objek"
+
+#: lib/minios_module_manager/backend.py:88
+#: lib/minios_module_manager/backend.py:118
+msgid "unsupported sb result"
+msgstr "hasil sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:92
+msgid "unsupported root union"
+msgstr "root union tidak didukung"
+
+#: lib/minios_module_manager/backend.py:95
+#: lib/minios_module_manager/backend.py:131
+msgid "module list is invalid"
+msgstr "daftar modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:123
+msgid "MiniOS data root is invalid"
+msgstr "data root MiniOS tidak valid"
+
+#: lib/minios_module_manager/backend.py:125
+msgid "bundle extension is invalid"
+msgstr "ekstensi bundle tidak valid"
+
+#: lib/minios_module_manager/backend.py:128
+msgid "next-boot add availability is invalid"
+msgstr "ketersediaan add next-boot tidak valid"
+
+#: lib/minios_module_manager/backend.py:134
+msgid "next-boot module source is incomplete"
+msgstr "sumber modul next-boot tidak lengkap"
+
+#: lib/minios_module_manager/backend.py:146
+#: lib/minios_module_manager/backend.py:174
+#: lib/minios_module_manager/backend.py:233
+#: lib/minios_module_manager/backend.py:257
+#: lib/minios_module_manager/backend.py:276
+#: lib/minios_module_manager/backend.py:336
+#: lib/minios_module_manager/backend.py:425
+#: lib/minios_module_manager/backend.py:529
+#: lib/minios_module_manager/backend.py:679
+#: lib/minios_module_manager/backend.py:867
+msgid "MiniOS Tools is not installed."
+msgstr "MiniOS Tools belum terpasang."
+
+#: lib/minios_module_manager/backend.py:158
+#: lib/minios_module_manager/backend.py:186
+#: lib/minios_module_manager/backend.py:244
+msgid "Could not start sb: {}"
+msgstr "Tidak dapat memulai sb: {}"
+
+#: lib/minios_module_manager/backend.py:161
+msgid "sb could not read the running module state."
+msgstr "sb tidak dapat membaca status modul yang sedang berjalan."
+
+#: lib/minios_module_manager/backend.py:189
+msgid "sb could not read the next-boot module state."
+msgstr "sb tidak dapat membaca status modul next-boot."
+
+#: lib/minios_module_manager/backend.py:209
+msgid "unsupported sb inspection result"
+msgstr "hasil inspeksi sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:216
+msgid "module path is invalid"
+msgstr "path modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:218
+msgid "module size is invalid"
+msgstr "ukuran modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:221
+msgid "module entry list is invalid"
+msgstr "daftar entri modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:223
+msgid "module entry count is invalid"
+msgstr "jumlah entri modul tidak valid"
+
+#: lib/minios_module_manager/backend.py:246
+msgid "sb could not inspect the module."
+msgstr "sb tidak dapat menginspeksi modul."
+
+#: lib/minios_module_manager/backend.py:266
+msgid "Could not start sb2dir: {}"
+msgstr "Tidak dapat memulai sb2dir: {}"
+
+#: lib/minios_module_manager/backend.py:268
+msgid "sb2dir could not extract the module."
+msgstr "sb2dir tidak dapat mengekstrak modul."
+
+#: lib/minios_module_manager/backend.py:278
+#: lib/minios_module_manager/backend.py:427
+#: lib/minios_module_manager/backend.py:531
+#: lib/minios_module_manager/backend.py:681
+#: lib/minios_module_manager/backend.py:869
+msgid "pkexec is not available."
+msgstr "pkexec tidak tersedia."
+
+#: lib/minios_module_manager/backend.py:287
+msgid "Could not start privileged MiniOS Tools: {}"
+msgstr "Tidak dapat memulai MiniOS Tools dengan hak istimewa: {}"
+
+#: lib/minios_module_manager/backend.py:289
+msgid "MiniOS Tools operation failed."
+msgstr "Operasi MiniOS Tools gagal."
+
+#: lib/minios_module_manager/backend.py:316
+msgid "unsupported dir2sb result"
+msgstr "hasil dir2sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:322
+msgid "dir2sb output path is invalid"
+msgstr "path output dir2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:324
+msgid "dir2sb output size is invalid"
+msgstr "ukuran output dir2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:326
+msgid "dir2sb digest is invalid"
+msgstr "digest dir2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:328
+msgid "dir2sb compression is invalid"
+msgstr "kompresi dir2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:338
+#: lib/minios_module_manager/backend.py:429
+#: lib/minios_module_manager/backend.py:533
+#: lib/minios_module_manager/backend.py:738
+#: lib/minios_module_manager/backend.py:871
+msgid "Unsupported compression type."
+msgstr "Tipe kompresi tidak didukung."
+
+#: lib/minios_module_manager/backend.py:355
+msgid "dir2sb returned invalid JSON."
+msgstr "dir2sb mengembalikan JSON yang tidak valid."
+
+#: lib/minios_module_manager/backend.py:360
+msgid "dir2sb returned an unknown phase."
+msgstr "dir2sb mengembalikan fase yang tidak dikenal."
+
+#: lib/minios_module_manager/backend.py:371
+msgid "dir2sb returned an unsupported record."
+msgstr "dir2sb mengembalikan rekaman yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:383
+msgid "dir2sb could not create the module."
+msgstr "dir2sb tidak dapat membuat modul."
+
+#: lib/minios_module_manager/backend.py:385
+msgid "dir2sb completed without a result."
+msgstr "dir2sb selesai tanpa hasil."
+
+#: lib/minios_module_manager/backend.py:399
+msgid "unsupported apt2sb result"
+msgstr "hasil apt2sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:408
+msgid "apt2sb output path is invalid"
+msgstr "path output apt2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:411
+msgid "apt2sb numeric result is invalid"
+msgstr "hasil numerik apt2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:413
+msgid "apt2sb package result is inconsistent"
+msgstr "hasil paket apt2sb tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:415
+msgid "apt2sb digest is invalid"
+msgstr "digest apt2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:417
+msgid "apt2sb compression is invalid"
+msgstr "kompresi apt2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:432
+msgid "Choose at least one package."
+msgstr "Pilih minimal satu paket."
+
+#: lib/minios_module_manager/backend.py:434
+msgid "Package input is invalid."
+msgstr "Input paket tidak valid."
+
+#: lib/minios_module_manager/backend.py:457
+msgid "apt2sb returned invalid JSON."
+msgstr "apt2sb mengembalikan JSON yang tidak valid."
+
+#: lib/minios_module_manager/backend.py:462
+msgid "apt2sb returned an unknown phase."
+msgstr "apt2sb mengembalikan fase yang tidak dikenal."
+
+#: lib/minios_module_manager/backend.py:473
+msgid "apt2sb returned an unsupported record."
+msgstr "apt2sb mengembalikan record yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:485
+msgid "apt2sb could not create the module."
+msgstr "apt2sb tidak dapat membuat modul."
+
+#: lib/minios_module_manager/backend.py:487
+msgid "apt2sb completed without a result."
+msgstr "apt2sb selesai tanpa hasil."
+
+#: lib/minios_module_manager/backend.py:501
+msgid "unsupported script2sb result"
+msgstr "hasil script2sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:510
+msgid "script2sb output path is invalid"
+msgstr "path output script2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:513
+msgid "script2sb numeric result is invalid"
+msgstr "hasil numerik script2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:515
+msgid "script2sb result is inconsistent"
+msgstr "hasil script2sb tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:517
+msgid "script2sb digest is invalid"
+msgstr "digest script2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:519
+msgid "script2sb compression is invalid"
+msgstr "kompresi script2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:535
+#: lib/minios_module_manager/ui.py:1564
+msgid "Choose an installation script."
+msgstr "Pilih skrip instalasi."
+
+#: lib/minios_module_manager/backend.py:555
+msgid "script2sb returned invalid JSON."
+msgstr "script2sb mengembalikan JSON yang tidak valid."
+
+#: lib/minios_module_manager/backend.py:560
+msgid "script2sb returned an unknown phase."
+msgstr "script2sb mengembalikan fase yang tidak dikenal."
+
+#: lib/minios_module_manager/backend.py:571
+msgid "script2sb returned an unsupported record."
+msgstr "script2sb mengembalikan record yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:583
+msgid "script2sb could not create the module."
+msgstr "script2sb tidak dapat membuat modul."
+
+#: lib/minios_module_manager/backend.py:585
+msgid "script2sb completed without a result."
+msgstr "script2sb selesai tanpa hasil."
+
+#: lib/minios_module_manager/backend.py:638
+msgid "unsupported chroot2sb prepare result"
+msgstr "hasil prepare chroot2sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:640
+msgid "chroot2sb session id is invalid"
+msgstr "session id chroot2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:642
+msgid "chroot2sb prepare result is inconsistent"
+msgstr "hasil prepare chroot2sb tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:644
+#: lib/minios_module_manager/backend.py:671
+msgid "chroot2sb seed result is inconsistent"
+msgstr "hasil seed chroot2sb tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:655
+msgid "unsupported chroot2sb finish result"
+msgstr "hasil finish chroot2sb tidak didukung"
+
+#: lib/minios_module_manager/backend.py:659
+msgid "chroot2sb numeric result is invalid"
+msgstr "hasil numerik chroot2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:661
+msgid "chroot2sb compressed size is invalid"
+msgstr "ukuran terkompresi chroot2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:665
+msgid "chroot2sb output path is invalid"
+msgstr "path output chroot2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:667
+msgid "chroot2sb digest is invalid"
+msgstr "digest chroot2sb tidak valid"
+
+#: lib/minios_module_manager/backend.py:669
+msgid "chroot2sb compression result is inconsistent"
+msgstr "hasil kompresi chroot2sb tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:702
+#: lib/minios_module_manager/backend.py:795
+msgid "chroot2sb returned invalid JSON."
+msgstr "chroot2sb mengembalikan JSON yang tidak valid."
+
+#: lib/minios_module_manager/backend.py:707
+msgid "chroot2sb returned an unknown phase."
+msgstr "chroot2sb mengembalikan fase yang tidak dikenal."
+
+#: lib/minios_module_manager/backend.py:717
+msgid "chroot2sb returned an unsupported record."
+msgstr "chroot2sb mengembalikan record yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:726
+msgid "chroot2sb operation failed."
+msgstr "operasi chroot2sb gagal."
+
+#: lib/minios_module_manager/backend.py:728
+msgid "chroot2sb completed without a result."
+msgstr "chroot2sb selesai tanpa hasil."
+
+#: lib/minios_module_manager/backend.py:754
+#: lib/minios_module_manager/backend.py:764
+#: lib/minios_module_manager/backend.py:778
+msgid "Invalid chroot session id."
+msgstr "ID sesi chroot tidak valid."
+
+#: lib/minios_module_manager/backend.py:789
+msgid "Could not start chroot2sb: {}"
+msgstr "Tidak dapat memulai chroot2sb: {}"
+
+#: lib/minios_module_manager/backend.py:791
+msgid "Could not cancel the chroot session."
+msgstr "Tidak dapat membatalkan sesi chroot."
+
+#: lib/minios_module_manager/backend.py:803
+msgid "chroot2sb returned an unsupported cancel result."
+msgstr "chroot2sb mengembalikan hasil pembatalan yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:845
+msgid "unsupported savechanges result"
+msgstr "hasil savechanges tidak didukung"
+
+#: lib/minios_module_manager/backend.py:847
+msgid "savechanges output path is inconsistent"
+msgstr "jalur output savechanges tidak konsisten"
+
+#: lib/minios_module_manager/backend.py:851
+msgid "savechanges numeric result is invalid"
+msgstr "hasil numerik savechanges tidak valid"
+
+#: lib/minios_module_manager/backend.py:853
+msgid "savechanges compressed size is invalid"
+msgstr "ukuran terkompresi savechanges tidak valid"
+
+#: lib/minios_module_manager/backend.py:856
+msgid "savechanges digest is invalid"
+msgstr "digest savechanges tidak valid"
+
+#: lib/minios_module_manager/backend.py:858
+msgid "savechanges compression is invalid"
+msgstr "kompresi savechanges tidak valid"
+
+#: lib/minios_module_manager/backend.py:896
+msgid "savechanges returned invalid JSON."
+msgstr "savechanges mengembalikan JSON yang tidak valid."
+
+#: lib/minios_module_manager/backend.py:901
+msgid "savechanges returned an unknown phase."
+msgstr "savechanges mengembalikan fase yang tidak dikenal."
+
+#: lib/minios_module_manager/backend.py:913
+msgid "savechanges returned an unsupported record."
+msgstr "savechanges mengembalikan record yang tidak didukung."
+
+#: lib/minios_module_manager/backend.py:922
+msgid "Could not start savechanges: {}"
+msgstr "Tidak dapat memulai savechanges: {}"
+
+#: lib/minios_module_manager/backend.py:931
+msgid "savechanges could not capture current session changes."
+msgstr "savechanges tidak dapat menangkap perubahan sesi saat ini."
+
+#: lib/minios_module_manager/backend.py:933
+msgid "savechanges completed without a result."
+msgstr "savechanges selesai tanpa hasil."
+
+#: lib/minios_module_manager/ui.py:32 lib/minios_module_manager/ui.py:1167
+msgid "Packages"
+msgstr "Paket"
+
+#: lib/minios_module_manager/ui.py:33
+msgid "For software from APT repositories or local .deb packages; dependencies are installed automatically."
+msgstr "Untuk perangkat lunak dari repositori APT atau paket .deb lokal; dependensi akan diinstal otomatis."
+
+#: lib/minios_module_manager/ui.py:34 lib/minios_module_manager/ui.py:1450
+msgid "Installation Script"
+msgstr "Skrip Instalasi"
+
+#: lib/minios_module_manager/ui.py:35
+msgid "For repeatable setup that can be expressed as commands without interactive input."
+msgstr "Untuk penyiapan berulang yang dapat diekspresikan sebagai perintah tanpa input interaktif."
+
+#: lib/minios_module_manager/ui.py:36 lib/minios_module_manager/ui.py:1726
+msgid "Interactive Chroot"
+msgstr "Chroot Interaktif"
+
+#: lib/minios_module_manager/ui.py:37
+msgid "For manual or interactive setup in a temporary root shell."
+msgstr "Untuk penyiapan manual atau interaktif di shell root sementara."
+
+#: lib/minios_module_manager/ui.py:38 lib/minios_module_manager/ui.py:927
+msgid "Folder"
+msgstr "Folder"
+
+#: lib/minios_module_manager/ui.py:39
+msgid "For an already prepared filesystem tree that should become the module contents."
+msgstr "Untuk pohon filesystem yang sudah disiapkan dan akan dijadikan isi modul."
+
+#: lib/minios_module_manager/ui.py:40 lib/minios_module_manager/ui.py:2161
+msgid "Current Session Changes"
+msgstr "Perubahan Sesi Saat Ini"
+
+#: lib/minios_module_manager/ui.py:41
+msgid "For eligible changes that have already been made in this live session."
+msgstr "Untuk perubahan yang memenuhi syarat dan sudah dilakukan pada sesi live ini."
+
+#: lib/minios_module_manager/ui.py:46
+msgid "Install packages from repositories or local .deb files and save the result as a module."
+msgstr "Instal paket dari repositori atau file .deb lokal dan simpan hasilnya sebagai modul."
+
+#: lib/minios_module_manager/ui.py:48 lib/minios_module_manager/ui.py:56
+#: lib/minios_module_manager/ui.py:72 lib/minios_module_manager/ui.py:80
+msgid "What to enter"
+msgstr "Apa yang harus diisi"
+
+#: lib/minios_module_manager/ui.py:49
+msgid ""
+"• <b>Repository packages</b> — package names separated by spaces. Use <tt>↑</tt>/<tt>↓</tt> to choose a suggestion and <tt>Tab</tt> or <tt>Enter</tt> to accept it.\n"
+"• <b>Local packages</b> — add <tt>.deb</tt> files from disk.\n"
+"• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n"
+"• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format."
+msgstr ""
+"• <b>Paket repositori</b> — nama paket dipisahkan spasi. Gunakan <tt>↑</tt>/<tt>↓</tt> untuk memilih saran dan <tt>Tab</tt> atau <tt>Enter</tt> untuk menerima.\n"
+"• <b>Paket lokal</b> — tambahkan file .deb dari disk.\n"
+"• <b>Modul output</b> — pilih file .sb baru.\n"
+"• <b>Kompresi</b> — biarkan <tt>zstd</tt> kecuali Anda membutuhkan format lain."
+
+#: lib/minios_module_manager/ui.py:50 lib/minios_module_manager/ui.py:58
+msgid "How it works"
+msgstr "Cara kerja"
+
+#: lib/minios_module_manager/ui.py:51
+msgid "APT installs the selected packages and their dependencies. Recommended packages are included when the checkbox is enabled. Package installation runs with administrator privileges. The current MiniOS session is not changed, and the new module is not loaded automatically."
+msgstr "APT akan menginstal paket yang dipilih beserta dependensinya. Paket yang direkomendasikan akan disertakan jika kotak centang diaktifkan. Instalasi paket dijalankan dengan hak administrator. Sesi MiniOS saat ini tidak berubah, dan modul baru tidak dimuat secara otomatis."
+
+#: lib/minios_module_manager/ui.py:54
+msgid "Run an installation script and save the changes it makes as a module."
+msgstr "Jalankan skrip instalasi dan simpan perubahan yang dihasilkan sebagai modul."
+
+#: lib/minios_module_manager/ui.py:57
+msgid ""
+"• <b>Installation script</b> — the script that performs the installation or setup.\n"
+"• <b>Seed folder</b> — optional files to copy into the module before the script runs.\n"
+"• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n"
+"• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format."
+msgstr ""
+"• <b>Skrip instalasi</b> — skrip yang melakukan instalasi atau penyiapan.\n"
+"• <b>Folder seed</b> — file opsional untuk disalin ke modul sebelum skrip dijalankan.\n"
+"• <b>Modul output</b> — pilih file .sb baru.\n"
+"• <b>Kompresi</b> — biarkan <tt>zstd</tt> kecuali Anda membutuhkan format lain."
+
+#: lib/minios_module_manager/ui.py:59
+msgid "The script runs with administrator privileges and <b>without an interactive terminal</b>. If it asks questions or needs manual work, use <b>Interactive Chroot</b> instead. The script itself is not stored in the module. The current MiniOS session is not changed."
+msgstr "Skrip dijalankan dengan hak administrator dan <b>tanpa terminal interaktif</b>. Jika skrip meminta input atau membutuhkan interaksi manual, gunakan <b>Chroot Interaktif</b> sebagai gantinya. Skrip itu sendiri tidak disimpan di modul. Sesi MiniOS saat ini tidak berubah."
+
+#: lib/minios_module_manager/ui.py:62
+msgid "Open a temporary MiniOS system in a terminal and save your changes as a module."
+msgstr "Buka sistem MiniOS sementara di terminal dan simpan perubahan Anda sebagai modul."
+
+#: lib/minios_module_manager/ui.py:64
+msgid "Before you start"
+msgstr "Sebelum memulai"
+
+#: lib/minios_module_manager/ui.py:65
+msgid ""
+"• <b>Seed folder</b> — optional files to copy into the temporary system before the shell opens.\n"
+"• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n"
+"• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format."
+msgstr ""
+"• <b>Folder seed</b> — file opsional untuk disalin ke sistem sementara sebelum shell dibuka.\n"
+"• <b>Modul output</b> — pilih file .sb baru.\n"
+"• <b>Kompresi</b> — biarkan <tt>zstd</tt> kecuali Anda membutuhkan format lain."
+
+#: lib/minios_module_manager/ui.py:66
+msgid "How to finish"
+msgstr "Cara menyelesaikan"
+
+#: lib/minios_module_manager/ui.py:67
+msgid "Work in the terminal as <b>root</b>. When you are finished, type <tt>exit</tt>. Then choose <b>Create Module</b> to save the changes, <b>Reopen Shell</b> to continue working, or <b>Discard Changes</b> to cancel. The current MiniOS session is not changed."
+msgstr "Bekerja di terminal sebagai <b>root</b>. Setelah selesai, ketik <tt>exit</tt>. Lalu pilih <b>Buat Modul</b> untuk menyimpan perubahan, <b>Buka Ulang Shell</b> untuk melanjutkan, atau <b>Batalkan Perubahan</b> untuk membatalkan. Sesi MiniOS saat ini tidak berubah."
+
+#: lib/minios_module_manager/ui.py:70
+msgid "Convert the contents of a folder directly into a compressed .sb module."
+msgstr "Konversi isi folder langsung menjadi modul terkompresi .sb."
+
+#: lib/minios_module_manager/ui.py:73
+msgid ""
+"• <b>Source folder</b> — its contents become the root of the module. The source folder name itself is not added.\n"
+"• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n"
+"• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format."
+msgstr ""
+"• <b>Folder sumber</b> — isinya akan menjadi root modul. Nama folder sumber tidak ikut dimasukkan.\n"
+"• <b>Modul output</b> — pilih file <tt>.sb</tt> baru.\n"
+"• <b>Kompresi</b> — biarkan <tt>zstd</tt> kecuali Anda membutuhkan format lain."
+
+#: lib/minios_module_manager/ui.py:74
+msgid "Result"
+msgstr "Hasil"
+
+#: lib/minios_module_manager/ui.py:75
+msgid "The source folder is not modified and an existing output file is never overwritten. Ordinary conversion does not need administrator privileges. File ownership inside the module is normalized to <b>root</b>. The new module is not loaded automatically."
+msgstr "Folder sumber tidak akan diubah dan file output yang sudah ada tidak akan ditimpa. Konversi biasa tidak memerlukan hak administrator. Kepemilikan file di dalam modul dinormalisasi ke <b>root</b>. Modul baru tidak dimuat secara otomatis."
+
+#: lib/minios_module_manager/ui.py:78
+msgid "Save changes already made in the current MiniOS session as a module."
+msgstr "Simpan perubahan yang sudah dilakukan pada sesi MiniOS saat ini sebagai modul."
+
+#: lib/minios_module_manager/ui.py:81
+msgid ""
+"• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n"
+"• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.\n"
+"MiniOS finds the current session changes automatically."
+msgstr ""
+"• <b>Modul output</b> — pilih file <tt>.sb</tt> baru.\n"
+"• <b>Kompresi</b> — biarkan <tt>zstd</tt> kecuali Anda membutuhkan format lain.\n"
+"MiniOS akan mendeteksi perubahan sesi saat ini secara otomatis."
+
+#: lib/minios_module_manager/ui.py:82
+msgid "What is saved"
+msgstr "Apa yang disimpan"
+
+#: lib/minios_module_manager/ui.py:83
+msgid "Files and configuration changes from the current session are saved, including supported file deletions. Logs, caches, boot data and temporary runtime files are skipped by the standard MiniOS save policy. Reading all session changes requires administrator privileges. The current session is not modified."
+msgstr "File dan perubahan konfigurasi dari sesi saat ini akan disimpan, termasuk penghapusan file yang didukung. Log, cache, data boot, dan file runtime sementara dilewati oleh kebijakan penyimpanan standar MiniOS. Membaca semua perubahan sesi memerlukan hak administrator. Sesi saat ini tidak akan diubah."
+
+#: lib/minios_module_manager/ui.py:91 lib/minios_module_manager/ui.py:119
+#: share/applications/minios-module-manager.desktop:4
+msgid "MiniOS Module Manager"
+msgstr "Manajer Modul MiniOS"
+
+#: lib/minios_module_manager/ui.py:129 lib/minios_module_manager/ui.py:130
+msgid "Back"
+msgstr "Kembali"
+
+#: lib/minios_module_manager/ui.py:188
+msgid "Help: {}"
+msgstr "Bantuan: {}"
+
+#: lib/minios_module_manager/ui.py:189
+msgid "Help"
+msgstr "Bantuan"
+
+#: lib/minios_module_manager/ui.py:189
+msgid "Show help for this creation method"
+msgstr "Tampilkan bantuan untuk metode pembuatan ini"
+
+#: lib/minios_module_manager/ui.py:214 lib/minios_module_manager/ui.py:581
+msgid "Modules"
+msgstr "Modul"
+
+#: lib/minios_module_manager/ui.py:216
+msgid "Create"
+msgstr "Buat"
+
+#: lib/minios_module_manager/ui.py:223
+msgid "Module composition"
+msgstr "Komposisi modul"
+
+#: lib/minios_module_manager/ui.py:234
+msgid "Running Now"
+msgstr "Sedang Berjalan"
+
+#: lib/minios_module_manager/ui.py:236
+msgid "Next Boot"
+msgstr "Boot Berikutnya"
+
+#: lib/minios_module_manager/ui.py:248 lib/minios_module_manager/ui.py:249
+#: lib/minios_module_manager/ui.py:288 lib/minios_module_manager/ui.py:289
+msgid "Refresh"
+msgstr "Muat Ulang"
+
+#: lib/minios_module_manager/ui.py:258 lib/minios_module_manager/ui.py:401
+msgid "Loading running modules…"
+msgstr "Memuat modul yang sedang berjalan…"
+
+#: lib/minios_module_manager/ui.py:259
+msgid "Reading the module order from MiniOS Tools."
+msgstr "Membaca urutan modul dari MiniOS Tools."
+
+#: lib/minios_module_manager/ui.py:280 lib/minios_module_manager/ui.py:281
+msgid "Add Module…"
+msgstr "Tambah Modul…"
+
+#: lib/minios_module_manager/ui.py:298 lib/minios_module_manager/ui.py:532
+msgid "Loading next-boot modules…"
+msgstr "Memuat modul boot berikutnya…"
+
+#: lib/minios_module_manager/ui.py:299 lib/minios_module_manager/ui.py:533
+msgid "Applying the current MiniOS boot module rules."
+msgstr "Menerapkan aturan modul boot MiniOS saat ini."
+
+#: lib/minios_module_manager/ui.py:319
+msgid "Module Details"
+msgstr "Detail Modul"
+
+#: lib/minios_module_manager/ui.py:334 lib/minios_module_manager/ui.py:335
+msgid "Extract to Folder…"
+msgstr "Ekstrak ke Folder…"
+
+#: lib/minios_module_manager/ui.py:356
+msgid "Contents"
+msgstr "Isi"
+
+#: lib/minios_module_manager/ui.py:399
+msgid "Loading running module state…"
+msgstr "Memuat status modul yang sedang berjalan…"
+
+#: lib/minios_module_manager/ui.py:402
+msgid "Reading the authoritative module order from MiniOS Tools."
+msgstr "Membaca urutan modul otoritatif dari MiniOS Tools."
+
+#: lib/minios_module_manager/ui.py:424
+msgid "{} · {} running modules"
+msgstr "{} · {} modul berjalan"
+
+#: lib/minios_module_manager/ui.py:429
+msgid "{} · no running modules"
+msgstr "{} · tidak ada modul berjalan"
+
+#: lib/minios_module_manager/ui.py:431
+msgid "No running modules"
+msgstr "Tidak ada modul berjalan"
+
+#: lib/minios_module_manager/ui.py:432 lib/minios_module_manager/ui.py:567
+msgid "MiniOS Tools returned an authoritative empty module list."
+msgstr "MiniOS Tools mengembalikan daftar modul kosong yang otoritatif."
+
+#: lib/minios_module_manager/ui.py:434
+msgid "Running module state unavailable"
+msgstr "Status modul berjalan tidak tersedia"
+
+#: lib/minios_module_manager/ui.py:436
+msgid "Could not load running modules"
+msgstr "Tidak dapat memuat modul yang sedang berjalan"
+
+#: lib/minios_module_manager/ui.py:437
+msgid "The running module state is unavailable."
+msgstr "Status modul yang sedang berjalan tidak tersedia."
+
+#: lib/minios_module_manager/ui.py:445
+msgid "Core system"
+msgstr "Sistem inti"
+
+#: lib/minios_module_manager/ui.py:446
+msgid "Kernel and drivers"
+msgstr "Kernel dan driver"
+
+#: lib/minios_module_manager/ui.py:447
+msgid "Hardware firmware"
+msgstr "Firmware perangkat keras"
+
+#: lib/minios_module_manager/ui.py:448
+msgid "Graphical base"
+msgstr "Basis grafis"
+
+#: lib/minios_module_manager/ui.py:449
+msgid "Desktop environment"
+msgstr "Lingkungan desktop"
+
+#: lib/minios_module_manager/ui.py:450
+msgid "Toolbox utilities"
+msgstr "Utilitas Toolbox"
+
+#: lib/minios_module_manager/ui.py:451
+msgid "Ultra applications"
+msgstr "Aplikasi Ultra"
+
+#: lib/minios_module_manager/ui.py:452
+msgid "Application bundle"
+msgstr "Bundel Aplikasi"
+
+#: lib/minios_module_manager/ui.py:453
+msgid "Web browser"
+msgstr "Peramban web"
+
+#: lib/minios_module_manager/ui.py:454
+msgid "Custom module"
+msgstr "Modul Kustom"
+
+#: lib/minios_module_manager/ui.py:530
+msgid "Loading next-boot module state…"
+msgstr "Memuat status modul boot berikutnya…"
+
+#: lib/minios_module_manager/ui.py:558
+msgid "{} next-boot modules · .{}"
+msgstr "{} modul boot berikutnya · .{}"
+
+#: lib/minios_module_manager/ui.py:563 lib/minios_module_manager/ui.py:566
+msgid "No modules selected for next boot"
+msgstr "Tidak ada modul yang dipilih untuk boot berikutnya"
+
+#: lib/minios_module_manager/ui.py:569
+msgid "Next-boot module state unavailable"
+msgstr "Status modul boot berikutnya tidak tersedia"
+
+#: lib/minios_module_manager/ui.py:572
+msgid "Could not load next-boot modules"
+msgstr "Tidak dapat memuat modul next-boot"
+
+#: lib/minios_module_manager/ui.py:573
+msgid "The next-boot module state is unavailable."
+msgstr "Status modul next-boot tidak tersedia."
+
+#: lib/minios_module_manager/ui.py:580
+msgid "Base system"
+msgstr "Sistem dasar"
+
+#: lib/minios_module_manager/ui.py:582
+msgid "Persistence"
+msgstr "Persistensi"
+
+#: lib/minios_module_manager/ui.py:593
+msgid "Add Module to Next Boot"
+msgstr "Tambah Modul ke Next Boot"
+
+#: lib/minios_module_manager/ui.py:596 lib/minios_module_manager/ui.py:806
+#: lib/minios_module_manager/ui.py:978 lib/minios_module_manager/ui.py:998
+#: lib/minios_module_manager/ui.py:1231 lib/minios_module_manager/ui.py:1265
+#: lib/minios_module_manager/ui.py:1509 lib/minios_module_manager/ui.py:1529
+#: lib/minios_module_manager/ui.py:1543 lib/minios_module_manager/ui.py:1771
+#: lib/minios_module_manager/ui.py:1789 lib/minios_module_manager/ui.py:2199
+msgid "Cancel"
+msgstr "Batal"
+
+#: lib/minios_module_manager/ui.py:597 lib/minios_module_manager/ui.py:979
+#: lib/minios_module_manager/ui.py:999 lib/minios_module_manager/ui.py:1266
+#: lib/minios_module_manager/ui.py:1510 lib/minios_module_manager/ui.py:1530
+#: lib/minios_module_manager/ui.py:1544 lib/minios_module_manager/ui.py:1772
+#: lib/minios_module_manager/ui.py:1790 lib/minios_module_manager/ui.py:2200
+msgid "Select"
+msgstr "Pilih"
+
+#: lib/minios_module_manager/ui.py:600
+msgid "MiniOS modules"
+msgstr "Modul MiniOS"
+
+#: lib/minios_module_manager/ui.py:609 lib/minios_module_manager/ui.py:741
+msgid "Add {} to Next Boot? The running system will not change."
+msgstr "Tambah {} ke Next Boot? Sistem yang sedang berjalan tidak akan berubah."
+
+#: lib/minios_module_manager/ui.py:613
+msgid "Adding module to Next Boot…"
+msgstr "Menambahkan modul ke Next Boot…"
+
+#: lib/minios_module_manager/ui.py:625
+msgid "Could not add module to Next Boot."
+msgstr "Tidak dapat menambahkan modul ke Next Boot."
+
+#: lib/minios_module_manager/ui.py:651
+msgid "Backing source unavailable"
+msgstr "Sumber cadangan tidak tersedia"
+
+#: lib/minios_module_manager/ui.py:659
+msgid "The backing module source is unavailable for inspection."
+msgstr "Sumber modul cadangan tidak tersedia untuk inspeksi."
+
+#: lib/minios_module_manager/ui.py:662
+msgid "Reading module contents…"
+msgstr "Membaca isi modul…"
+
+#: lib/minios_module_manager/ui.py:681
+msgid "{} bytes · {} entries"
+msgstr "{} byte · {} entri"
+
+#: lib/minios_module_manager/ui.py:688
+msgid "Module inspection failed."
+msgstr "Inspeksi modul gagal."
+
+#: lib/minios_module_manager/ui.py:732
+msgid "Deactivate for This Session"
+msgstr "Nonaktifkan untuk Sesi Ini"
+
+#: lib/minios_module_manager/ui.py:733
+msgid "Deactivate {} for this session? Next Boot will not change."
+msgstr "Nonaktifkan {} untuk sesi ini? Next Boot tidak akan berubah."
+
+#: lib/minios_module_manager/ui.py:740
+msgid "Add to Next Boot"
+msgstr "Tambah ke Next Boot"
+
+#: lib/minios_module_manager/ui.py:747
+msgid "Remove from Next Boot"
+msgstr "Hapus dari Next Boot"
+
+#: lib/minios_module_manager/ui.py:748
+msgid "Remove {} from Next Boot? The running system will not change."
+msgstr "Hapus {} dari Next Boot? Sistem yang sedang berjalan tidak akan berubah."
+
+#: lib/minios_module_manager/ui.py:755
+msgid "Activate for This Session"
+msgstr "Aktifkan untuk Sesi Ini"
+
+#: lib/minios_module_manager/ui.py:756
+msgid "Activate {} for this session? Next Boot will not change."
+msgstr "Aktifkan {} untuk sesi ini? Next Boot tidak akan berubah."
+
+#: lib/minios_module_manager/ui.py:762
+msgid "Continue"
+msgstr "Lanjutkan"
+
+#: lib/minios_module_manager/ui.py:773
+msgid "Applying module change…"
+msgstr "Menerapkan perubahan modul…"
+
+#: lib/minios_module_manager/ui.py:790
+msgid "Module change failed."
+msgstr "Perubahan modul gagal."
+
+#: lib/minios_module_manager/ui.py:803
+msgid "Extract Module to Folder"
+msgstr "Ekstrak Modul ke Folder"
+
+#: lib/minios_module_manager/ui.py:807
+msgid "Extract"
+msgstr "Ekstrak"
+
+#: lib/minios_module_manager/ui.py:820
+msgid "Extracting module…"
+msgstr "Mengekstrak modul…"
+
+#: lib/minios_module_manager/ui.py:837
+msgid "Extracted to {}"
+msgstr "Diekstrak ke {}"
+
+#: lib/minios_module_manager/ui.py:872
+msgid "Create a Module"
+msgstr "Buat Modul"
+
+#: lib/minios_module_manager/ui.py:876
+msgid "Choose what the new immutable module should contain."
+msgstr "Pilih isi yang harus dimiliki modul immutable baru."
+
+#: lib/minios_module_manager/ui.py:936
+msgid "Source folder"
+msgstr "Folder sumber"
+
+#: lib/minios_module_manager/ui.py:938 lib/minios_module_manager/ui.py:943
+#: lib/minios_module_manager/ui.py:1198 lib/minios_module_manager/ui.py:1459
+#: lib/minios_module_manager/ui.py:1469 lib/minios_module_manager/ui.py:1480
+#: lib/minios_module_manager/ui.py:1735 lib/minios_module_manager/ui.py:1743
+#: lib/minios_module_manager/ui.py:2170
+msgid "Choose…"
+msgstr "Pilih…"
+
+#: lib/minios_module_manager/ui.py:941 lib/minios_module_manager/ui.py:1196
+#: lib/minios_module_manager/ui.py:1478 lib/minios_module_manager/ui.py:1741
+#: lib/minios_module_manager/ui.py:2168
+msgid "Output module"
+msgstr "Modul output"
+
+#: lib/minios_module_manager/ui.py:952 lib/minios_module_manager/ui.py:1207
+#: lib/minios_module_manager/ui.py:1489 lib/minios_module_manager/ui.py:1751
+#: lib/minios_module_manager/ui.py:2179
+msgid "Compression"
+msgstr "Kompresi"
+
+#: lib/minios_module_manager/ui.py:960 lib/minios_module_manager/ui.py:1219
+#: lib/minios_module_manager/ui.py:1497 lib/minios_module_manager/ui.py:1759
+#: lib/minios_module_manager/ui.py:2187
+msgid "Review"
+msgstr "Tinjau"
+
+#: lib/minios_module_manager/ui.py:975
+msgid "Choose Source Folder"
+msgstr "Pilih Folder Sumber"
+
+#: lib/minios_module_manager/ui.py:995 lib/minios_module_manager/ui.py:1262
+#: lib/minios_module_manager/ui.py:1540 lib/minios_module_manager/ui.py:1786
+#: lib/minios_module_manager/ui.py:2196
+msgid "Choose Output Module"
+msgstr "Pilih Modul Output"
+
+#: lib/minios_module_manager/ui.py:1019
+msgid "Choose both a source folder and an output module."
+msgstr "Pilih folder sumber dan modul output."
+
+#: lib/minios_module_manager/ui.py:1024
+msgid "Source folder is not readable."
+msgstr "Folder sumber tidak dapat dibaca."
+
+#: lib/minios_module_manager/ui.py:1026 lib/minios_module_manager/ui.py:1297
+#: lib/minios_module_manager/ui.py:1579 lib/minios_module_manager/ui.py:1817
+#: lib/minios_module_manager/ui.py:2223
+msgid "Output module already exists."
+msgstr "Modul output sudah ada."
+
+#: lib/minios_module_manager/ui.py:1029 lib/minios_module_manager/ui.py:1300
+#: lib/minios_module_manager/ui.py:1582 lib/minios_module_manager/ui.py:1820
+#: lib/minios_module_manager/ui.py:2226
+msgid "Output directory is not writable."
+msgstr "Direktori output tidak dapat ditulis."
+
+#: lib/minios_module_manager/ui.py:1038
+msgid "Review Folder Module"
+msgstr "Tinjau Modul Folder"
+
+#: lib/minios_module_manager/ui.py:1051
+msgid "The source folder is not modified. A new module is created rootlessly; an existing output is never replaced."
+msgstr "Folder sumber tidak diubah. Modul baru dibuat tanpa root; output yang sudah ada tidak pernah diganti."
+
+#: lib/minios_module_manager/ui.py:1055 lib/minios_module_manager/ui.py:1332
+#: lib/minios_module_manager/ui.py:1902
+msgid "Create Module"
+msgstr "Buat Modul"
+
+#: lib/minios_module_manager/ui.py:1070
+msgid "Source: {}"
+msgstr "Sumber: {}"
+
+#: lib/minios_module_manager/ui.py:1071 lib/minios_module_manager/ui.py:1351
+#: lib/minios_module_manager/ui.py:1630 lib/minios_module_manager/ui.py:1864
+#: lib/minios_module_manager/ui.py:2269
+msgid "Output: {}"
+msgstr "Output: {}"
+
+#: lib/minios_module_manager/ui.py:1073
+msgid "Compression: {} · Privileges: none"
+msgstr "Kompresi: {} · Hak istimewa: tidak ada"
+
+#: lib/minios_module_manager/ui.py:1078
+msgid "Creating Module"
+msgstr "Membuat Modul"
+
+#: lib/minios_module_manager/ui.py:1082 lib/minios_module_manager/ui.py:1115
+#: lib/minios_module_manager/ui.py:1363 lib/minios_module_manager/ui.py:1395
+#: lib/minios_module_manager/ui.py:1641 lib/minios_module_manager/ui.py:1673
+#: lib/minios_module_manager/ui.py:1871 lib/minios_module_manager/ui.py:2281
+msgid "Preparing…"
+msgstr "Menyiapkan…"
+
+#: lib/minios_module_manager/ui.py:1089 lib/minios_module_manager/ui.py:1370
+#: lib/minios_module_manager/ui.py:1648
+msgid "Module Result"
+msgstr "Hasil Modul"
+
+#: lib/minios_module_manager/ui.py:1096 lib/minios_module_manager/ui.py:1159
+msgid "Back to Folder"
+msgstr "Kembali ke Folder"
+
+#: lib/minios_module_manager/ui.py:1100 lib/minios_module_manager/ui.py:1381
+#: lib/minios_module_manager/ui.py:1659 lib/minios_module_manager/ui.py:1923
+#: lib/minios_module_manager/ui.py:2303
+msgid "Done"
+msgstr "Selesai"
+
+#: lib/minios_module_manager/ui.py:1135
+msgid "Preparing source…"
+msgstr "Menyiapkan sumber…"
+
+#: lib/minios_module_manager/ui.py:1136
+msgid "Compressing folder…"
+msgstr "Mengompresi folder…"
+
+#: lib/minios_module_manager/ui.py:1137 lib/minios_module_manager/ui.py:2348
+msgid "Verifying module…"
+msgstr "Memverifikasi modul…"
+
+#: lib/minios_module_manager/ui.py:1138 lib/minios_module_manager/ui.py:2349
+msgid "Publishing module…"
+msgstr "Mempublikasikan modul…"
+
+#: lib/minios_module_manager/ui.py:1139 lib/minios_module_manager/ui.py:1421
+#: lib/minios_module_manager/ui.py:1697 lib/minios_module_manager/ui.py:2350
+msgid "Finishing…"
+msgstr "Menyelesaikan…"
+
+#: lib/minios_module_manager/ui.py:1147 lib/minios_module_manager/ui.py:1428
+#: lib/minios_module_manager/ui.py:1704 lib/minios_module_manager/ui.py:2078
+#: lib/minios_module_manager/ui.py:2378
+msgid "Module Created"
+msgstr "Modul Berhasil Dibuat"
+
+#: lib/minios_module_manager/ui.py:1151
+#, python-brace-format
+msgid ""
+"Output: {output}\n"
+"Size: {size} bytes\n"
+"Compression: {compression}\n"
+"SHA-256: {sha256}"
+msgstr ""
+"Output: {output}\n"
+"Ukuran: {size} byte\n"
+"Kompresi: {compression}\n"
+"SHA-256: {sha256}"
+
+#: lib/minios_module_manager/ui.py:1153 lib/minios_module_manager/ui.py:1436
+#: lib/minios_module_manager/ui.py:1712 lib/minios_module_manager/ui.py:1919
+msgid "Create Another"
+msgstr "Buat Lagi"
+
+#: lib/minios_module_manager/ui.py:1155 lib/minios_module_manager/ui.py:1438
+#: lib/minios_module_manager/ui.py:1714
+msgid "Module Creation Failed"
+msgstr "Pembuatan Modul Gagal"
+
+#: lib/minios_module_manager/ui.py:1178
+msgid "Repository packages"
+msgstr "Paket repository"
+
+#: lib/minios_module_manager/ui.py:1182 lib/minios_module_manager/ui.py:1258
+msgid "No local .deb files selected"
+msgstr "Tidak ada file .deb lokal yang dipilih"
+
+#: lib/minios_module_manager/ui.py:1184
+msgid "Local packages"
+msgstr "Paket lokal"
+
+#: lib/minios_module_manager/ui.py:1187
+msgid "Add .deb…"
+msgstr "Tambah .deb…"
+
+#: lib/minios_module_manager/ui.py:1190 lib/minios_module_manager/ui.py:1472
+msgid "Clear"
+msgstr "Bersihkan"
+
+#: lib/minios_module_manager/ui.py:1210
+msgid "Install recommended packages"
+msgstr "Instal paket yang direkomendasikan"
+
+#: lib/minios_module_manager/ui.py:1228
+msgid "Choose Local Debian Packages"
+msgstr "Pilih Paket Debian Lokal"
+
+#: lib/minios_module_manager/ui.py:1232
+msgid "Add"
+msgstr "Tambah"
+
+#: lib/minios_module_manager/ui.py:1236
+msgid "Debian packages"
+msgstr "Paket Debian"
+
+#: lib/minios_module_manager/ui.py:1286
+msgid "Choose at least one repository package or local .deb file."
+msgstr "Pilih minimal satu paket repository atau file .deb lokal."
+
+#: lib/minios_module_manager/ui.py:1288
+msgid "Use Add .deb… for local package paths."
+msgstr "Gunakan Tambah .deb… untuk menambahkan path paket lokal."
+
+#: lib/minios_module_manager/ui.py:1291
+msgid "A selected local .deb file is no longer readable."
+msgstr "File .deb lokal yang dipilih sudah tidak dapat dibaca."
+
+#: lib/minios_module_manager/ui.py:1294 lib/minios_module_manager/ui.py:1576
+#: lib/minios_module_manager/ui.py:1814 lib/minios_module_manager/ui.py:2220
+msgid "Choose an output module."
+msgstr "Pilih modul output."
+
+#: lib/minios_module_manager/ui.py:1310
+msgid "Review Package Module"
+msgstr "Tinjau Modul Paket"
+
+#: lib/minios_module_manager/ui.py:1328
+msgid "APT and package maintainer scripts run as root inside a temporary MiniOS build union. The running system and Next Boot are not changed."
+msgstr "Skrip pemelihara APT dan paket dijalankan sebagai root di dalam union build MiniOS sementara. Sistem berjalan dan Next Boot tidak diubah."
+
+#: lib/minios_module_manager/ui.py:1347
+msgid "Repository packages: {}"
+msgstr "Paket repository: {}"
+
+#: lib/minios_module_manager/ui.py:1347 lib/minios_module_manager/ui.py:1350
+#: lib/minios_module_manager/ui.py:1629 lib/minios_module_manager/ui.py:1863
+msgid "none"
+msgstr "tidak ada"
+
+#: lib/minios_module_manager/ui.py:1349
+msgid "Local packages: {}"
+msgstr "Paket lokal: {}"
+
+#: lib/minios_module_manager/ui.py:1353
+msgid "Compression: {} · Recommends: {} · Privileges: authentication required"
+msgstr "Kompresi: {} · Rekomendasi: {} · Hak akses: autentikasi diperlukan"
+
+#: lib/minios_module_manager/ui.py:1354
+msgid "yes"
+msgstr "ya"
+
+#: lib/minios_module_manager/ui.py:1354
+msgid "no"
+msgstr "tidak"
+
+#: lib/minios_module_manager/ui.py:1359
+msgid "Creating Package Module"
+msgstr "Membuat Modul Paket"
+
+#: lib/minios_module_manager/ui.py:1377 lib/minios_module_manager/ui.py:1442
+msgid "Back to Packages"
+msgstr "Kembali ke Paket"
+
+#: lib/minios_module_manager/ui.py:1417 lib/minios_module_manager/ui.py:1693
+msgid "Preparing build environment…"
+msgstr "Menyiapkan lingkungan build…"
+
+#: lib/minios_module_manager/ui.py:1418
+msgid "Updating package indexes…"
+msgstr "Memperbarui indeks paket…"
+
+#: lib/minios_module_manager/ui.py:1419
+msgid "Installing packages…"
+msgstr "Menginstal paket…"
+
+#: lib/minios_module_manager/ui.py:1420 lib/minios_module_manager/ui.py:1696
+msgid "Capturing module…"
+msgstr "Meng-capture modul…"
+
+#: lib/minios_module_manager/ui.py:1432 lib/minios_module_manager/ui.py:2082
+#, python-brace-format
+msgid ""
+"Output: {output}\n"
+"Compressed size: {compressed_size} bytes\n"
+"Uncompressed size: {uncompressed_size} bytes\n"
+"Entries: {entry_count}\n"
+"Compression: {compression}\n"
+"SHA-256: {sha256}"
+msgstr ""
+"Output: {output}\n"
+"Ukuran terkompresi: {compressed_size} byte\n"
+"Ukuran tidak terkompresi: {uncompressed_size} byte\n"
+"Entri: {entry_count}\n"
+"Kompresi: {compression}\n"
+"SHA-256: {sha256}"
+
+#: lib/minios_module_manager/ui.py:1457
+msgid "Installation script"
+msgstr "Skrip instalasi"
+
+#: lib/minios_module_manager/ui.py:1465
+msgid "Optional"
+msgstr "Opsional"
+
+#: lib/minios_module_manager/ui.py:1466
+msgid "Seed folder"
+msgstr "Folder seed"
+
+#: lib/minios_module_manager/ui.py:1506
+msgid "Choose Installation Script"
+msgstr "Pilih Skrip Instalasi"
+
+#: lib/minios_module_manager/ui.py:1526 lib/minios_module_manager/ui.py:1768
+msgid "Choose Seed Folder"
+msgstr "Pilih Folder Seed"
+
+#: lib/minios_module_manager/ui.py:1567
+msgid "Installation script is not readable."
+msgstr "Skrip instalasi tidak dapat dibaca."
+
+#: lib/minios_module_manager/ui.py:1573 lib/minios_module_manager/ui.py:1811
+msgid "Seed folder is not readable."
+msgstr "Folder seed tidak dapat dibaca."
+
+#: lib/minios_module_manager/ui.py:1593
+msgid "Review Installation Script"
+msgstr "Tinjau Skrip Instalasi"
+
+#: lib/minios_module_manager/ui.py:1608
+msgid "The installation script runs as root inside a temporary MiniOS build union and may execute arbitrary code. The running system and Next Boot are not changed."
+msgstr "Skrip instalasi dijalankan sebagai root di dalam union build MiniOS sementara dan dapat mengeksekusi kode apa pun. Sistem yang berjalan dan Next Boot tidak akan diubah."
+
+#: lib/minios_module_manager/ui.py:1612
+msgid "Run Script and Create Module"
+msgstr "Jalankan Skrip dan Buat Modul"
+
+#: lib/minios_module_manager/ui.py:1627
+msgid "Script: {}"
+msgstr "Skrip: {}"
+
+#: lib/minios_module_manager/ui.py:1629 lib/minios_module_manager/ui.py:1863
+msgid "Seed folder: {}"
+msgstr "Folder seed: {}"
+
+#: lib/minios_module_manager/ui.py:1632 lib/minios_module_manager/ui.py:1866
+msgid "Compression: {} · Privileges: authentication required"
+msgstr "Kompresi: {} · Hak akses: autentikasi diperlukan"
+
+#: lib/minios_module_manager/ui.py:1637
+msgid "Running Installation Script"
+msgstr "Menjalankan Skrip Instalasi"
+
+#: lib/minios_module_manager/ui.py:1655 lib/minios_module_manager/ui.py:1718
+msgid "Back to Script"
+msgstr "Kembali ke Skrip"
+
+#: lib/minios_module_manager/ui.py:1694 lib/minios_module_manager/ui.py:1962
+msgid "Copying seed folder…"
+msgstr "Menyalin folder seed…"
+
+#: lib/minios_module_manager/ui.py:1695
+msgid "Running installation script…"
+msgstr "Menjalankan skrip instalasi…"
+
+#: lib/minios_module_manager/ui.py:1708
+#, python-brace-format
+msgid ""
+"Output: {output}\n"
+"Compressed size: {compressed_size} bytes\n"
+"Uncompressed size: {uncompressed_size} bytes\n"
+"Entries: {entry_count}\n"
+"Compression: {compression}\n"
+"Seed folder: {seed_directory}\n"
+"SHA-256: {sha256}"
+msgstr ""
+"Output: {output}\n"
+"Ukuran terkompresi: {compressed_size} byte\n"
+"Ukuran tidak terkompresi: {uncompressed_size} byte\n"
+"Entri: {entry_count}\n"
+"Kompresi: {compression}\n"
+"Folder seed: {seed_directory}\n"
+"SHA-256: {sha256}"
+
+#: lib/minios_module_manager/ui.py:1733
+msgid "Seed folder (optional)"
+msgstr "Folder seed (opsional)"
+
+#: lib/minios_module_manager/ui.py:1830
+msgid "Review Interactive Chroot"
+msgstr "Tinjau Chroot Interaktif"
+
+#: lib/minios_module_manager/ui.py:1843
+msgid "A root shell will run inside a temporary MiniOS build union. Exit the shell when finished; you can then create the module or discard all chroot changes."
+msgstr "Shell root akan dijalankan di dalam union build MiniOS sementara. Keluar dari shell jika sudah selesai; Anda dapat membuat modul atau membatalkan semua perubahan chroot."
+
+#: lib/minios_module_manager/ui.py:1847
+msgid "Open Interactive Chroot"
+msgstr "Buka Chroot Interaktif"
+
+#: lib/minios_module_manager/ui.py:1876
+msgid "Make your changes, then type exit to leave the chroot shell."
+msgstr "Lakukan perubahan Anda, lalu ketik exit untuk keluar dari shell chroot."
+
+#: lib/minios_module_manager/ui.py:1891
+msgid "Reopen Shell"
+msgstr "Buka Ulang Shell"
+
+#: lib/minios_module_manager/ui.py:1896 lib/minios_module_manager/ui.py:2151
+msgid "Discard Changes"
+msgstr "Batalkan Perubahan"
+
+#: lib/minios_module_manager/ui.py:1912
+msgid "Interactive Chroot Result"
+msgstr "Hasil Chroot Interaktif"
+
+#: lib/minios_module_manager/ui.py:1941
+msgid "Preparing interactive chroot…"
+msgstr "Menyiapkan chroot interaktif…"
+
+#: lib/minios_module_manager/ui.py:1961
+msgid "Preparing protected chroot session…"
+msgstr "Menyiapkan sesi chroot terlindungi…"
+
+#: lib/minios_module_manager/ui.py:1971
+msgid "Chroot Preparation Failed"
+msgstr "Persiapan Chroot Gagal"
+
+#: lib/minios_module_manager/ui.py:1997
+msgid "Opening privileged chroot shell…"
+msgstr "Membuka shell chroot dengan hak istimewa…"
+
+#: lib/minios_module_manager/ui.py:2003
+msgid "VTE could not start the chroot shell."
+msgstr "VTE tidak dapat memulai shell chroot."
+
+#: lib/minios_module_manager/ui.py:2007
+msgid "Could not open chroot shell: {}"
+msgstr "Tidak dapat membuka shell chroot: {}"
+
+#: lib/minios_module_manager/ui.py:2014
+msgid "Interactive chroot is active. Type exit when finished."
+msgstr "Chroot interaktif sedang aktif. Ketik exit jika sudah selesai."
+
+#: lib/minios_module_manager/ui.py:2020
+msgid "exit status {}"
+msgstr "status keluar {}"
+
+#: lib/minios_module_manager/ui.py:2022
+msgid "signal {}"
+msgstr "sinyal {}"
+
+#: lib/minios_module_manager/ui.py:2024
+msgid "status {}"
+msgstr "status {}"
+
+#: lib/minios_module_manager/ui.py:2026
+msgid "Chroot shell closed ({}). Create the module, reopen the shell, or discard the session."
+msgstr "Shell chroot ditutup ({}). Buat modul, buka kembali shell, atau batalkan sesi."
+
+#: lib/minios_module_manager/ui.py:2043 lib/minios_module_manager/ui.py:2062
+msgid "Capturing chroot changes…"
+msgstr "Mengambil perubahan chroot…"
+
+#: lib/minios_module_manager/ui.py:2063
+msgid "Cleaning chroot session…"
+msgstr "Membersihkan sesi chroot…"
+
+#: lib/minios_module_manager/ui.py:2096
+msgid "Discarding chroot session…"
+msgstr "Membuang sesi chroot…"
+
+#: lib/minios_module_manager/ui.py:2122
+msgid "Session Discarded"
+msgstr "Sesi Dibuang"
+
+#: lib/minios_module_manager/ui.py:2126
+msgid "Interactive chroot changes were discarded. No module was created."
+msgstr "Perubahan chroot interaktif telah dibuang. Tidak ada modul yang dibuat."
+
+#: lib/minios_module_manager/ui.py:2133
+msgid "Current session capture is still running."
+msgstr "Pengambilan sesi saat ini masih berjalan."
+
+#: lib/minios_module_manager/ui.py:2134
+msgid "Cancel the capture or wait for it to finish before closing MiniOS Module Manager."
+msgstr "Batalkan pengambilan atau tunggu hingga selesai sebelum menutup MiniOS Module Manager."
+
+#: lib/minios_module_manager/ui.py:2138
+msgid "A chroot operation is still in progress."
+msgstr "Operasi chroot masih berlangsung."
+
+#: lib/minios_module_manager/ui.py:2139
+msgid "Wait for it to finish before closing MiniOS Module Manager."
+msgstr "Tunggu hingga selesai sebelum menutup MiniOS Module Manager."
+
+#: lib/minios_module_manager/ui.py:2143
+msgid "Exit the interactive chroot before closing."
+msgstr "Keluar dari chroot interaktif sebelum menutup."
+
+#: lib/minios_module_manager/ui.py:2144
+msgid "Type exit in the embedded terminal, then create the module or discard the session."
+msgstr "Ketik exit di terminal tertanam, lalu buat modul atau buang sesi."
+
+#: lib/minios_module_manager/ui.py:2149
+msgid "Discard the prepared chroot session and close?"
+msgstr "Buang sesi chroot yang sudah dipersiapkan dan tutup?"
+
+#: lib/minios_module_manager/ui.py:2150
+msgid "No module will be created from the current interactive chroot changes."
+msgstr "Tidak ada modul yang akan dibuat dari perubahan chroot interaktif saat ini."
+
+#: lib/minios_module_manager/ui.py:2237
+msgid "Review Current Session Changes"
+msgstr "Tinjau Perubahan Sesi Saat Ini"
+
+#: lib/minios_module_manager/ui.py:2249
+msgid "MiniOS will capture the authoritative current writable layer using its standard savechanges policy. Runtime paths, logs, caches and other predefined noise are excluded. The running system and Next Boot are not changed."
+msgstr "MiniOS akan mengambil layer writable saat ini yang dianggap otoritatif menggunakan kebijakan savechanges standar. Path runtime, log, cache, dan noise yang telah ditentukan sebelumnya akan dikecualikan. Sistem yang sedang berjalan dan Next Boot tidak akan diubah."
+
+#: lib/minios_module_manager/ui.py:2254
+msgid "Capture Changes"
+msgstr "Ambil Perubahan"
+
+#: lib/minios_module_manager/ui.py:2271
+msgid "Compression: {} · Policy: standard MiniOS savechanges · Privileges: authentication required"
+msgstr "Kompresi: {} · Kebijakan: savechanges standar MiniOS · Hak istimewa: autentikasi diperlukan"
+
+#: lib/minios_module_manager/ui.py:2277
+msgid "Capturing Current Session Changes"
+msgstr "Mengambil Perubahan Sesi Saat Ini"
+
+#: lib/minios_module_manager/ui.py:2284
+msgid "Cancel Capture"
+msgstr "Batalkan Pengambilan"
+
+#: lib/minios_module_manager/ui.py:2292
+msgid "Session Capture Result"
+msgstr "Hasil Pengambilan Sesi"
+
+#: lib/minios_module_manager/ui.py:2299
+msgid "Capture Again"
+msgstr "Ambil Lagi"
+
+#: lib/minios_module_manager/ui.py:2319
+msgid "Preparing current session capture…"
+msgstr "Menyiapkan pengambilan sesi saat ini…"
+
+#: lib/minios_module_manager/ui.py:2344
+msgid "Preparing capture…"
+msgstr "Menyiapkan pengambilan…"
+
+#: lib/minios_module_manager/ui.py:2345
+msgid "Inspecting current changes…"
+msgstr "Memeriksa perubahan saat ini…"
+
+#: lib/minios_module_manager/ui.py:2346
+msgid "Copying current changes…"
+msgstr "Menyalin perubahan saat ini…"
+
+#: lib/minios_module_manager/ui.py:2347
+msgid "Compressing module…"
+msgstr "Mengompresi modul…"
+
+#: lib/minios_module_manager/ui.py:2365
+msgid "Could not request cancellation: {}"
+msgstr "Tidak dapat meminta pembatalan: {}"
+
+#: lib/minios_module_manager/ui.py:2368
+msgid "Cancelling capture…"
+msgstr "Membatalkan pengambilan…"
+
+#: lib/minios_module_manager/ui.py:2382
+#, python-brace-format
+msgid ""
+"Output: {output}\n"
+"Compressed size: {compressed_size} bytes\n"
+"Uncompressed size: {uncompressed_size} bytes\n"
+"Entries: {entry_count}\n"
+"SHA-256: {sha256}"
+msgstr ""
+"Output: {output}\n"
+"Ukuran terkompresi: {compressed_size} byte\n"
+"Ukuran tidak terkompresi: {uncompressed_size} byte\n"
+"Entri: {entry_count}\n"
+"SHA-256: {sha256}"
+
+#: lib/minios_module_manager/ui.py:2386
+msgid "Capture Cancelled"
+msgstr "Pengambilan Dibatalkan"
+
+#: lib/minios_module_manager/ui.py:2390
+msgid "Current session capture was cancelled. No completed module was reported."
+msgstr "Pengambilan sesi saat ini telah dibatalkan. Tidak ada modul yang selesai dilaporkan."
+
+#: lib/minios_module_manager/ui.py:2392
+msgid "Session Capture Failed"
+msgstr "Pengambilan Sesi Gagal"
+
+#: lib/minios_module_manager/ui.py:2404
+msgid "The selected module file is unavailable."
+msgstr "Berkas modul yang dipilih tidak tersedia."
+
+#: lib/minios_module_manager/ui.py:2474
+msgid "These dropped items cannot be opened together."
+msgstr "Item yang dijatuhkan ini tidak dapat dibuka secara bersamaan."
+
+#: lib/minios_module_manager/ui.py:2475
+msgid "Drop one module, script, or folder, or one or more local .deb files."
+msgstr "Jatuhkan satu modul, skrip, atau folder, atau satu atau lebih berkas .deb lokal."
+
+#: share/applications/minios-module-manager.desktop:13
+msgid "Inspect, create and manage MiniOS modules"
+msgstr "Inspeksi, buat, dan kelola modul MiniOS"
+
+#: share/applications/minios-module-manager.desktop:22
+msgid "module;sb;squashfs;bundle;"
+msgstr "modul;sb;squashfs;bundle;"

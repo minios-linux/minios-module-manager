@@ -1,0 +1,66 @@
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MINIOS\-MODULE\-MANAGER 1 "Agustus 2026" MiniOS "Perintah Pengguna"
+.SH NAMA
+minios\-module\-manager \- memeriksa, membuat, dan mengelola modul MiniOS
+.SH SINOPSIS
+\fBminios\-module\-manager\fP [\fImodule\-file\fP]
+.SH DESKRIPSI
+\fBMiniOS Module Manager\fP adalah antarmuka GTK 3 untuk komposisi dan
+pembuatan modul MiniOS. Aplikasi ini dijalankan sebagai pengguna desktop dan
+mendelegasikan operasi yang membutuhkan hak istimewa atau sensitif terhadap
+sistem berkas ke MiniOS Tools melalui vektor argumen tetap.
+.PP
+Aplikasi ini memiliki dua ruang kerja utama: Modules dan Create. Ruang kerja
+Modules membedakan modul\-modul yang membentuk sistem yang sedang berjalan
+dari modul\-modul yang dipilih untuk boot berikutnya.
+.SH MODUL
+.TP  4
+\fBSedang Berjalan\fP
+Menampilkan komposisi modul runtime berurutan yang otoritatif sebagaimana
+dilaporkan oleh MiniOS Tools. Aktivasi dan deaktivasi runtime hanya tersedia
+jika root union yang ter\-mount adalah AUFS.
+.TP  4
+\fBBoot Berikutnya\fP
+Menampilkan komposisi modul berurutan yang otoritatif sesuai dengan aturan
+boot MiniOS saat ini. Modul pengguna dapat ditambahkan atau dihapus dari
+penyimpanan modul yang persisten ketika MiniOS Tools melaporkan bahwa
+penyimpanan tersebut tersedia.
+.PP
+Memilih sebuah modul akan membuka detail yang hanya\-baca. Ketika berkas
+sumber pendukungnya tersedia, detail juga menampilkan isi SquashFS dan
+memungkinkan ekstraksi ke direktori baru. Proses ekstraksi dilakukan secara
+eksplisit dan tidak pernah menimpa tujuan yang sudah ada.
+.SH BUAT
+Ruang kerja Create menyediakan alur kerja yang telah ditinjau untuk paket
+Debian dari repositori atau lokal, skrip instalasi, chroot interaktif,
+folder yang sudah ada, dan perubahan sesi saat ini.
+.PP
+Setiap alur kerja memisahkan konfigurasi, peninjauan, eksekusi, dan
+hasil. Membuat modul tidak secara otomatis mengaktifkannya atau
+menambahkannya ke boot berikutnya.
+.PP
+Chroot interaktif menggunakan terminal VTE terintegrasi dan siklus hidup
+\fBchroot2sb\fP(1)  prepare/shell/finish/cancel yang terlindungi. Penangkapan
+sesi saat ini menggunakan \fBsavechanges\fP(1)  yang dapat dibatalkan dan
+kebijakan pengecualian MiniOS standar.
+.SH "MEMBUKA BERKAS DAN SERET\-LEPAS"
+Modul SquashFS lokal yang dibuka dari manajer berkas hanya akan
+diperiksa. Modul tersebut tidak diaktifkan dan tidak ditambahkan ke Boot
+Berikutnya.
+.PP
+Seret dan lepas adalah pintasan input. Satu modul akan membuka inspeksi,
+berkas paket Debian akan mengisi Packages, sebuah direktori akan mengisi
+Folder, dan berkas reguler lain akan mengisi Installation
+Script. Menjatuhkan item tidak pernah mengeksekusi kode atau mengubah
+komposisi modul secara otomatis.
+.SH "HAK ISTIMEWA"
+Aplikasi grafis tidak pernah dijalankan sebagai root. Operasi yang
+membutuhkan hak istimewa dijalankan melalui pkexec dan backend MiniOS Tools
+yang relevan.
+.SH "LIHAT JUGA"
+\fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
+\fBchroot2sb\fP(1), \fBsavechanges\fP(1)

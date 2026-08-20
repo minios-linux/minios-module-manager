@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+SOURCE_LIB = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'lib'))
+INSTALLED_LIB = '/usr/lib/minios-module-manager'
+
+for path in (SOURCE_LIB, INSTALLED_LIB):
+    if os.path.isdir(path) and path not in sys.path:
+        sys.path.insert(0, path)
+
+from minios_module_manager.app import main
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
