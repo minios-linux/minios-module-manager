@@ -18,6 +18,7 @@ Depends: ${misc:Depends},
          gir1.2-vte-2.91,
          shared-mime-info,
          python3-minios-gui (>= 1.1.0),
+         polkitd | policykit-1,
          pkexec | policykit-1,
          minios-tools (>= 1.6.0)
 Description: GTK interface for MiniOS module composition
