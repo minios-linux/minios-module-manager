@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: minios-module-manager 1.0.0\n"
 "Report-Msgid-Bugs-To: support@minios.dev\n"
-"POT-Creation-Date: 2026-08-20 15:37+0300\n"
-"PO-Revision-Date: 2026-08-20 10:10+0000\n"
+"POT-Creation-Date: 2026-09-01 02:08+0300\n"
+"PO-Revision-Date: 2026-08-31 23:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: es\n"
@@ -595,7 +595,7 @@ msgstr "Se guardan los archivos y cambios de configuración de la sesión actual
 #: lib/minios_module_manager/ui.py:91 lib/minios_module_manager/ui.py:119
 #: share/applications/minios-module-manager.desktop:4
 msgid "MiniOS Module Manager"
-msgstr "Administrador de módulos de MiniOS"
+msgstr "Gestor de módulos de MiniOS"
 
 #: lib/minios_module_manager/ui.py:129 lib/minios_module_manager/ui.py:130
 msgid "Back"

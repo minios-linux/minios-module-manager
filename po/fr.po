@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: minios-module-manager 1.0.0\n"
 "Report-Msgid-Bugs-To: support@minios.dev\n"
-"POT-Creation-Date: 2026-08-20 15:37+0300\n"
-"PO-Revision-Date: 2026-08-20 10:10+0000\n"
+"POT-Creation-Date: 2026-09-01 02:08+0300\n"
+"PO-Revision-Date: 2026-08-31 23:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -1378,7 +1378,7 @@ msgstr "La capture de la session en cours est toujours en cours d’exécution."
 
 #: lib/minios_module_manager/ui.py:2134
 msgid "Cancel the capture or wait for it to finish before closing MiniOS Module Manager."
-msgstr "Annulez la capture ou attendez sa fin avant de fermer MiniOS Module Manager."
+msgstr "Annulez la capture ou attendez qu'elle se termine avant de fermer MiniOS."
 
 #: lib/minios_module_manager/ui.py:2138
 msgid "A chroot operation is still in progress."
@@ -1386,7 +1386,7 @@ msgstr "Une opération chroot est toujours en cours."
 
 #: lib/minios_module_manager/ui.py:2139
 msgid "Wait for it to finish before closing MiniOS Module Manager."
-msgstr "Attendez la fin avant de fermer MiniOS Module Manager."
+msgstr "Attendez qu'elle se termine avant de fermer MiniOS."
 
 #: lib/minios_module_manager/ui.py:2143
 msgid "Exit the interactive chroot before closing."

@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: minios-module-manager 1.0.0\n"
 "Report-Msgid-Bugs-To: support@minios.dev\n"
-"POT-Creation-Date: 2026-08-20 15:37+0300\n"
-"PO-Revision-Date: 2026-08-20 10:10+0000\n"
+"POT-Creation-Date: 2026-09-01 02:08+0300\n"
+"PO-Revision-Date: 2026-08-31 23:09+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pt-BR\n"
@@ -595,7 +595,7 @@ msgstr "Arquivos e alterações de configuração da sessão atual são salvos, 
 #: lib/minios_module_manager/ui.py:91 lib/minios_module_manager/ui.py:119
 #: share/applications/minios-module-manager.desktop:4
 msgid "MiniOS Module Manager"
-msgstr "Gerenciador de Módulos MiniOS"
+msgstr "Gerenciador de módulos MiniOS"
 
 #: lib/minios_module_manager/ui.py:129 lib/minios_module_manager/ui.py:130
 msgid "Back"
@@ -1378,7 +1378,7 @@ msgstr "A captura da sessão atual ainda está em andamento."
 
 #: lib/minios_module_manager/ui.py:2134
 msgid "Cancel the capture or wait for it to finish before closing MiniOS Module Manager."
-msgstr "Cancele a captura ou aguarde a finalização antes de fechar o MiniOS Module Manager."
+msgstr "Cancele a captura ou aguarde até que ela termine antes de fechar o Gerenciador de módulos MiniOS."
 
 #: lib/minios_module_manager/ui.py:2138
 msgid "A chroot operation is still in progress."
@@ -1386,7 +1386,7 @@ msgstr "Uma operação de chroot ainda está em andamento."
 
 #: lib/minios_module_manager/ui.py:2139
 msgid "Wait for it to finish before closing MiniOS Module Manager."
-msgstr "Aguarde a finalização antes de fechar o MiniOS Module Manager."
+msgstr "Aguarde até que ela termine antes de fechar o Gerenciador de módulos MiniOS."
 
 #: lib/minios_module_manager/ui.py:2143
 msgid "Exit the interactive chroot before closing."
