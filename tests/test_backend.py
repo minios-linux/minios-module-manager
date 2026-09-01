@@ -159,7 +159,11 @@ class ParseInspectionResultTests(unittest.TestCase):
             inspect_result(['etc', 'etc/example.conf']))
         self.assertEqual(result_value.state, LoadState.READY)
         self.assertEqual(result_value.size, 4096)
-        self.assertEqual(result_value.entries, ('etc', 'etc/example.conf'))
+        self.assertEqual(
+            tuple(entry.path for entry in result_value.entries),
+            ('etc', 'etc/example.conf'))
+        self.assertEqual(result_value.entries[0].kind, 'directory')
+        self.assertEqual(result_value.entries[1].kind, 'unknown')
 
     def test_wrong_entry_count_is_rejected(self):
         value = json.loads(inspect_result(['etc']))

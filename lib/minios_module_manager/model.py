@@ -23,6 +23,17 @@ class ModuleRecord(object):
         self.removable = bool(removable)
 
 
+class InspectionEntry(object):
+    """One rootless filesystem entry inside an immutable module."""
+
+    def __init__(self, path, kind='unknown', size=None, mode=None, target=None):
+        self.path = path
+        self.kind = kind
+        self.size = size
+        self.mode = mode
+        self.target = target
+
+
 class Inspection(object):
     """Rootless inspection result for one immutable module."""
 

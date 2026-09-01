@@ -350,16 +350,47 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.detail_status.set_line_wrap(True)
         outer.pack_start(self.detail_status, False, False, 0)
 
-        self.detail_store = Gtk.ListStore(str)
-        tree = Gtk.TreeView(model=self.detail_store)
-        renderer = Gtk.CellRendererText()
-        column = Gtk.TreeViewColumn(_('Contents'), renderer, text=0)
-        column.set_resizable(True)
-        tree.append_column(column)
+        search_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.detail_search = Gtk.SearchEntry()
+        self.detail_search.set_placeholder_text(_('Search module contents…'))
+        self.detail_search.connect('search-changed', self._on_detail_search_changed)
+        search_row.pack_start(self.detail_search, True, True, 0)
+        outer.pack_start(search_row, False, False, 0)
+
+        # icon, name, type, size, full path, is directory, target, mode
+        self.detail_store = Gtk.TreeStore(str, str, str, str, str, bool, str, str)
+        self.detail_tree = Gtk.TreeView(model=self.detail_store)
+        self.detail_tree.set_search_column(1)
+        self.detail_tree.set_headers_clickable(True)
+
+        icon_renderer = Gtk.CellRendererPixbuf()
+        name_renderer = Gtk.CellRendererText()
+        name_column = Gtk.TreeViewColumn(_('Name'))
+        name_column.pack_start(icon_renderer, False)
+        name_column.add_attribute(icon_renderer, 'icon-name', 0)
+        name_column.pack_start(name_renderer, True)
+        name_column.add_attribute(name_renderer, 'text', 1)
+        name_column.set_resizable(True)
+        name_column.set_expand(True)
+        self.detail_tree.append_column(name_column)
+
+        type_renderer = Gtk.CellRendererText()
+        type_column = Gtk.TreeViewColumn(_('Type'), type_renderer, text=2)
+        type_column.set_resizable(True)
+        self.detail_tree.append_column(type_column)
+
+        size_renderer = Gtk.CellRendererText()
+        size_renderer.set_property('xalign', 1.0)
+        size_column = Gtk.TreeViewColumn(_('Size'), size_renderer, text=3)
+        size_column.set_resizable(True)
+        self.detail_tree.append_column(size_column)
+
+        self.detail_tree.get_selection().connect('changed', self._on_detail_selection_changed)
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scrolled.add(tree)
+        scrolled.add(self.detail_tree)
         outer.pack_start(scrolled, True, True, 0)
+        self._detail_inspection = None
         return outer
 
     def _snapshot_placeholder(self, title, detail):
@@ -647,6 +678,8 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._detail_module = module
         self._detail_scope = scope
         self.detail_store.clear()
+        self._detail_inspection = None
+        self.detail_search.set_text('')
         self.detail_title.set_text(module.name)
         self.detail_source.set_text(module.source or _('Backing source unavailable'))
         self.detail_meta.set_text('')
@@ -674,12 +707,19 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         if request != self._inspection_request:
             return False
         self.detail_store.clear()
+        self._detail_inspection = inspection if inspection.state == LoadState.READY else None
         if inspection.state == LoadState.READY:
+            self._populate_detail_tree()
+            counts = {'directory': 0, 'file': 0, 'symlink': 0}
             for entry in inspection.entries:
-                self.detail_store.append((entry,))
-            self.detail_meta.set_text(
-                _('{} bytes · {} entries').format(
-                    inspection.size, len(inspection.entries)))
+                if entry.kind in counts:
+                    counts[entry.kind] += 1
+            summary = _('{size} · {entries} entries').format(
+                size=format_bytes(inspection.size), entries=len(inspection.entries))
+            if counts['directory'] or counts['file'] or counts['symlink']:
+                summary += _(' · {directories} folders · {files} files · {links} links').format(
+                    directories=counts['directory'], files=counts['file'], links=counts['symlink'])
+            self.detail_meta.set_text(summary)
             self.detail_status.set_text('')
             self.detail_extract.set_sensitive(True)
         else:
@@ -688,6 +728,89 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                 inspection.message or _('Module inspection failed.'))
             self.detail_extract.set_sensitive(False)
         return False
+
+
+    def _detail_kind_label(self, kind):
+        return {
+            'directory': _('Folder'),
+            'file': _('File'),
+            'symlink': _('Symbolic link'),
+            'device': _('Device'),
+            'fifo': _('FIFO'),
+            'socket': _('Socket'),
+            'unknown': _('Item'),
+        }.get(kind, _('Item'))
+
+    @staticmethod
+    def _detail_kind_icon(kind):
+        return {
+            'directory': 'folder',
+            'file': 'text-x-generic',
+            'symlink': 'emblem-symbolic-link',
+            'device': 'drive-harddisk',
+            'fifo': 'text-x-generic',
+            'socket': 'network-wired',
+            'unknown': 'text-x-generic',
+        }.get(kind, 'text-x-generic')
+
+    def _populate_detail_tree(self):
+        self.detail_store.clear()
+        inspection = self._detail_inspection
+        if inspection is None:
+            return
+        query = self.detail_search.get_text().strip().casefold()
+        entries = list(inspection.entries)
+        directory_paths = set()
+        for item in entries:
+            parts = item.path.split('/')
+            for index in range(1, len(parts)):
+                directory_paths.add('/'.join(parts[:index]))
+        visible = None
+        if query:
+            visible = set()
+            for entry in entries:
+                if query in entry.path.casefold():
+                    parts = entry.path.split('/')
+                    for index in range(1, len(parts) + 1):
+                        visible.add('/'.join(parts[:index]))
+
+        iters = {}
+        ordered = sorted(entries, key=lambda entry: (entry.path.count('/'), entry.path.casefold()))
+        for entry in ordered:
+            if visible is not None and entry.path not in visible:
+                continue
+            parent_path, _, name = entry.path.rpartition('/')
+            parent = iters.get(parent_path) if parent_path else None
+            kind = entry.kind
+            if kind == 'unknown' and entry.path in directory_paths:
+                kind = 'directory'
+            size = format_bytes(entry.size) if entry.size is not None and kind != 'directory' else ''
+            tree_iter = self.detail_store.append(parent, (
+                self._detail_kind_icon(kind), name or entry.path,
+                self._detail_kind_label(kind), size, entry.path,
+                kind == 'directory', entry.target or '', entry.mode or ''))
+            iters[entry.path] = tree_iter
+        if query:
+            self.detail_tree.expand_all()
+
+    def _on_detail_search_changed(self, _entry):
+        self._populate_detail_tree()
+
+    def _on_detail_selection_changed(self, selection):
+        model, tree_iter = selection.get_selected()
+        if tree_iter is None:
+            if self._detail_inspection is not None:
+                self.detail_status.set_text('')
+            return
+        path = model.get_value(tree_iter, 4)
+        target = model.get_value(tree_iter, 6)
+        mode = model.get_value(tree_iter, 7)
+        details = path
+        if target:
+            details += _(' → {}').format(target)
+        if mode:
+            details += _(' · {}').format(mode)
+        self.detail_status.set_text(details)
 
     @staticmethod
     def _snapshot_module(snapshot, name):

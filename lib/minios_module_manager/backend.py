@@ -8,7 +8,7 @@ import tempfile
 import threading
 
 from .i18n import _
-from .model import Inspection, LoadState, ModuleRecord, Snapshot
+from .model import Inspection, InspectionEntry, LoadState, ModuleRecord, Snapshot
 
 
 CAPTURE_CANCELLED = object()
@@ -221,8 +221,40 @@ def parse_inspection_result(text):
         raise ProtocolError(_('module entry list is invalid'))
     if count != len(entries):
         raise ProtocolError(_('module entry count is invalid'))
+
+    details = value.get('entry_details')
+    parsed_entries = []
+    if details is not None:
+        if not isinstance(details, list) or len(details) != len(entries):
+            raise ProtocolError(_('module entry details are invalid'))
+        for expected_path, detail in zip(entries, details):
+            if not isinstance(detail, dict) or detail.get('path') != expected_path:
+                raise ProtocolError(_('module entry details are invalid'))
+            kind = detail.get('kind', 'unknown')
+            entry_size = detail.get('size')
+            mode = detail.get('mode')
+            target = detail.get('target')
+            if kind not in ('file', 'directory', 'symlink', 'device', 'fifo', 'socket', 'unknown'):
+                raise ProtocolError(_('module entry type is invalid'))
+            if entry_size is not None and (not isinstance(entry_size, int) or isinstance(entry_size, bool) or entry_size < 0):
+                raise ProtocolError(_('module entry size is invalid'))
+            if mode is not None and not isinstance(mode, str):
+                raise ProtocolError(_('module entry mode is invalid'))
+            if target is not None and not isinstance(target, str):
+                raise ProtocolError(_('module link target is invalid'))
+            parsed_entries.append(InspectionEntry(
+                expected_path, kind=kind, size=entry_size, mode=mode, target=target))
+    else:
+        directories = set()
+        for entry in entries:
+            parts = entry.split('/')
+            for index in range(1, len(parts)):
+                directories.add('/'.join(parts[:index]))
+        parsed_entries = [InspectionEntry(
+            entry, kind='directory' if entry in directories else 'unknown')
+            for entry in entries]
     return Inspection(
-        state=LoadState.READY, path=path, size=size, entries=entries)
+        state=LoadState.READY, path=path, size=size, entries=parsed_entries)
 
 def load_module_inspection(path):
     executable = shutil.which('sb')
