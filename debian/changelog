@@ -1,3 +1,9 @@
+minios-module-manager (1.0.4) unstable; urgency=medium
+
+  * Refresh translations, desktop metadata and localized manual pages
+
+ -- crims0n <crims0n@minios.dev>  Tue, 01 Sep 2026 18:15:45 +0300
+
 minios-module-manager (1.0.3) unstable; urgency=medium
 
   * Refresh translations
