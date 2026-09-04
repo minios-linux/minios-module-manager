@@ -3,9 +3,9 @@
 # This file is distributed under the same license as the minios-module-manager package.
 msgid ""
 msgstr ""
-"Project-Id-Version: minios-module-manager 1.0.0\n"
+"Project-Id-Version: minios-module-manager 1.0.7\n"
 "Report-Msgid-Bugs-To: support@minios.dev\n"
-"POT-Creation-Date: 2026-09-02 13:35+0300\n"
+"POT-Creation-Date: 2026-09-02 22:33+0300\n"
 "PO-Revision-Date: 2026-09-02 10:35+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -15,442 +15,467 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: lib/minios_module_manager/backend.py:49
+#: lib/minios_module_manager/backend.py:70
 msgid "module record is not an object"
 msgstr "registro do módulo não é um objeto"
 
-#: lib/minios_module_manager/backend.py:56
+#: lib/minios_module_manager/backend.py:77
 msgid "module name is invalid"
 msgstr "nome do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:58
-#: lib/minios_module_manager/backend.py:60
+#: lib/minios_module_manager/backend.py:79
+#: lib/minios_module_manager/backend.py:81
 msgid "module mountpoint is invalid"
 msgstr "ponto de montagem do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:62
+#: lib/minios_module_manager/backend.py:83
 msgid "module source is invalid"
 msgstr "fonte do módulo é inválida"
 
-#: lib/minios_module_manager/backend.py:64
+#: lib/minios_module_manager/backend.py:85
 msgid "module origin is invalid"
 msgstr "origem do módulo é inválida"
 
-#: lib/minios_module_manager/backend.py:66
+#: lib/minios_module_manager/backend.py:87
 msgid "module removability is invalid"
 msgstr "removibilidade do módulo é inválida"
 
-#: lib/minios_module_manager/backend.py:75
-#: lib/minios_module_manager/backend.py:105
-#: lib/minios_module_manager/backend.py:201
+#: lib/minios_module_manager/backend.py:96
+#: lib/minios_module_manager/backend.py:128
+#: lib/minios_module_manager/backend.py:226
 msgid "sb returned invalid JSON: {}"
 msgstr "sb retornou JSON inválido: {}"
 
-#: lib/minios_module_manager/backend.py:78
-#: lib/minios_module_manager/backend.py:108
+#: lib/minios_module_manager/backend.py:99
+#: lib/minios_module_manager/backend.py:131
 msgid "sb result is not an object"
 msgstr "resultado do sb não é um objeto"
 
-#: lib/minios_module_manager/backend.py:88
-#: lib/minios_module_manager/backend.py:118
+#: lib/minios_module_manager/backend.py:101
+#: lib/minios_module_manager/backend.py:111
+#: lib/minios_module_manager/backend.py:133
+#: lib/minios_module_manager/backend.py:143
 msgid "unsupported sb result"
 msgstr "resultado do sb não suportado"
 
-#: lib/minios_module_manager/backend.py:92
+#: lib/minios_module_manager/backend.py:115
 msgid "unsupported root union"
 msgstr "união raiz não suportada"
 
-#: lib/minios_module_manager/backend.py:95
-#: lib/minios_module_manager/backend.py:131
+#: lib/minios_module_manager/backend.py:118
+#: lib/minios_module_manager/backend.py:156
 msgid "module list is invalid"
 msgstr "lista de módulos é inválida"
 
-#: lib/minios_module_manager/backend.py:123
+#: lib/minios_module_manager/backend.py:148
 msgid "MiniOS data root is invalid"
 msgstr "data root do MiniOS é inválido"
 
-#: lib/minios_module_manager/backend.py:125
+#: lib/minios_module_manager/backend.py:150
 msgid "bundle extension is invalid"
 msgstr "extensão do pacote é inválida"
 
-#: lib/minios_module_manager/backend.py:128
+#: lib/minios_module_manager/backend.py:153
 msgid "next-boot add availability is invalid"
 msgstr "disponibilidade de adição para próximo boot é inválida"
 
-#: lib/minios_module_manager/backend.py:134
+#: lib/minios_module_manager/backend.py:159
 msgid "next-boot module source is incomplete"
 msgstr "fonte do módulo para próximo boot está incompleta"
 
-#: lib/minios_module_manager/backend.py:146
-#: lib/minios_module_manager/backend.py:174
-#: lib/minios_module_manager/backend.py:265
-#: lib/minios_module_manager/backend.py:289
-#: lib/minios_module_manager/backend.py:308
-#: lib/minios_module_manager/backend.py:368
-#: lib/minios_module_manager/backend.py:457
-#: lib/minios_module_manager/backend.py:561
-#: lib/minios_module_manager/backend.py:711
-#: lib/minios_module_manager/backend.py:899
+#: lib/minios_module_manager/backend.py:171
+#: lib/minios_module_manager/backend.py:199
+#: lib/minios_module_manager/backend.py:290
+#: lib/minios_module_manager/backend.py:314
+#: lib/minios_module_manager/backend.py:333
+#: lib/minios_module_manager/backend.py:393
+#: lib/minios_module_manager/backend.py:485
+#: lib/minios_module_manager/backend.py:592
+#: lib/minios_module_manager/backend.py:745
+#: lib/minios_module_manager/backend.py:1044
 msgid "MiniOS Tools is not installed."
 msgstr "MiniOS Tools não está instalado."
 
-#: lib/minios_module_manager/backend.py:158
-#: lib/minios_module_manager/backend.py:186
-#: lib/minios_module_manager/backend.py:276
+#: lib/minios_module_manager/backend.py:183
+#: lib/minios_module_manager/backend.py:211
+#: lib/minios_module_manager/backend.py:301
 msgid "Could not start sb: {}"
 msgstr "Não foi possível iniciar sb: {}"
 
-#: lib/minios_module_manager/backend.py:161
+#: lib/minios_module_manager/backend.py:186
 msgid "sb could not read the running module state."
 msgstr "sb não conseguiu ler o estado do módulo em execução."
 
-#: lib/minios_module_manager/backend.py:189
+#: lib/minios_module_manager/backend.py:214
 msgid "sb could not read the next-boot module state."
 msgstr "sb não conseguiu ler o estado do módulo para o próximo boot."
 
-#: lib/minios_module_manager/backend.py:209
+#: lib/minios_module_manager/backend.py:234
 msgid "unsupported sb inspection result"
 msgstr "resultado de inspeção do sb não suportado"
 
-#: lib/minios_module_manager/backend.py:216
+#: lib/minios_module_manager/backend.py:241
 msgid "module path is invalid"
 msgstr "caminho do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:218
+#: lib/minios_module_manager/backend.py:243
 msgid "module size is invalid"
 msgstr "tamanho do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:221
+#: lib/minios_module_manager/backend.py:246
 msgid "module entry list is invalid"
 msgstr "lista de entradas do módulo é inválida"
 
-#: lib/minios_module_manager/backend.py:223
+#: lib/minios_module_manager/backend.py:248
 msgid "module entry count is invalid"
 msgstr "quantidade de entradas do módulo é inválida"
 
-#: lib/minios_module_manager/backend.py:229
-#: lib/minios_module_manager/backend.py:232
+#: lib/minios_module_manager/backend.py:254
+#: lib/minios_module_manager/backend.py:257
 msgid "module entry details are invalid"
 msgstr "os detalhes da entrada do módulo são inválidos"
 
-#: lib/minios_module_manager/backend.py:238
+#: lib/minios_module_manager/backend.py:263
 msgid "module entry type is invalid"
 msgstr "o tipo da entrada do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:240
+#: lib/minios_module_manager/backend.py:265
 msgid "module entry size is invalid"
 msgstr "o tamanho da entrada do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:242
+#: lib/minios_module_manager/backend.py:267
 msgid "module entry mode is invalid"
 msgstr "o modo da entrada do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:244
+#: lib/minios_module_manager/backend.py:269
 msgid "module link target is invalid"
 msgstr "o destino do link do módulo é inválido"
 
-#: lib/minios_module_manager/backend.py:278
+#: lib/minios_module_manager/backend.py:303
 msgid "sb could not inspect the module."
 msgstr "sb não conseguiu inspecionar o módulo."
 
-#: lib/minios_module_manager/backend.py:298
+#: lib/minios_module_manager/backend.py:323
 msgid "Could not start sb2dir: {}"
 msgstr "Não foi possível iniciar sb2dir: {}"
 
-#: lib/minios_module_manager/backend.py:300
+#: lib/minios_module_manager/backend.py:325
 msgid "sb2dir could not extract the module."
 msgstr "sb2dir não conseguiu extrair o módulo."
 
-#: lib/minios_module_manager/backend.py:310
-#: lib/minios_module_manager/backend.py:459
-#: lib/minios_module_manager/backend.py:563
-#: lib/minios_module_manager/backend.py:713
-#: lib/minios_module_manager/backend.py:901
+#: lib/minios_module_manager/backend.py:335
+#: lib/minios_module_manager/backend.py:487
+#: lib/minios_module_manager/backend.py:594
+#: lib/minios_module_manager/backend.py:747
+#: lib/minios_module_manager/backend.py:1046
 msgid "pkexec is not available."
 msgstr "pkexec não está disponível."
 
-#: lib/minios_module_manager/backend.py:319
+#: lib/minios_module_manager/backend.py:344
 msgid "Could not start privileged MiniOS Tools: {}"
 msgstr "Não foi possível iniciar MiniOS Tools com privilégios: {}"
 
-#: lib/minios_module_manager/backend.py:321
+#: lib/minios_module_manager/backend.py:346
 msgid "MiniOS Tools operation failed."
 msgstr "Falha na operação do MiniOS Tools."
 
-#: lib/minios_module_manager/backend.py:348
+#: lib/minios_module_manager/backend.py:373
 msgid "unsupported dir2sb result"
 msgstr "resultado do dir2sb não suportado"
 
-#: lib/minios_module_manager/backend.py:354
+#: lib/minios_module_manager/backend.py:379
 msgid "dir2sb output path is invalid"
 msgstr "caminho de saída do dir2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:356
+#: lib/minios_module_manager/backend.py:381
 msgid "dir2sb output size is invalid"
 msgstr "tamanho de saída do dir2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:358
+#: lib/minios_module_manager/backend.py:383
 msgid "dir2sb digest is invalid"
 msgstr "digest do dir2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:360
+#: lib/minios_module_manager/backend.py:385
 msgid "dir2sb compression is invalid"
 msgstr "compressão do dir2sb é inválida"
 
-#: lib/minios_module_manager/backend.py:370
-#: lib/minios_module_manager/backend.py:461
-#: lib/minios_module_manager/backend.py:565
-#: lib/minios_module_manager/backend.py:770
-#: lib/minios_module_manager/backend.py:903
+#: lib/minios_module_manager/backend.py:395
+#: lib/minios_module_manager/backend.py:489
+#: lib/minios_module_manager/backend.py:596
+#: lib/minios_module_manager/backend.py:807
+#: lib/minios_module_manager/backend.py:1048
 msgid "Unsupported compression type."
 msgstr "Tipo de compressão não suportado."
 
-#: lib/minios_module_manager/backend.py:387
+#: lib/minios_module_manager/backend.py:412
 msgid "dir2sb returned invalid JSON."
 msgstr "dir2sb retornou JSON inválido."
 
-#: lib/minios_module_manager/backend.py:392
-msgid "dir2sb returned an unknown phase."
-msgstr "dir2sb retornou uma fase desconhecida."
-
-#: lib/minios_module_manager/backend.py:403
+#: lib/minios_module_manager/backend.py:415
+#: lib/minios_module_manager/backend.py:431
 msgid "dir2sb returned an unsupported record."
 msgstr "dir2sb retornou um registro não suportado."
 
-#: lib/minios_module_manager/backend.py:415
+#: lib/minios_module_manager/backend.py:420
+msgid "dir2sb returned an unknown phase."
+msgstr "dir2sb retornou uma fase desconhecida."
+
+#: lib/minios_module_manager/backend.py:443
 msgid "dir2sb could not create the module."
 msgstr "dir2sb não conseguiu criar o módulo."
 
-#: lib/minios_module_manager/backend.py:417
+#: lib/minios_module_manager/backend.py:445
 msgid "dir2sb completed without a result."
 msgstr "dir2sb foi concluído sem um resultado."
 
-#: lib/minios_module_manager/backend.py:431
+#: lib/minios_module_manager/backend.py:459
 msgid "unsupported apt2sb result"
 msgstr "resultado do apt2sb não suportado"
 
-#: lib/minios_module_manager/backend.py:440
+#: lib/minios_module_manager/backend.py:468
 msgid "apt2sb output path is invalid"
 msgstr "caminho de saída do apt2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:443
+#: lib/minios_module_manager/backend.py:471
 msgid "apt2sb numeric result is invalid"
 msgstr "resultado numérico do apt2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:445
+#: lib/minios_module_manager/backend.py:473
 msgid "apt2sb package result is inconsistent"
 msgstr "resultado do pacote apt2sb está inconsistente"
 
-#: lib/minios_module_manager/backend.py:447
+#: lib/minios_module_manager/backend.py:475
 msgid "apt2sb digest is invalid"
 msgstr "digest do apt2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:449
+#: lib/minios_module_manager/backend.py:477
 msgid "apt2sb compression is invalid"
 msgstr "compressão do apt2sb é inválida"
 
-#: lib/minios_module_manager/backend.py:464
+#: lib/minios_module_manager/backend.py:492
 msgid "Choose at least one package."
 msgstr "Escolha pelo menos um pacote."
 
-#: lib/minios_module_manager/backend.py:466
+#: lib/minios_module_manager/backend.py:494
 msgid "Package input is invalid."
 msgstr "Entrada do pacote é inválida."
 
-#: lib/minios_module_manager/backend.py:489
+#: lib/minios_module_manager/backend.py:517
 msgid "apt2sb returned invalid JSON."
 msgstr "apt2sb retornou um JSON inválido."
 
-#: lib/minios_module_manager/backend.py:494
-msgid "apt2sb returned an unknown phase."
-msgstr "apt2sb retornou uma fase desconhecida."
-
-#: lib/minios_module_manager/backend.py:505
+#: lib/minios_module_manager/backend.py:520
+#: lib/minios_module_manager/backend.py:536
 msgid "apt2sb returned an unsupported record."
 msgstr "apt2sb retornou um registro não suportado."
 
-#: lib/minios_module_manager/backend.py:517
+#: lib/minios_module_manager/backend.py:525
+msgid "apt2sb returned an unknown phase."
+msgstr "apt2sb retornou uma fase desconhecida."
+
+#: lib/minios_module_manager/backend.py:548
 msgid "apt2sb could not create the module."
 msgstr "apt2sb não conseguiu criar o módulo."
 
-#: lib/minios_module_manager/backend.py:519
+#: lib/minios_module_manager/backend.py:550
 msgid "apt2sb completed without a result."
 msgstr "apt2sb foi concluído sem um resultado."
 
-#: lib/minios_module_manager/backend.py:533
+#: lib/minios_module_manager/backend.py:564
 msgid "unsupported script2sb result"
 msgstr "resultado do script2sb não suportado"
 
-#: lib/minios_module_manager/backend.py:542
+#: lib/minios_module_manager/backend.py:573
 msgid "script2sb output path is invalid"
 msgstr "caminho de saída do script2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:545
+#: lib/minios_module_manager/backend.py:576
 msgid "script2sb numeric result is invalid"
 msgstr "resultado numérico do script2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:547
+#: lib/minios_module_manager/backend.py:578
 msgid "script2sb result is inconsistent"
 msgstr "resultado do script2sb está inconsistente"
 
-#: lib/minios_module_manager/backend.py:549
+#: lib/minios_module_manager/backend.py:580
 msgid "script2sb digest is invalid"
 msgstr "digest do script2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:551
+#: lib/minios_module_manager/backend.py:582
 msgid "script2sb compression is invalid"
 msgstr "compressão do script2sb é inválida"
 
-#: lib/minios_module_manager/backend.py:567
+#: lib/minios_module_manager/backend.py:598
 #: lib/minios_module_manager/ui.py:1687
 msgid "Choose an installation script."
 msgstr "Escolha um script de instalação."
 
-#: lib/minios_module_manager/backend.py:587
+#: lib/minios_module_manager/backend.py:618
 msgid "script2sb returned invalid JSON."
 msgstr "script2sb retornou um JSON inválido."
 
-#: lib/minios_module_manager/backend.py:592
-msgid "script2sb returned an unknown phase."
-msgstr "script2sb retornou uma fase desconhecida."
-
-#: lib/minios_module_manager/backend.py:603
+#: lib/minios_module_manager/backend.py:621
+#: lib/minios_module_manager/backend.py:637
 msgid "script2sb returned an unsupported record."
 msgstr "script2sb retornou um registro não suportado."
 
-#: lib/minios_module_manager/backend.py:615
+#: lib/minios_module_manager/backend.py:626
+msgid "script2sb returned an unknown phase."
+msgstr "script2sb retornou uma fase desconhecida."
+
+#: lib/minios_module_manager/backend.py:649
 msgid "script2sb could not create the module."
 msgstr "script2sb não conseguiu criar o módulo."
 
-#: lib/minios_module_manager/backend.py:617
+#: lib/minios_module_manager/backend.py:651
 msgid "script2sb completed without a result."
 msgstr "script2sb foi concluído sem um resultado."
 
-#: lib/minios_module_manager/backend.py:670
+#: lib/minios_module_manager/backend.py:704
 msgid "unsupported chroot2sb prepare result"
 msgstr "resultado de preparação do chroot2sb não suportado"
 
-#: lib/minios_module_manager/backend.py:672
+#: lib/minios_module_manager/backend.py:706
 msgid "chroot2sb session id is invalid"
 msgstr "ID de sessão do chroot2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:674
+#: lib/minios_module_manager/backend.py:708
 msgid "chroot2sb prepare result is inconsistent"
 msgstr "resultado de preparação do chroot2sb está inconsistente"
 
-#: lib/minios_module_manager/backend.py:676
-#: lib/minios_module_manager/backend.py:703
+#: lib/minios_module_manager/backend.py:710
+#: lib/minios_module_manager/backend.py:737
 msgid "chroot2sb seed result is inconsistent"
 msgstr "resultado seed do chroot2sb está inconsistente"
 
-#: lib/minios_module_manager/backend.py:687
+#: lib/minios_module_manager/backend.py:721
 msgid "unsupported chroot2sb finish result"
 msgstr "resultado de finalização do chroot2sb não suportado"
 
-#: lib/minios_module_manager/backend.py:691
+#: lib/minios_module_manager/backend.py:725
 msgid "chroot2sb numeric result is invalid"
 msgstr "resultado numérico do chroot2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:693
+#: lib/minios_module_manager/backend.py:727
 msgid "chroot2sb compressed size is invalid"
 msgstr "tamanho compactado do chroot2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:697
+#: lib/minios_module_manager/backend.py:731
 msgid "chroot2sb output path is invalid"
 msgstr "caminho de saída do chroot2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:699
+#: lib/minios_module_manager/backend.py:733
 msgid "chroot2sb digest is invalid"
 msgstr "digest do chroot2sb é inválido"
 
-#: lib/minios_module_manager/backend.py:701
+#: lib/minios_module_manager/backend.py:735
 msgid "chroot2sb compression result is inconsistent"
 msgstr "resultado de compressão do chroot2sb está inconsistente"
 
-#: lib/minios_module_manager/backend.py:734
-#: lib/minios_module_manager/backend.py:827
+#: lib/minios_module_manager/backend.py:768
+#: lib/minios_module_manager/backend.py:864
 msgid "chroot2sb returned invalid JSON."
 msgstr "chroot2sb retornou um JSON inválido."
 
-#: lib/minios_module_manager/backend.py:739
-msgid "chroot2sb returned an unknown phase."
-msgstr "chroot2sb retornou uma fase desconhecida."
-
-#: lib/minios_module_manager/backend.py:749
+#: lib/minios_module_manager/backend.py:771
+#: lib/minios_module_manager/backend.py:786
 msgid "chroot2sb returned an unsupported record."
 msgstr "chroot2sb retornou um registro não suportado."
 
-#: lib/minios_module_manager/backend.py:758
+#: lib/minios_module_manager/backend.py:776
+msgid "chroot2sb returned an unknown phase."
+msgstr "chroot2sb retornou uma fase desconhecida."
+
+#: lib/minios_module_manager/backend.py:795
 msgid "chroot2sb operation failed."
 msgstr "A operação do chroot2sb falhou."
 
-#: lib/minios_module_manager/backend.py:760
+#: lib/minios_module_manager/backend.py:797
 msgid "chroot2sb completed without a result."
 msgstr "chroot2sb foi concluído sem um resultado."
 
-#: lib/minios_module_manager/backend.py:786
-#: lib/minios_module_manager/backend.py:796
-#: lib/minios_module_manager/backend.py:810
+#: lib/minios_module_manager/backend.py:823
+#: lib/minios_module_manager/backend.py:833
+#: lib/minios_module_manager/backend.py:847
 msgid "Invalid chroot session id."
 msgstr "ID de sessão chroot inválido."
 
-#: lib/minios_module_manager/backend.py:821
+#: lib/minios_module_manager/backend.py:858
 msgid "Could not start chroot2sb: {}"
 msgstr "Não foi possível iniciar o chroot2sb: {}"
 
-#: lib/minios_module_manager/backend.py:823
+#: lib/minios_module_manager/backend.py:860
 msgid "Could not cancel the chroot session."
 msgstr "Não foi possível cancelar a sessão chroot."
 
-#: lib/minios_module_manager/backend.py:835
+#: lib/minios_module_manager/backend.py:872
 msgid "chroot2sb returned an unsupported cancel result."
 msgstr "chroot2sb retornou um resultado de cancelamento não suportado."
 
-#: lib/minios_module_manager/backend.py:877
+#: lib/minios_module_manager/backend.py:914
+#: lib/minios_module_manager/backend.py:916
+#: lib/minios_module_manager/backend.py:930
+#: lib/minios_module_manager/backend.py:932
+#: lib/minios_module_manager/backend.py:935
+#: lib/minios_module_manager/backend.py:941
+#: lib/minios_module_manager/backend.py:958
+#: lib/minios_module_manager/backend.py:968
+#: lib/minios_module_manager/backend.py:982
 msgid "unsupported savechanges result"
 msgstr "resultado savechanges não suportado"
 
-#: lib/minios_module_manager/backend.py:879
+#: lib/minios_module_manager/backend.py:918
+#: lib/minios_module_manager/backend.py:1011
+#: lib/minios_module_manager/backend.py:1019
+#: lib/minios_module_manager/backend.py:1038
 msgid "savechanges output path is inconsistent"
 msgstr "O caminho de saída do savechanges está inconsistente"
 
-#: lib/minios_module_manager/backend.py:883
+#: lib/minios_module_manager/backend.py:922
 msgid "savechanges numeric result is invalid"
 msgstr "O resultado numérico do savechanges é inválido"
 
-#: lib/minios_module_manager/backend.py:885
+#: lib/minios_module_manager/backend.py:924
 msgid "savechanges compressed size is invalid"
 msgstr "O tamanho compactado do savechanges é inválido"
 
-#: lib/minios_module_manager/backend.py:888
+#: lib/minios_module_manager/backend.py:928
 msgid "savechanges digest is invalid"
 msgstr "O hash do savechanges é inválido"
 
-#: lib/minios_module_manager/backend.py:890
+#: lib/minios_module_manager/backend.py:984
 msgid "savechanges compression is invalid"
 msgstr "A compactação do savechanges é inválida"
 
-#: lib/minios_module_manager/backend.py:928
+#: lib/minios_module_manager/backend.py:1074
 msgid "savechanges returned invalid JSON."
 msgstr "savechanges retornou um JSON inválido."
 
-#: lib/minios_module_manager/backend.py:933
-msgid "savechanges returned an unknown phase."
-msgstr "savechanges retornou uma fase desconhecida."
-
-#: lib/minios_module_manager/backend.py:945
+#: lib/minios_module_manager/backend.py:1077
+#: lib/minios_module_manager/backend.py:1080
+#: lib/minios_module_manager/backend.py:1083
+#: lib/minios_module_manager/backend.py:1090
+#: lib/minios_module_manager/backend.py:1103
+#: lib/minios_module_manager/backend.py:1112
+#: lib/minios_module_manager/backend.py:1120
+#: lib/minios_module_manager/backend.py:1122
+#: lib/minios_module_manager/backend.py:1125
 msgid "savechanges returned an unsupported record."
 msgstr "savechanges retornou um registro não suportado."
 
-#: lib/minios_module_manager/backend.py:954
+#: lib/minios_module_manager/backend.py:1096
+msgid "savechanges returned an unknown phase."
+msgstr "savechanges retornou uma fase desconhecida."
+
+#: lib/minios_module_manager/backend.py:1129
 msgid "Could not start savechanges: {}"
 msgstr "Não foi possível iniciar o savechanges: {}"
 
-#: lib/minios_module_manager/backend.py:963
+#: lib/minios_module_manager/backend.py:1138
 msgid "savechanges could not capture current session changes."
 msgstr "savechanges não conseguiu capturar as alterações da sessão atual."
 
-#: lib/minios_module_manager/backend.py:965
+#: lib/minios_module_manager/backend.py:1140
 msgid "savechanges completed without a result."
 msgstr "savechanges foi concluído sem um resultado."
 

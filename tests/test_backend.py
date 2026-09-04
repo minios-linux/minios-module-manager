@@ -1,8 +1,11 @@
 import io
+import hashlib
 import json
 import os
+import stat
 import subprocess
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -305,9 +308,17 @@ class FolderCreationTests(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn('without a result', message)
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_non_object_json_is_rejected(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO('[]\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.shutil, 'which', return_value='/usr/bin/dir2sb'), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.create_module_from_folder(
+                '/source', '/tmp/out.sb')
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
 
 
 class ProtocolDrainTests(unittest.TestCase):
@@ -378,6 +389,20 @@ class PackageCreationTests(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn('inconsistent', message)
 
+    def test_non_object_json_is_rejected(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO('null\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        def which(name):
+            return {'apt2sb': '/usr/bin/apt2sb', 'pkexec': '/usr/bin/pkexec'}.get(name)
+        with mock.patch.object(backend.shutil, 'which', side_effect=which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.create_module_from_packages(
+                ['curl'], [], '/tmp/packages.sb')
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+
 
 class ScriptCreationTests(unittest.TestCase):
     def test_success_uses_pkexec_fixed_argv_and_phases(self):
@@ -428,6 +453,21 @@ class ScriptCreationTests(unittest.TestCase):
         with self.assertRaises(backend.ProtocolError):
             backend._script_result(value, True)
 
+    def test_non_object_json_is_rejected(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO('"record"\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        def which(name):
+            return {'script2sb': '/usr/bin/script2sb',
+                    'pkexec': '/usr/bin/pkexec'}.get(name)
+        with mock.patch.object(backend.shutil, 'which', side_effect=which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.create_module_from_script(
+                '/tmp/install.sh', '/tmp/script.sb')
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+
 
 class ChrootLifecycleTests(unittest.TestCase):
     def _which(self, name):
@@ -471,6 +511,17 @@ class ChrootLifecycleTests(unittest.TestCase):
         self.assertIn('invalid JSON', message)
         self.assertEqual(process.stdout.tell(), len(output))
 
+    def test_non_object_json_is_rejected(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO('1\n')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.prepare_chroot_session(
+                None, '/tmp/out.sb', 'zstd')
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+
     def test_shell_argv_is_fixed_and_opaque(self):
         with mock.patch.object(backend.shutil, 'which', side_effect=self._which):
             success, argv = backend.chroot_shell_argv('session.ABC123')
@@ -513,7 +564,41 @@ class ChrootLifecycleTests(unittest.TestCase):
         self.assertEqual(value['session_id'], 'session.ABC123')
 
 
+class TrustedRootExecutableTests(unittest.TestCase):
+    def test_accepts_only_root_owned_nonwritable_regular_executable(self):
+        valid = mock.Mock(
+            st_mode=stat.S_IFREG | 0o755, st_uid=0)
+        with mock.patch.object(backend.os, 'stat', return_value=valid) as stat_call:
+            self.assertTrue(backend._trusted_root_executable('/usr/bin/tool'))
+        stat_call.assert_called_once_with('/usr/bin/tool', follow_symlinks=False)
+
+        for metadata in (
+                mock.Mock(st_mode=stat.S_IFLNK | 0o777, st_uid=0),
+                mock.Mock(st_mode=stat.S_IFREG | 0o755, st_uid=1000),
+                mock.Mock(st_mode=stat.S_IFREG | 0o775, st_uid=0),
+                mock.Mock(st_mode=stat.S_IFREG | 0o644, st_uid=0)):
+            with mock.patch.object(backend.os, 'stat', return_value=metadata):
+                self.assertFalse(
+                    backend._trusted_root_executable('/usr/bin/tool'))
+
+    def test_missing_executable_is_rejected(self):
+        with mock.patch.object(
+                backend.os, 'stat', side_effect=FileNotFoundError):
+            self.assertFalse(
+                backend._trusted_root_executable('/usr/bin/tool'))
+
+
 class CurrentSessionCaptureTests(unittest.TestCase):
+    def setUp(self):
+        self.trusted_executable = mock.patch.object(
+            backend, '_trusted_root_executable', return_value=True)
+        self.trusted_executable.start()
+        self.addCleanup(self.trusted_executable.stop)
+        self.output_validation = mock.patch.object(
+            backend, '_validate_capture_output', return_value=None)
+        self.output_validation.start()
+        self.addCleanup(self.output_validation.stop)
+
     def _which(self, name):
         return {
             'savechanges': '/usr/bin/savechanges',
@@ -528,13 +613,175 @@ class CurrentSessionCaptureTests(unittest.TestCase):
             'compressed_size': 4096, 'uncompressed_size': 8192,
             'entry_count': 5, 'sha256': 'a' * 64,
             'profile': 'legacy', 'union_backend': 'overlayfs',
+            'output_identity': {'device': 1, 'inode': 2},
+            'extraction_footprint': {
+                'product_kind': 'minios-extraction-footprint',
+                'schema_version': 1,
+                'regular_file_bytes': 8192,
+                'regular_file_inodes': 5,
+                'directory_count': 1,
+                'symlink_count': 0,
+                'symlink_target_bytes': 0,
+                'whiteout_count': 0,
+                'inode_count': 6,
+                'directory_entry_count': 5,
+                'filename_bytes': 20,
+                'hardlink_reference_count': 0,
+                'xattr_count': 0,
+                'xattr_name_bytes': 0,
+                'xattr_value_bytes': 0,
+                'compressor': 'zstd',
+                'block_size': 1024 * 1024,
+            },
         }) + '\n'
+
+    def _result_value(self):
+        return json.loads(self._result_line())
+
+    def test_capture_result_rejects_inconsistent_metadata(self):
+        mutations = (
+            lambda value: value.update(schema_version=True),
+            lambda value: value.update(sha256='g' * 64),
+            lambda value: value.update(profile='exact'),
+            lambda value: value.update(union_backend='unknown'),
+            lambda value: value['output_identity'].update(inode=True),
+            lambda value: value['extraction_footprint'].update(compressor='xz'),
+            lambda value: value['extraction_footprint'].update(schema_version=True),
+        )
+        for mutate in mutations:
+            value = self._result_value()
+            mutate(value)
+            with self.subTest(value=value), self.assertRaises(backend.ProtocolError):
+                backend._session_capture_result(
+                    value, '/tmp/session.sb', 'zstd')
+
+    def test_capture_result_must_match_published_file(self):
+        self.output_validation.stop()
+        payload = b'hsqs' + b'captured module'
+        descriptor, path = tempfile.mkstemp(prefix='module-manager-capture-')
+        try:
+            os.write(descriptor, payload)
+            os.close(descriptor)
+            descriptor = None
+            metadata = os.stat(path)
+            result = self._result_value()
+            result.update({
+                'output': path,
+                'compressed_size': len(payload),
+                'sha256': hashlib.sha256(payload).hexdigest(),
+                'output_identity': {
+                    'device': metadata.st_dev,
+                    'inode': metadata.st_ino,
+                },
+            })
+            backend._validate_capture_output(path, result)
+
+            with open(path, 'r+b') as stream:
+                stream.seek(4)
+                stream.write(b'X')
+            with self.assertRaises(backend.ProtocolError):
+                backend._validate_capture_output(path, result)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+            self.output_validation.start()
+
+    def test_capture_validation_rejects_path_replacement_during_read(self):
+        self.output_validation.stop()
+        payload = b'hsqs' + b'captured module'
+        descriptor, path = tempfile.mkstemp(prefix='module-manager-capture-')
+        replacement = path + '.replacement'
+        try:
+            os.write(descriptor, payload)
+            os.close(descriptor)
+            descriptor = None
+            metadata = os.stat(path)
+            result = self._result_value()
+            result.update({
+                'output': path,
+                'compressed_size': len(payload),
+                'sha256': hashlib.sha256(payload).hexdigest(),
+                'output_identity': {
+                    'device': metadata.st_dev,
+                    'inode': metadata.st_ino,
+                },
+            })
+            real_read = os.read
+            replaced = [False]
+
+            def replace_then_read(fd, size):
+                if not replaced[0]:
+                    replaced[0] = True
+                    os.rename(path, replacement)
+                    with open(path, 'wb') as stream:
+                        stream.write(b'hsqs' + b'X' * (len(payload) - 4))
+                return real_read(fd, size)
+
+            with mock.patch.object(backend.os, 'read', side_effect=replace_then_read), \
+                    self.assertRaises(backend.ProtocolError):
+                backend._validate_capture_output(path, result)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            for candidate in (path, replacement):
+                try:
+                    os.unlink(candidate)
+                except FileNotFoundError:
+                    pass
+            self.output_validation.start()
+
+    def test_capture_validation_rejects_in_place_change_during_read(self):
+        self.output_validation.stop()
+        payload = b'hsqs' + b'A' * (1024 * 1024 + 16)
+        descriptor, path = tempfile.mkstemp(prefix='module-manager-capture-')
+        try:
+            os.write(descriptor, payload)
+            os.close(descriptor)
+            descriptor = None
+            metadata = os.stat(path)
+            result = self._result_value()
+            result.update({
+                'output': path,
+                'compressed_size': len(payload),
+                'sha256': hashlib.sha256(payload).hexdigest(),
+                'output_identity': {
+                    'device': metadata.st_dev,
+                    'inode': metadata.st_ino,
+                },
+            })
+            real_read = os.read
+            reads = [0]
+
+            def mutate_after_first_block(fd, size):
+                reads[0] += 1
+                if reads[0] == 2:
+                    with open(path, 'r+b') as stream:
+                        stream.seek(4)
+                        stream.write(b'X')
+                return real_read(fd, size)
+
+            with mock.patch.object(backend.os, 'read', side_effect=mutate_after_first_block), \
+                    self.assertRaises(backend.ProtocolError):
+                backend._validate_capture_output(path, result)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+            self.output_validation.start()
 
     def test_capture_uses_pkexec_fixed_argv_and_phases(self):
         process = mock.Mock()
-        process.stdout = io.StringIO(
-            '{"event":"phase","phase":"prepare"}\n'
-            '{"event":"phase","phase":"capture"}\n' + self._result_line())
+        process.stdout = io.StringIO(''.join(
+            json.dumps({'type': 'phase', 'phase': phase}) + '\n'
+            for phase in backend.SESSION_CAPTURE_PHASES
+        ) + self._result_line())
         process.stderr = io.StringIO('capture output\n')
         process.wait.return_value = 0
         phases = []
@@ -547,19 +794,47 @@ class CurrentSessionCaptureTests(unittest.TestCase):
                 '/tmp/session.sb', 'zstd', phases.append, context, logs.append)
         self.assertTrue(success)
         self.assertEqual(value['output'], '/tmp/session.sb')
-        self.assertEqual(phases, ['prepare', 'capture'])
+        self.assertEqual(phases, list(backend.SESSION_CAPTURE_PHASES))
         self.assertEqual(logs, ['capture output\n'])
         self.assertFalse(os.path.exists(context[0]))
         self.assertEqual(popen.call_args[0][0], [
             '/usr/bin/pkexec', '/usr/bin/savechanges', '--json',
             '--cancel-file', marker, '--comp', 'zstd', '/tmp/session.sb'])
 
+    def test_out_of_order_phase_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"capture"}\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unknown phase', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_result_without_complete_phase_sequence_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(self._result_line())
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
     def test_cancel_marker_makes_failed_capture_cancelled(self):
         context = backend.new_capture_cancel_marker()
         marker = context[1]
         process = mock.Mock()
         process.stdout = io.StringIO(
-            '{"event":"phase","phase":"prepare"}\n')
+            '{"type":"phase","phase":"prepare"}\n'
+            '{"type":"phase","phase":"cancelled"}\n')
         process.stderr = io.StringIO('')
 
         def wait():
@@ -573,6 +848,148 @@ class CurrentSessionCaptureTests(unittest.TestCase):
                 '/tmp/session.sb', 'zstd', cancel_context=context)
         self.assertFalse(success)
         self.assertIs(message, backend.CAPTURE_CANCELLED)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_cancelled_phase_and_status_work_without_marker(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"cancelled"}\n')
+        process.stderr = io.StringIO('E: capture cancelled\n')
+        process.wait.return_value = 130
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIs(message, backend.CAPTURE_CANCELLED)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_wrapper_signal_status_is_cancelled_without_marker_or_record(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"prepare"}\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 130
+        with mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIs(message, backend.CAPTURE_CANCELLED)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_cancelled_after_complete_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(''.join(
+            json.dumps({'type': 'phase', 'phase': phase}) + '\n'
+            for phase in backend.SESSION_CAPTURE_PHASES
+        ) + '{"type":"phase","phase":"cancelled"}\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 130
+        with mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_signal_status_after_complete_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(''.join(
+            json.dumps({'type': 'phase', 'phase': phase}) + '\n'
+            for phase in backend.SESSION_CAPTURE_PHASES))
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 130
+        with mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_cancelled_phase_with_success_status_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"cancelled"}\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_record_after_cancelled_phase_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"cancelled"}\n' +
+            self._result_line())
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_cancelled_phase_after_result_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            self._result_line() +
+            '{"type":"phase","phase":"cancelled"}\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 130
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_cancel_marker_does_not_mask_backend_failure(self):
+        context = backend.new_capture_cancel_marker()
+        marker = context[1]
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"type":"phase","phase":"prepare"}\n')
+        process.stderr = io.StringIO('capture failed\n')
+
+        def wait():
+            backend.request_capture_cancel(marker)
+            return 1
+
+        process.wait.side_effect = wait
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('capture failed', message)
+        self.assertFalse(os.path.exists(context[0]))
+
+    def test_non_object_json_is_rejected(self):
+        context = backend.new_capture_cancel_marker()
+        process = mock.Mock()
+        process.stdout = io.StringIO('[]\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process):
+            success, message = backend.capture_current_session(
+                '/tmp/session.sb', 'zstd', cancel_context=context)
+        self.assertFalse(success)
+        self.assertIn('unsupported record', message)
         self.assertFalse(os.path.exists(context[0]))
 
     def test_cancel_marker_is_exclusive(self):
@@ -603,3 +1020,7 @@ class PackageNameCompletionTests(unittest.TestCase):
         with mock.patch.object(backend.subprocess, 'run') as run:
             self.assertEqual(backend.query_package_names('p'), ())
         run.assert_not_called()
+
+
+if __name__ == '__main__':
+    unittest.main()

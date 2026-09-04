@@ -1,3 +1,14 @@
+minios-module-manager (1.0.7) unstable; urgency=medium
+
+  * Accept the phase record schema emitted by savechanges
+  * Classify savechanges cancellation from its phase and exit status, rejecting
+    contradictory terminal records
+  * Reject non-object JSON records from all streaming backends
+  * Use fixed trusted capture executables and validate the published module,
+    result schema, phase sequence, identity, and digest before reporting success
+
+ -- crims0n <crims0n@minios.dev>  Fri, 04 Sep 2026 14:45:11 +0300
+
 minios-module-manager (1.0.6) unstable; urgency=medium
 
   * Refresh translations

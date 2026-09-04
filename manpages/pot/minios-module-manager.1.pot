@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE
 # Copyright (C) YEAR Free Software Foundation, Inc.
-# This file is distributed under the same license as the PACKAGE package.
+# This file is distributed under the same license as the minios-module-manager package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2026-09-01 13:44+0300\n"
+"Project-Id-Version: minios-module-manager 1.0.7\n"
+"POT-Creation-Date: 2026-09-02 23:27+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,13 +25,13 @@ msgstr ""
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "August 2026"
+msgid "September 2026"
 msgstr ""
 
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS"
+msgid "MiniOS Module Manager 1.0.7"
 msgstr ""
 
 #. type: TH

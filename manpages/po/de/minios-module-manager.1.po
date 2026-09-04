@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: minios-module-manager 1.0.0\n"
-"POT-Creation-Date: 2026-09-01 13:44+0300\n"
-"PO-Revision-Date: 2026-09-01 10:44+0000\n"
+"Project-Id-Version: minios-module-manager 1.0.7\n"
+"POT-Creation-Date: 2026-09-02 23:01+0300\n"
+"PO-Revision-Date: 2026-09-02 19:36+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: de\n"
@@ -25,14 +25,14 @@ msgstr "MINIOS-MODULE-MANAGER"
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "August 2026"
-msgstr "August 2026"
+msgid "September 2026"
+msgstr "September 2026"
 
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS"
-msgstr "MiniOS"
+msgid "MiniOS Module Manager 1.0.7"
+msgstr "MiniOS-Modulmanager 1.0.7"
 
 #. type: TH
 #: en/minios-module-manager.1:1

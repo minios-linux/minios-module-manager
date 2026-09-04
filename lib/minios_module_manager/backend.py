@@ -1,8 +1,10 @@
 """Fixed-argv adapters for MiniOS command-line backends."""
 
+import hashlib
 import json
 import os
 import shutil
+import stat
 import subprocess
 import tempfile
 import threading
@@ -12,10 +14,29 @@ from .model import Inspection, InspectionEntry, LoadState, ModuleRecord, Snapsho
 
 
 CAPTURE_CANCELLED = object()
+PKEXEC_PATH = '/usr/bin/pkexec'
+SAVECHANGES_PATH = '/usr/bin/savechanges'
 
 
 class ProtocolError(Exception):
     pass
+
+
+def _schema_version_is_one(value):
+    return type(value.get('schema_version')) is int and value['schema_version'] == 1
+
+
+def _trusted_root_executable(path):
+    try:
+        metadata = os.stat(path, follow_symlinks=False)
+    except OSError:
+        return False
+    return (
+        stat.S_ISREG(metadata.st_mode) and
+        metadata.st_uid == 0 and
+        not metadata.st_mode & 0o022 and
+        bool(metadata.st_mode & 0o111)
+    )
 
 
 def _start_stderr_reader(process, callback=None):
@@ -76,6 +97,8 @@ def parse_running_result(text):
 
     if not isinstance(value, dict):
         raise ProtocolError(_('sb result is not an object'))
+    if not _schema_version_is_one(value):
+        raise ProtocolError(_('unsupported sb result'))
     expected = {
         'type': 'result',
         'product_kind': 'minios-tool-result',
@@ -106,6 +129,8 @@ def parse_next_boot_result(text):
 
     if not isinstance(value, dict):
         raise ProtocolError(_('sb result is not an object'))
+    if not _schema_version_is_one(value):
+        raise ProtocolError(_('unsupported sb result'))
     expected = {
         'type': 'result',
         'product_kind': 'minios-tool-result',
@@ -204,8 +229,8 @@ def parse_inspection_result(text):
         'type': 'result', 'product_kind': 'minios-tool-result',
         'schema_version': 1, 'tool': 'sb', 'operation': 'inspect',
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         raise ProtocolError(_('unsupported sb inspection result'))
 
     path = value.get('path')
@@ -386,6 +411,9 @@ def create_module_from_folder(source, target, compression='zstd', phase_callback
             except ValueError:
                 protocol_error = _('dir2sb returned invalid JSON.')
                 break
+            if not isinstance(value, dict):
+                protocol_error = _('dir2sb returned an unsupported record.')
+                break
             if value.get('event') == 'phase':
                 phase = value.get('phase')
                 if phase not in FOLDER_PHASES:
@@ -426,8 +454,8 @@ def _package_result(value, expected_count):
         'type': 'result', 'product_kind': 'minios-tool-result',
         'schema_version': 1, 'tool': 'apt2sb', 'operation': 'install',
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         raise ProtocolError(_('unsupported apt2sb result'))
     output = value.get('output')
     compressed = value.get('compressed_size')
@@ -488,6 +516,9 @@ def create_module_from_packages(package_names, local_packages, target,
             except ValueError:
                 protocol_error = _('apt2sb returned invalid JSON.')
                 break
+            if not isinstance(value, dict):
+                protocol_error = _('apt2sb returned an unsupported record.')
+                break
             if value.get('event') == 'phase':
                 phase = value.get('phase')
                 if phase not in PACKAGE_PHASES:
@@ -528,8 +559,8 @@ def _script_result(value, expected_seed):
         'type': 'result', 'product_kind': 'minios-tool-result',
         'schema_version': 1, 'tool': 'script2sb', 'operation': 'create',
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         raise ProtocolError(_('unsupported script2sb result'))
     output = value.get('output')
     compressed = value.get('compressed_size')
@@ -585,6 +616,9 @@ def create_module_from_script(script, target, compression='zstd',
                 value = json.loads(line)
             except ValueError:
                 protocol_error = _('script2sb returned invalid JSON.')
+                break
+            if not isinstance(value, dict):
+                protocol_error = _('script2sb returned an unsupported record.')
                 break
             if value.get('event') == 'phase':
                 phase = value.get('phase')
@@ -665,8 +699,8 @@ def _chroot_prepare_result(value, target, compression, seed_directory):
         'type': 'result', 'product_kind': 'minios-tool-result',
         'schema_version': 1, 'tool': 'chroot2sb', 'operation': 'prepare',
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         raise ProtocolError(_('unsupported chroot2sb prepare result'))
     if not _valid_chroot_session_id(value.get('session_id')):
         raise ProtocolError(_('chroot2sb session id is invalid'))
@@ -682,8 +716,8 @@ def _chroot_finish_result(value, compression, seed_directory):
         'type': 'result', 'product_kind': 'minios-tool-result',
         'schema_version': 1, 'tool': 'chroot2sb', 'operation': 'finish',
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         raise ProtocolError(_('unsupported chroot2sb finish result'))
     for key in ('compressed_size', 'uncompressed_size', 'entry_count'):
         number = value.get(key)
@@ -732,6 +766,9 @@ def _run_chroot_ndjson(argv, phases, result_parser, phase_callback):
                     value = json.loads(line)
                 except ValueError:
                     protocol_error = _('chroot2sb returned invalid JSON.')
+                    continue
+                if not isinstance(value, dict):
+                    protocol_error = _('chroot2sb returned an unsupported record.')
                     continue
                 if value.get('event') == 'phase':
                     phase = value.get('phase')
@@ -830,8 +867,8 @@ def cancel_chroot_session(session_id):
         'schema_version': 1, 'tool': 'chroot2sb', 'operation': 'cancel',
         'session_id': session_id,
     }
-    if not isinstance(value, dict) or any(
-            value.get(key) != item for key, item in expected.items()):
+    if (not isinstance(value, dict) or not _schema_version_is_one(value) or any(
+            value.get(key) != item for key, item in expected.items())):
         return False, _('chroot2sb returned an unsupported cancel result.')
     return True, value
 
@@ -869,11 +906,13 @@ def cleanup_capture_cancel_marker(context):
 def _session_capture_result(value, target, compression):
     expected = {
         'type': 'result', 'product_kind': 'minios-tool-result',
-        'schema_version': 1, 'tool': 'savechanges',
+        'tool': 'savechanges',
         'operation': 'capture-module',
     }
     if not isinstance(value, dict) or any(
             value.get(key) != item for key, item in expected.items()):
+        raise ProtocolError(_('unsupported savechanges result'))
+    if type(value.get('schema_version')) is not int or value['schema_version'] != 1:
         raise ProtocolError(_('unsupported savechanges result'))
     if value.get('output') != target:
         raise ProtocolError(_('savechanges output path is inconsistent'))
@@ -884,20 +923,126 @@ def _session_capture_result(value, target, compression):
     if value.get('compressed_size', 0) <= 0:
         raise ProtocolError(_('savechanges compressed size is invalid'))
     digest = value.get('sha256')
-    if not isinstance(digest, str) or len(digest) != 64:
+    if (not isinstance(digest, str) or len(digest) != 64 or
+            any(character not in '0123456789abcdef' for character in digest)):
         raise ProtocolError(_('savechanges digest is invalid'))
+    if value.get('profile') != 'legacy':
+        raise ProtocolError(_('unsupported savechanges result'))
+    if value.get('union_backend') not in ('aufs', 'overlayfs'):
+        raise ProtocolError(_('unsupported savechanges result'))
+    identity = value.get('output_identity')
+    if not isinstance(identity, dict):
+        raise ProtocolError(_('unsupported savechanges result'))
+    for key in ('device', 'inode'):
+        number = identity.get(key)
+        minimum = 1 if key == 'inode' else 0
+        if (not isinstance(number, int) or isinstance(number, bool) or
+                number < minimum):
+            raise ProtocolError(_('unsupported savechanges result'))
+    footprint = value.get('extraction_footprint')
+    footprint_fields = {
+        'product_kind', 'schema_version', 'regular_file_bytes',
+        'regular_file_inodes', 'directory_count', 'symlink_count',
+        'symlink_target_bytes', 'whiteout_count', 'inode_count',
+        'directory_entry_count', 'filename_bytes',
+        'hardlink_reference_count', 'xattr_count', 'xattr_name_bytes',
+        'xattr_value_bytes', 'compressor', 'block_size',
+    }
+    if (not isinstance(footprint, dict) or set(footprint) != footprint_fields or
+            footprint.get('product_kind') != 'minios-extraction-footprint' or
+            type(footprint.get('schema_version')) is not int or
+            footprint['schema_version'] != 1 or
+            footprint.get('compressor') != compression or
+            footprint.get('regular_file_bytes') != value.get('uncompressed_size') or
+            footprint.get('directory_entry_count') != value.get('entry_count')):
+        raise ProtocolError(_('unsupported savechanges result'))
+    count_fields = footprint_fields - {
+        'product_kind', 'schema_version', 'compressor', 'block_size',
+    }
+    block_size = footprint['block_size']
+    if (any(type(footprint[key]) is not int or footprint[key] < 0
+            for key in count_fields) or
+            type(block_size) is not int or block_size < 4096 or
+            block_size > 1024 * 1024 or block_size & (block_size - 1) or
+            footprint['directory_count'] < 1 or footprint['inode_count'] < 1):
+        raise ProtocolError(_('unsupported savechanges result'))
+    regular_inodes = footprint['regular_file_inodes']
+    directories = footprint['directory_count']
+    symlinks = footprint['symlink_count']
+    whiteouts = footprint['whiteout_count']
+    hardlinks = footprint['hardlink_reference_count']
+    if ((hardlinks and not regular_inodes) or
+            footprint['directory_entry_count'] != (
+                directories - 1 + regular_inodes + hardlinks + symlinks + whiteouts) or
+            footprint['inode_count'] != (
+                directories + regular_inodes + symlinks + whiteouts) or
+            footprint['filename_bytes'] < footprint['directory_entry_count'] or
+            footprint['symlink_target_bytes'] < symlinks or
+            footprint['xattr_name_bytes'] < footprint['xattr_count']):
+        raise ProtocolError(_('unsupported savechanges result'))
     if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
         raise ProtocolError(_('savechanges compression is invalid'))
     return value
 
 
+def _validate_capture_output(target, result):
+    identity = result['output_identity']
+    descriptor = None
+    parent_descriptor = None
+    try:
+        absolute_target = os.path.abspath(target)
+        parent, name = os.path.split(absolute_target)
+        parent_descriptor = os.open(
+            parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptor = os.open(
+            name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_descriptor)
+        metadata = os.fstat(descriptor)
+        digests = []
+        for _pass in range(2):
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            digest = hashlib.sha256()
+            first_block = True
+            while True:
+                block = os.read(descriptor, 1024 * 1024)
+                if not block:
+                    break
+                if first_block and not block.startswith(b'hsqs'):
+                    raise ProtocolError(
+                        _('savechanges output path is inconsistent'))
+                first_block = False
+                digest.update(block)
+            digests.append(digest.hexdigest())
+        final_metadata = os.fstat(descriptor)
+        published_metadata = os.stat(
+            name, dir_fd=parent_descriptor, follow_symlinks=False)
+    except OSError:
+        raise ProtocolError(_('savechanges output path is inconsistent'))
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if parent_descriptor is not None:
+            os.close(parent_descriptor)
+    stable_fields = ('st_mode', 'st_size', 'st_nlink', 'st_dev', 'st_ino',
+                     'st_mtime_ns', 'st_ctime_ns')
+    if (any(getattr(metadata, field) != getattr(final_metadata, field)
+            for field in stable_fields) or
+            any(getattr(metadata, field) != getattr(published_metadata, field)
+                for field in stable_fields) or
+            not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1 or
+            metadata.st_size != result['compressed_size'] or
+            metadata.st_dev != identity['device'] or
+            metadata.st_ino != identity['inode'] or
+            published_metadata.st_dev != metadata.st_dev or
+            published_metadata.st_ino != metadata.st_ino or
+            digests[0] != result['sha256'] or digests[1] != result['sha256']):
+        raise ProtocolError(_('savechanges output path is inconsistent'))
+
+
 def capture_current_session(target, compression='zstd', phase_callback=None,
                             cancel_context=None, log_callback=None):
-    savechanges = shutil.which('savechanges')
-    pkexec = shutil.which('pkexec')
-    if not savechanges:
+    if not _trusted_root_executable(SAVECHANGES_PATH):
         return False, _('MiniOS Tools is not installed.')
-    if not pkexec:
+    if not _trusted_root_executable(PKEXEC_PATH):
         return False, _('pkexec is not available.')
     if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
         return False, _('Unsupported compression type.')
@@ -905,14 +1050,15 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
         cancel_context = new_capture_cancel_marker()
     _parent, marker = cancel_context
     argv = [
-        pkexec, savechanges, '--json', '--cancel-file', marker,
+        PKEXEC_PATH, SAVECHANGES_PATH, '--json', '--cancel-file', marker,
         '--comp', compression, target,
     ]
     final_result = None
     stderr = ''
     returncode = 1
     protocol_error = None
-    cancelled = False
+    cancelled_phase = False
+    phase_index = 0
     try:
         process = subprocess.Popen(
             argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -927,14 +1073,35 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
             except ValueError:
                 protocol_error = _('savechanges returned invalid JSON.')
                 break
-            if value.get('event') == 'phase':
+            if not isinstance(value, dict):
+                protocol_error = _('savechanges returned an unsupported record.')
+                break
+            if cancelled_phase:
+                protocol_error = _('savechanges returned an unsupported record.')
+                break
+            if final_result is not None:
+                protocol_error = _('savechanges returned an unsupported record.')
+                break
+            if value.get('type') == 'phase':
                 phase = value.get('phase')
-                if phase not in SESSION_CAPTURE_PHASES:
+                if phase == 'cancelled':
+                    if (final_result is not None or
+                            phase_index == len(SESSION_CAPTURE_PHASES)):
+                        protocol_error = _('savechanges returned an unsupported record.')
+                        break
+                    cancelled_phase = True
+                    continue
+                if (phase_index >= len(SESSION_CAPTURE_PHASES) or
+                        phase != SESSION_CAPTURE_PHASES[phase_index]):
                     protocol_error = _('savechanges returned an unknown phase.')
                     break
+                phase_index += 1
                 if phase_callback is not None:
                     phase_callback(phase)
             elif value.get('tool') == 'savechanges':
+                if phase_index != len(SESSION_CAPTURE_PHASES):
+                    protocol_error = _('savechanges returned an unsupported record.')
+                    break
                 try:
                     final_result = _session_capture_result(
                         value, target, compression)
@@ -949,7 +1116,15 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
                 pass
         returncode = process.wait()
         stderr = _finish_stderr_reader(stderr_chunks, stderr_thread)
-        cancelled = os.path.exists(marker)
+        if protocol_error is None and cancelled_phase and returncode != 130:
+            protocol_error = _('savechanges returned an unsupported record.')
+        if protocol_error is None and final_result is not None and returncode == 130:
+            protocol_error = _('savechanges returned an unsupported record.')
+        if (protocol_error is None and final_result is None and
+                phase_index == len(SESSION_CAPTURE_PHASES)):
+            protocol_error = _('savechanges returned an unsupported record.')
+        cancelled = (returncode == 130 and final_result is None and
+                     phase_index < len(SESSION_CAPTURE_PHASES))
     except OSError as error:
         return False, _('Could not start savechanges: {}').format(error)
     finally:
@@ -963,4 +1138,8 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
         return False, stderr or _('savechanges could not capture current session changes.')
     if final_result is None:
         return False, _('savechanges completed without a result.')
+    try:
+        _validate_capture_output(target, final_result)
+    except ProtocolError as error:
+        return False, str(error)
     return True, final_result
