@@ -3,7 +3,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MINIOS\-MODULE\-MANAGER 1 "Settembre 2026" "Gestore moduli MiniOS 1.0.7" "Comandi utente"
+.TH MINIOS\-MODULE\-MANAGER 1 "Settembre 2026" "Gestore moduli MiniOS 1.1.0" "Comandi utente"
 .SH NOME
 minios\-module\-manager \- ispeziona, crea e gestisce i moduli MiniOS
 .SH SINTASSI
@@ -25,15 +25,23 @@ dagli strumenti MiniOS. L'attivazione e la disattivazione a runtime sono
 disponibili solo quando la root union montata è AUFS.
 .TP  4
 \fBProssimo avvio\fP
-Mostra la composizione dei moduli, autorevole e ordinata, selezionata dalle
+Mostra la composizione autorevole e ordinata dei moduli selezionata dalle
 regole di avvio correnti di MiniOS. I moduli utente possono essere aggiunti
-o rimossi dallo storage dei moduli persistente quando gli strumenti MiniOS
-segnalano che tale storage è disponibile.
+all'archiviazione durevole dei moduli quando gli strumenti MiniOS segnalano
+che tale archiviazione è disponibile. Escludere un modulo utente lo sposta
+nell'archiviazione disabilitata, dalla quale può essere incluso
+nuovamente. L'eliminazione permanente è disponibile solo per un modulo
+rimovibile già escluso e richiede una conferma separata. Queste azioni non
+modificano lo stato Attualmente in esecuzione.
 .PP
-La selezione di un modulo apre i dettagli in sola lettura. Quando il file
+Selezionando un modulo si aprono i dettagli in sola lettura. Quando il file
 sorgente di supporto è disponibile, i dettagli mostrano anche il contenuto
 SquashFS e consentono l'estrazione in una nuova directory. L'estrazione è
-un'operazione esplicita e non sovrascrive mai una destinazione esistente.
+un'operazione esplicita e non sovrascrive mai una destinazione esistente. I
+file di supporto dei moduli attivi protetti possono essere ispezionati dopo
+l'autenticazione dell'amministratore. Durante l'estrazione vengono mostrati
+l'avanzamento della fase annullabile e le diagnostiche del backend in
+streaming.
 .SH CREA
 L'area di lavoro Crea offre flussi di lavoro revisionati per pacchetti
 Debian da repository o locali, script di installazione, un chroot
@@ -42,6 +50,16 @@ interattivo, cartelle esistenti e le modifiche della sessione corrente.
 Ogni flusso di lavoro separa configurazione, revisione, esecuzione e
 risultato. La creazione di un modulo non lo attiva né lo aggiunge
 automaticamente al prossimo avvio.
+.PP
+I flussi di lavoro di pacchetti, script di installazione e chroot
+interattivo selezionano una base di compilazione dallo stack attivo. Una
+selezione numerata include ogni modulo numerato attivo fino a quel livello e
+ogni modulo non numerato attivo. La creazione del pacchetto non installa
+Recommends o Suggests a meno che ciascuna opzione non sia abilitata
+esplicitamente; gli indici APT locali mancanti possono essere aggiornati
+prima di utilizzare il completamento del nome del pacchetto. La creazione
+supporta zstd, LZ4, XZ, LZO e gzip dove gli strumenti MiniOS supportano il
+metodo selezionato.
 .PP
 Il chroot interattivo utilizza un terminale VTE integrato e il ciclo di vita
 protetto \fBchroot2sb\fP(1) prepara/shell/fine/annulla. L'acquisizione della
@@ -56,10 +74,19 @@ file di pacchetti Debian popolano Pacchetti, una directory popola Cartella e
 un altro file regolare popola Script di installazione. Il trascinamento di
 un elemento non esegue mai codice né modifica la composizione dei moduli da
 solo.
+.SH "TIPO MIME"
+L'applicazione dichiara il supporto per \fBapplication/x\-sb\fP.  Il tipo MIME e
+la sua associazione di nome file *.sb sono definiti e installati dagli
+strumenti MiniOS; Gestore moduli non installa una voce concorrente nel
+database MIME.
 .SH PRIVILEGI
 L'applicazione grafica non viene mai eseguita come root. Le operazioni che
 richiedono privilegi vengono avviate tramite pkexec e il backend MiniOS
 Tools appropriato.
+.SH REQUISITI
+L'interfaccia condivisa richiede python3\-minios\-gui 1.4.0 o superiore. La
+gestione e la creazione dei moduli backend richiedono minios\-tools 1.7.0 o
+superiore.
 .SH "VEDERE ANCHE"
 \fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
 \fBchroot2sb\fP(1), \fBsavechanges\fP(1)

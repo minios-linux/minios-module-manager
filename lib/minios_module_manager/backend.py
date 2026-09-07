@@ -15,6 +15,8 @@ from .model import Inspection, InspectionEntry, LoadState, ModuleRecord, Snapsho
 
 CAPTURE_CANCELLED = object()
 PKEXEC_PATH = '/usr/bin/pkexec'
+APT_GET_PATH = '/usr/bin/apt-get'
+APT_LISTS_DIR = '/var/lib/apt/lists'
 SAVECHANGES_PATH = '/usr/bin/savechanges'
 
 
@@ -81,7 +83,9 @@ def _module_record(value, require_mount=True):
         raise ProtocolError(_('module mountpoint is invalid'))
     if source is not None and not isinstance(source, str):
         raise ProtocolError(_('module source is invalid'))
-    if origin is not None and origin not in ('base', 'modules', 'persistence'):
+    if origin is not None and origin not in (
+            'base', 'modules', 'persistence',
+            'disabled-modules', 'disabled-persistence'):
         raise ProtocolError(_('module origin is invalid'))
     if not isinstance(removable, bool):
         raise ProtocolError(_('module removability is invalid'))
@@ -155,12 +159,21 @@ def parse_next_boot_result(text):
     if not isinstance(modules_value, list):
         raise ProtocolError(_('module list is invalid'))
     modules = [_module_record(item, require_mount=False) for item in modules_value]
+    disabled_value = value.get('disabled_modules', [])
+    if not isinstance(disabled_value, list):
+        raise ProtocolError(_('disabled module list is invalid'))
+    disabled_modules = [
+        _module_record(item, require_mount=False) for item in disabled_value]
     if any(item.origin is None or item.source is None for item in modules):
         raise ProtocolError(_('next-boot module source is incomplete'))
-    state = LoadState.READY if modules else LoadState.EMPTY
+    if any(item.origin is None or item.source is None
+           for item in disabled_modules):
+        raise ProtocolError(_('disabled module source is incomplete'))
+    state = LoadState.READY if modules or disabled_modules else LoadState.EMPTY
     return Snapshot(
         state=state, modules=modules, data_root=data_root,
-        bundle_extension=extension, add_available=add_available)
+        bundle_extension=extension, add_available=add_available,
+        disabled_modules=disabled_modules)
 
 
 def load_running_snapshot():
@@ -281,18 +294,25 @@ def parse_inspection_result(text):
     return Inspection(
         state=LoadState.READY, path=path, size=size, entries=parsed_entries)
 
-def load_module_inspection(path):
+def load_module_inspection(path, allow_privileged=False):
     executable = shutil.which('sb')
     if not executable:
         return Inspection(
             state=LoadState.UNAVAILABLE,
             path=path,
             message=_('MiniOS Tools is not installed.'))
+
+    argv = [executable, 'inspect', path, '--json']
+    if allow_privileged and not os.access(path, os.R_OK):
+        pkexec = shutil.which('pkexec')
+        if not pkexec:
+            return Inspection(
+                state=LoadState.ERROR, path=path,
+                message=_('Administrator authentication is required to inspect this mounted module, but pkexec is not available.'))
+        argv = [pkexec] + argv
     try:
         process = subprocess.Popen(
-            [executable, 'inspect', path, '--json'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True)
         stdout, stderr = process.communicate()
     except OSError as error:
@@ -309,12 +329,12 @@ def load_module_inspection(path):
 
 
 def extract_module(source, target):
-    executable = shutil.which('sb2dir')
-    if not executable:
+    argv = module_extraction_argv(source, target)
+    if argv is None:
         return False, _('MiniOS Tools is not installed.')
     try:
         process = subprocess.Popen(
-            [executable, '--json', source, target],
+            argv,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True)
@@ -324,6 +344,13 @@ def extract_module(source, target):
     if process.returncode != 0:
         return False, stderr.strip() or _('sb2dir could not extract the module.')
     return True, target
+
+
+def module_extraction_argv(source, target):
+    executable = shutil.which('sb2dir')
+    if not executable:
+        return None
+    return [executable, '--json', '--', source, target]
 
 
 def _run_privileged_sb(arguments):
@@ -362,7 +389,17 @@ def add_to_next_boot(source):
 
 def remove_from_next_boot(name):
     return _run_privileged_sb([
-        'next-boot', 'remove', name, '--json'])
+        'next-boot', 'disable', name, '--json'])
+
+
+def enable_for_next_boot(name):
+    return _run_privileged_sb([
+        'next-boot', 'enable', name, '--json'])
+
+
+def delete_disabled_module(name):
+    return _run_privileged_sb([
+        'next-boot', 'delete', name, '--json'])
 
 
 FOLDER_PHASES = ('prepare', 'compress', 'verify', 'publish', 'complete')
@@ -473,20 +510,23 @@ def _package_result(value, expected_count):
         raise ProtocolError(_('apt2sb package result is inconsistent'))
     if not isinstance(digest, str) or len(digest) != 64:
         raise ProtocolError(_('apt2sb digest is invalid'))
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         raise ProtocolError(_('apt2sb compression is invalid'))
     return value
 def create_module_from_packages(package_names, local_packages, target,
-                                compression='zstd', install_recommends=True,
-                                phase_callback=None, log_callback=None):
+                                compression='zstd', install_recommends=False,
+                                phase_callback=None, log_callback=None, level=None,
+                                install_suggests=False):
     apt2sb = shutil.which('apt2sb')
     pkexec = shutil.which('pkexec')
     if not apt2sb:
         return False, _('MiniOS Tools is not installed.')
     if not pkexec:
         return False, _('pkexec is not available.')
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
+    if level is not None and (type(level) is not int or level < 0):
+        return False, _('Build level must be a non-negative integer.')
     requested = list(package_names) + list(local_packages)
     if not requested:
         return False, _('Choose at least one package.')
@@ -497,8 +537,12 @@ def create_module_from_packages(package_names, local_packages, target,
         pkexec, apt2sb, 'install', '--json', '-y',
         '--name', target, '--comp', compression,
     ]
-    if not install_recommends:
-        argv.append('--no-install-recommends')
+    if level is not None:
+        argv.extend(['--level', str(level)])
+    if install_recommends:
+        argv.append('--install-recommends')
+    if install_suggests:
+        argv.append('--install-suggests')
     argv.extend(requested)
     final_result = None
     protocol_error = None
@@ -578,27 +622,31 @@ def _script_result(value, expected_seed):
         raise ProtocolError(_('script2sb result is inconsistent'))
     if not isinstance(digest, str) or len(digest) != 64:
         raise ProtocolError(_('script2sb digest is invalid'))
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         raise ProtocolError(_('script2sb compression is invalid'))
     return value
 
 
 def create_module_from_script(script, target, compression='zstd',
                               seed_directory=None, phase_callback=None,
-                              log_callback=None):
+                              log_callback=None, level=None):
     script2sb = shutil.which('script2sb')
     pkexec = shutil.which('pkexec')
     if not script2sb:
         return False, _('MiniOS Tools is not installed.')
     if not pkexec:
         return False, _('pkexec is not available.')
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
+    if level is not None and (type(level) is not int or level < 0):
+        return False, _('Build level must be a non-negative integer.')
     if not isinstance(script, str) or not script:
         return False, _('Choose an installation script.')
 
     argv = [pkexec, script2sb, '--json', '--script', script,
             '--name', target, '--comp', compression]
+    if level is not None:
+        argv.extend(['--level', str(level)])
     if seed_directory:
         argv.extend(['--directory', seed_directory])
     final_result = None
@@ -650,6 +698,44 @@ def create_module_from_script(script, target, compression='zstd',
     if final_result is None:
         return False, _('script2sb completed without a result.')
     return True, final_result
+
+
+def package_indexes_available(directory=APT_LISTS_DIR):
+    """Return whether local binary APT package indexes are available."""
+    try:
+        names = os.listdir(directory)
+    except OSError:
+        return False
+    for name in names:
+        if '_Packages' not in name:
+            continue
+        path = os.path.join(directory, name)
+        try:
+            metadata = os.stat(path, follow_symlinks=False)
+        except OSError:
+            continue
+        if stat.S_ISREG(metadata.st_mode) and metadata.st_size > 0:
+            return True
+    return False
+
+
+def update_package_indexes():
+    """Refresh APT package lists with administrator privileges."""
+    if not _trusted_root_executable(PKEXEC_PATH):
+        return False, _('pkexec is not available or is not trusted.')
+    if not _trusted_root_executable(APT_GET_PATH):
+        return False, _('apt-get is not available or is not trusted.')
+    try:
+        result = subprocess.run(
+            [PKEXEC_PATH, APT_GET_PATH, 'update'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            universal_newlines=True, check=False)
+    except OSError as error:
+        return False, _('Could not start apt-get: {}').format(error)
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip()
+        return False, detail or _('apt-get could not update package lists.')
+    return True, ''
 
 
 def query_package_names(prefix, limit=200):
@@ -799,16 +885,20 @@ def _run_chroot_ndjson(argv, phases, result_parser, phase_callback):
 
 
 def prepare_chroot_session(seed_directory, target, compression='zstd',
-                           phase_callback=None):
+                           phase_callback=None, level=None):
     chroot2sb, pkexec, error = _chroot_tools()
     if error:
         return False, error
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
+    if level is not None and (type(level) is not int or level < 0):
+        return False, _('Build level must be a non-negative integer.')
     argv = [
         pkexec, chroot2sb, 'prepare', '--json',
         '--name', target, '--comp', compression,
     ]
+    if level is not None:
+        argv.extend(['--level', str(level)])
     if seed_directory:
         argv.extend(['--directory', seed_directory])
     return _run_chroot_ndjson(
@@ -980,7 +1070,7 @@ def _session_capture_result(value, target, compression):
             footprint['symlink_target_bytes'] < symlinks or
             footprint['xattr_name_bytes'] < footprint['xattr_count']):
         raise ProtocolError(_('unsupported savechanges result'))
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         raise ProtocolError(_('savechanges compression is invalid'))
     return value
 
@@ -1044,7 +1134,7 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
         return False, _('MiniOS Tools is not installed.')
     if not _trusted_root_executable(PKEXEC_PATH):
         return False, _('pkexec is not available.')
-    if compression not in ('zstd', 'gzip', 'lzo', 'xz'):
+    if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
     if cancel_context is None:
         cancel_context = new_capture_cancel_marker()

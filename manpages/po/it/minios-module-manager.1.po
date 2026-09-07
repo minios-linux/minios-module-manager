@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: minios-module-manager 1.0.7\n"
-"POT-Creation-Date: 2026-09-02 23:01+0300\n"
-"PO-Revision-Date: 2026-09-02 19:36+0000\n"
+"POT-Creation-Date: 2026-09-07 02:27+0300\n"
+"PO-Revision-Date: 2026-09-06 23:27+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: it\n"
@@ -31,8 +31,8 @@ msgstr "Settembre 2026"
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS Module Manager 1.0.7"
-msgstr "Gestore moduli MiniOS 1.0.7"
+msgid "MiniOS Module Manager 1.1.0"
+msgstr "Gestore moduli MiniOS 1.1.0"
 
 #. type: TH
 #: en/minios-module-manager.1:1
@@ -122,38 +122,51 @@ msgid "B<Next Boot>"
 msgstr "B<Prossimo avvio>"
 
 #. type: Plain text
-#: en/minios-module-manager.1:27
+#: en/minios-module-manager.1:30
 msgid ""
 "Shows the authoritative ordered module composition selected by the current "
-"MiniOS boot rules. User modules can be added to or removed from durable "
-"module storage when MiniOS Tools reports that such storage is available."
+"MiniOS boot rules. User modules can be added to durable module storage when "
+"MiniOS Tools reports that such storage is available. Excluding a user module "
+"moves it to disabled storage, from which it can be included again. Permanent "
+"deletion is available only for an already excluded removable module and "
+"requires separate confirmation. These actions do not change Running Now."
 msgstr ""
-"Mostra la composizione dei moduli, autorevole e ordinata, selezionata dalle "
+"Mostra la composizione autorevole e ordinata dei moduli selezionata dalle "
 "regole di avvio correnti di MiniOS. I moduli utente possono essere aggiunti "
-"o rimossi dallo storage dei moduli persistente quando gli strumenti MiniOS "
-"segnalano che tale storage è disponibile."
+"all'archiviazione durevole dei moduli quando gli strumenti MiniOS segnalano "
+"che tale archiviazione è disponibile. Escludere un modulo utente lo sposta "
+"nell'archiviazione disabilitata, dalla quale può essere incluso nuovamente. "
+"L'eliminazione permanente è disponibile solo per un modulo rimovibile già "
+"escluso e richiede una conferma separata. Queste azioni non modificano lo "
+"stato Attualmente in esecuzione."
 
 #. type: Plain text
-#: en/minios-module-manager.1:32
+#: en/minios-module-manager.1:37
 msgid ""
 "Selecting a module opens read-only details. When its backing source file is "
 "available, the details also show its SquashFS contents and allow extraction "
 "to a new directory. Extraction is an explicit operation and never overwrites "
-"an existing destination."
+"an existing destination. Protected active-module backing files can be "
+"inspected after administrator authentication. Extraction shows cancellable "
+"phase progress and streamed backend diagnostics."
 msgstr ""
-"La selezione di un modulo apre i dettagli in sola lettura. Quando il file "
+"Selezionando un modulo si aprono i dettagli in sola lettura. Quando il file "
 "sorgente di supporto è disponibile, i dettagli mostrano anche il contenuto "
 "SquashFS e consentono l'estrazione in una nuova directory. L'estrazione è "
-"un'operazione esplicita e non sovrascrive mai una destinazione esistente."
+"un'operazione esplicita e non sovrascrive mai una destinazione esistente. I "
+"file di supporto dei moduli attivi protetti possono essere ispezionati dopo "
+"l'autenticazione dell'amministratore. Durante l'estrazione vengono mostrati "
+"l'avanzamento della fase annullabile e le diagnostiche del backend in "
+"streaming."
 
 #. type: SH
-#: en/minios-module-manager.1:32
+#: en/minios-module-manager.1:37
 #, no-wrap
 msgid "CREATE"
 msgstr "CREA"
 
 #. type: Plain text
-#: en/minios-module-manager.1:36
+#: en/minios-module-manager.1:41
 msgid ""
 "The Create workspace provides reviewed workflows for repository or local "
 "Debian packages, installation scripts, an interactive chroot, existing "
@@ -164,7 +177,7 @@ msgstr ""
 "interattivo, cartelle esistenti e le modifiche della sessione corrente."
 
 #. type: Plain text
-#: en/minios-module-manager.1:39
+#: en/minios-module-manager.1:44
 msgid ""
 "Every workflow separates configuration, review, execution, and result. "
 "Creating a module does not activate it or add it to the next boot "
@@ -175,7 +188,28 @@ msgstr ""
 "automaticamente al prossimo avvio."
 
 #. type: Plain text
-#: en/minios-module-manager.1:45
+#: en/minios-module-manager.1:52
+msgid ""
+"Package, installation-script, and interactive-chroot workflows select a "
+"build base from the active stack. A numbered selection includes every active "
+"numbered module through that level and every active unnumbered module. "
+"Package creation does not install Recommends or Suggests unless each option "
+"is enabled explicitly; missing local APT indexes can be refreshed before "
+"package-name completion is used. Creation supports zstd, LZ4, XZ, LZO, and "
+"gzip where MiniOS Tools supports the selected method."
+msgstr ""
+"I flussi di lavoro di pacchetti, script di installazione e chroot "
+"interattivo selezionano una base di compilazione dallo stack attivo. Una "
+"selezione numerata include ogni modulo numerato attivo fino a quel livello e "
+"ogni modulo non numerato attivo. La creazione del pacchetto non installa "
+"Recommends o Suggests a meno che ciascuna opzione non sia abilitata "
+"esplicitamente; gli indici APT locali mancanti possono essere aggiornati "
+"prima di utilizzare il completamento del nome del pacchetto. La creazione "
+"supporta zstd, LZ4, XZ, LZO e gzip dove gli strumenti MiniOS supportano il "
+"metodo selezionato."
+
+#. type: Plain text
+#: en/minios-module-manager.1:58
 msgid ""
 "The interactive chroot uses an embedded VTE terminal and the protected "
 "B<chroot2sb>(1)  prepare/shell/finish/cancel lifecycle. Current-session "
@@ -188,13 +222,13 @@ msgstr ""
 "di esclusione MiniOS standard."
 
 #. type: SH
-#: en/minios-module-manager.1:45
+#: en/minios-module-manager.1:58
 #, no-wrap
 msgid "FILE OPENING AND DRAG AND DROP"
 msgstr "APERTURA FILE E DRAG AND DROP"
 
 #. type: Plain text
-#: en/minios-module-manager.1:48
+#: en/minios-module-manager.1:61
 msgid ""
 "A local SquashFS module opened from the file manager is inspected only. It "
 "is not activated and is not added to Next Boot."
@@ -203,7 +237,7 @@ msgstr ""
 "Non viene attivato e non viene aggiunto al prossimo avvio."
 
 #. type: Plain text
-#: en/minios-module-manager.1:53
+#: en/minios-module-manager.1:66
 msgid ""
 "Drag and drop is an input shortcut. One module opens inspection, Debian "
 "package files populate Packages, a directory populates Folder, and another "
@@ -217,13 +251,31 @@ msgstr ""
 "solo."
 
 #. type: SH
-#: en/minios-module-manager.1:53
+#: en/minios-module-manager.1:66
+#, no-wrap
+msgid "MIME TYPE"
+msgstr "TIPO MIME"
+
+#. type: Plain text
+#: en/minios-module-manager.1:71
+msgid ""
+"The application declares support for B<application/x-sb>.  The MIME type and "
+"its *.sb filename association are defined and installed by MiniOS Tools; "
+"Module Manager does not install a competing MIME database entry."
+msgstr ""
+"L'applicazione dichiara il supporto per B<application/x-sb>.  Il tipo MIME e "
+"la sua associazione di nome file *.sb sono definiti e installati dagli "
+"strumenti MiniOS; Gestore moduli non installa una voce concorrente nel "
+"database MIME."
+
+#. type: SH
+#: en/minios-module-manager.1:71
 #, no-wrap
 msgid "PRIVILEGES"
 msgstr "PRIVILEGI"
 
 #. type: Plain text
-#: en/minios-module-manager.1:56
+#: en/minios-module-manager.1:74
 msgid ""
 "The graphical application is never run as root. Operations that require "
 "privilege are started through pkexec and the relevant MiniOS Tools backend."
@@ -233,13 +285,29 @@ msgstr ""
 "Tools appropriato."
 
 #. type: SH
-#: en/minios-module-manager.1:56
+#: en/minios-module-manager.1:74
+#, no-wrap
+msgid "REQUIREMENTS"
+msgstr "REQUISITI"
+
+#. type: Plain text
+#: en/minios-module-manager.1:77
+msgid ""
+"The shared interface requires python3-minios-gui 1.4.0 or newer. Backend "
+"module management and creation require minios-tools 1.7.0 or newer."
+msgstr ""
+"L'interfaccia condivisa richiede python3-minios-gui 1.4.0 o superiore. La "
+"gestione e la creazione dei moduli backend richiedono minios-tools 1.7.0 o "
+"superiore."
+
+#. type: SH
+#: en/minios-module-manager.1:77
 #, no-wrap
 msgid "SEE ALSO"
 msgstr "VEDERE ANCHE"
 
 #. type: Plain text
-#: en/minios-module-manager.1:63
+#: en/minios-module-manager.1:84
 msgid ""
 "B<sb>(1), B<dir2sb>(1), B<sb2dir>(1), B<apt2sb>(1), B<script2sb>(1), "
 "B<chroot2sb>(1), B<savechanges>(1)"

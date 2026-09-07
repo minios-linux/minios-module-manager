@@ -3,7 +3,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MINIOS\-MODULE\-MANAGER 1 "September 2026" "MiniOS\-Modulmanager 1.0.7" Benutzerbefehle
+.TH MINIOS\-MODULE\-MANAGER 1 "September 2026" "MiniOS\-Modulmanager 1.1.0" Benutzerbefehle
 .SH NAME
 minios\-module\-manager \- MiniOS\-Module inspizieren, erstellen und verwalten
 .SH ÜBERSICHT
@@ -26,16 +26,24 @@ Laufzeit ist nur möglich, wenn das eingehängte Root\-Union\-Dateisystem AUFS
 ist.
 .TP  4
 \fBNächster Start\fP
-Zeigt die maßgebliche, geordnete Modulzusammenstellung an, die durch die
-aktuellen MiniOS\-Startregeln ausgewählt wurde. Benutzermodule können zu
-einem persistenten Modulspeicher hinzugefügt oder daraus entfernt werden,
-wenn MiniOS Tools meldet, dass ein solcher Speicher verfügbar ist.
+Zeigt die maßgebliche, geordnete Modulkombination an, die durch die
+aktuellen MiniOS\-Bootregeln ausgewählt wurde. Benutzermodule können dem
+dauerhaften Modulspeicher hinzugefügt werden, wenn MiniOS Tools meldet, dass
+ein solcher Speicher verfügbar ist. Das Ausschließen eines Benutzermoduls
+verschiebt es in den deaktivierten Speicher, aus dem es wieder aufgenommen
+werden kann. Das endgültige Löschen ist nur für ein bereits
+ausgeschlossenes, entfernbares Modul möglich und erfordert eine separate
+Bestätigung. Diese Aktionen beeinflussen den aktuellen Betriebszustand
+nicht.
 .PP
-Die Auswahl eines Moduls öffnet eine schreibgeschützte Detailansicht. Ist
-die zugehörige Quelldatei verfügbar, werden zusätzlich deren
-SquashFS\-Inhalte angezeigt und das Extrahieren in ein neues Verzeichnis
-ermöglicht. Das Extrahieren ist ein expliziter Vorgang und überschreibt
-niemals ein vorhandenes Ziel.
+Die Auswahl eines Moduls öffnet eine schreibgeschützte Detailansicht. Wenn
+die zugehörige Quelldatei verfügbar ist, werden deren SquashFS\-Inhalte
+ebenfalls angezeigt und können in ein neues Verzeichnis extrahiert
+werden. Die Extraktion ist ein expliziter Vorgang und überschreibt niemals
+ein vorhandenes Ziel. Geschützte Sicherungsdateien aktiver Module können
+nach Authentifizierung des Administrators eingesehen werden. Während der
+Extraktion werden abbrechbare Phasenfortschritte und gestreamte
+Backend\-Diagnosen angezeigt.
 .SH ERSTELLEN
 Der Arbeitsbereich Erstellen bietet geprüfte Arbeitsabläufe für Repository\-
 oder lokale Debian\-Pakete, Installationsskripte, eine interaktive
@@ -44,6 +52,16 @@ Chroot\-Umgebung, vorhandene Ordner sowie Änderungen der aktuellen Sitzung.
 Jeder Arbeitsablauf trennt Konfiguration, Überprüfung, Ausführung und
 Ergebnis. Das Erstellen eines Moduls aktiviert dieses nicht und fügt es auch
 nicht automatisch zum nächsten Systemstart hinzu.
+.PP
+Paket\-, Installationsskript\- und interaktive Chroot\-Workflows wählen eine
+Build\-Basis aus dem aktiven Stack aus. Eine nummerierte Auswahl umfasst alle
+aktiven nummerierten Module bis zu dieser Ebene sowie alle aktiven
+unnummerierten Module. Die Paket\-Erstellung installiert keine Empfehlungen
+oder Vorschläge, es sei denn, jede Option wird explizit aktiviert; fehlende
+lokale APT\-Indizes können aktualisiert werden, bevor die
+Paketnamen\-Vervollständigung verwendet wird. Die Erstellung unterstützt
+zstd, LZ4, XZ, LZO und gzip, sofern MiniOS Tools die gewählte Methode
+unterstützt.
 .PP
 Die interaktive Chroot\-Umgebung verwendet ein eingebettetes VTE\-Terminal und
 den geschützten \fBchroot2sb\fP(1)\-Lebenszyklus
@@ -60,10 +78,19 @@ Debian\-Paketdateien füllen Pakete, ein Verzeichnis füllt Ordner und eine
 andere reguläre Datei füllt das Installationsskript. Das Ablegen eines
 Elements führt niemals eigenständig Code aus oder ändert die
 Modulzusammenstellung.
+.SH MIME\-TYP
+Die Anwendung deklariert Unterstützung für \fBapplication/x\-sb\fP.  Der
+MIME\-Typ und seine *.sb\-Dateizuordnung werden von MiniOS Tools definiert und
+installiert; Modulmanager installiert keinen konkurrierenden
+MIME\-Datenbankeintrag.
 .SH BERECHTIGUNGEN
 Die grafische Anwendung wird niemals als root ausgeführt. Vorgänge, die
 erhöhte Rechte erfordern, werden über pkexec und das jeweilige
 MiniOS\-Tools\-Backend gestartet.
+.SH ANFORDERUNGEN
+Die gemeinsame Schnittstelle erfordert python3\-minios\-gui 1.4.0 oder
+neuer. Backend\-Modulverwaltung und \-erstellung benötigen minios\-tools 1.7.0
+oder neuer.
 .SH "SIEHE AUCH"
 \fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
 \fBchroot2sb\fP(1), \fBsavechanges\fP(1)

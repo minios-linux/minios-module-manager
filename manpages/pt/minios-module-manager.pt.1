@@ -3,7 +3,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MINIOS\-MODULE\-MANAGER 1 "setembro de 2026" "Gestor de módulos MiniOS 1.0.7" "Comandos de Usuário"
+.TH MINIOS\-MODULE\-MANAGER 1 "setembro de 2026" "Gestor de módulos MiniOS 1.1.0" "Comandos de Usuário"
 .SH NOME
 minios\-module\-manager \- inspeciona, cria e gerencia módulos MiniOS
 .SH SINOPSE
@@ -25,15 +25,22 @@ conforme relatado pelas MiniOS Tools. A ativação e desativação em tempo de
 execução estão disponíveis apenas quando a união raiz montada é AUFS.
 .TP  4
 \fBPróximo Boot\fP
-Exibe a composição autoritativa e ordenada dos módulos selecionados pelas
-regras de boot atuais do MiniOS. Módulos de usuário podem ser adicionados ou
-removidos do armazenamento durável de módulos quando as MiniOS Tools
-informam que tal armazenamento está disponível.
+Exibe a composição de módulos ordenada e autoritativa selecionada pelas
+regras de boot atuais do MiniOS. Módulos de usuário podem ser adicionados ao
+armazenamento durável de módulos quando as Ferramentas MiniOS informam que
+tal armazenamento está disponível. Excluir um módulo de usuário move\-o para
+o armazenamento desativado, de onde pode ser incluído novamente. A exclusão
+permanente está disponível apenas para um módulo removível já excluído e
+requer confirmação separada. Essas ações não alteram o estado Em Execução
+Agora.
 .PP
 Selecionar um módulo abre detalhes somente leitura. Quando o arquivo de
-origem está disponível, os detalhes também exibem seu conteúdo SquashFS e
-permitem a extração para um novo diretório. A extração é uma operação
-explícita e nunca sobrescreve um destino existente.
+origem de suporte está disponível, os detalhes também exibem seu conteúdo
+SquashFS e permitem a extração para um novo diretório. A extração é uma
+operação explícita e nunca sobrescreve um destino existente. Arquivos de
+suporte de módulos ativos protegidos podem ser inspecionados após
+autenticação do administrador. A extração exibe o progresso da fase, que
+pode ser cancelado, e diagnósticos do backend transmitidos em tempo real.
 .SH CRIAR
 O espaço de trabalho Criar oferece fluxos de trabalho revisados para pacotes
 Debian de repositório ou locais, scripts de instalação, um chroot
@@ -42,6 +49,15 @@ interativo, pastas existentes e alterações da sessão atual.
 Cada fluxo de trabalho separa configuração, revisão, execução e resultado. A
 criação de um módulo não o ativa nem o adiciona automaticamente ao próximo
 boot.
+.PP
+Os fluxos de trabalho de pacote, script de instalação e chroot interativo
+selecionam uma base de compilação a partir da pilha ativa. Uma seleção
+numerada inclui todos os módulos numerados ativos até esse nível e todos os
+módulos não numerados ativos. A criação de pacotes não instala Recommends ou
+Suggests, a menos que cada opção seja ativada explicitamente; índices locais
+APT ausentes podem ser atualizados antes de usar a conclusão de nome de
+pacote. A criação suporta zstd, LZ4, XZ, LZO e gzip onde as Ferramentas
+MiniOS suportam o método selecionado.
 .PP
 O chroot interativo utiliza um terminal VTE embutido e o ciclo protegido
 \fBchroot2sb\fP(1) preparar/shell/finalizar/cancelar. A captura da sessão atual
@@ -55,10 +71,19 @@ Arrastar e soltar é um atalho de entrada. Um módulo abre a inspeção,
 arquivos de pacote Debian preenchem Pacotes, um diretório preenche Pasta e
 outro arquivo regular preenche Script de Instalação. Soltar um item nunca
 executa código nem altera a composição de módulos por si só.
+.SH "TIPO MIME"
+O aplicativo declara suporte para \fBapplication/x\-sb\fP. O tipo MIME e sua
+associação de nome de arquivo *.sb são definidos e instalados pelas
+Ferramentas MiniOS; o Gestor de Módulos não instala uma entrada concorrente
+no banco de dados MIME.
 .SH PRIVILÉGIOS
 O aplicativo gráfico nunca é executado como root. Operações que exigem
 privilégios são iniciadas via pkexec e pelo backend correspondente das
 MiniOS Tools.
+.SH REQUISITOS
+A interface compartilhada requer python3\-minios\-gui 1.4.0 ou superior. O
+gerenciamento e a criação de módulos no backend requerem minios\-tools 1.7.0
+ou superior.
 .SH "VEJA TAMBÉM"
 \fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
 \fBchroot2sb\fP(1), \fBsavechanges\fP(1)

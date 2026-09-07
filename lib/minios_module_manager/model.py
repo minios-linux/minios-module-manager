@@ -53,11 +53,12 @@ class Snapshot(object):
 
     def __init__(self, state=LoadState.LOADING, modules=None, message='',
                  union_backend=None, data_root=None, bundle_extension=None,
-                 add_available=False):
+                 add_available=False, disabled_modules=None):
         if state not in LoadState.VALUES:
             raise ValueError('invalid snapshot state')
         self.state = state
         self.modules = tuple(modules or ())
+        self.disabled_modules = tuple(disabled_modules or ())
         self.message = message
         self.union_backend = union_backend
         self.data_root = data_root

@@ -1,28 +1,38 @@
 """GTK 3 interface for MiniOS Module Manager."""
 
+from collections import deque
+import json
 import os
+import re
 import threading
 
 import gi
 
+gi.require_version('Gdk', '3.0')
 gi.require_version('Gtk', '3.0')
 gi.require_version('Vte', '2.91')
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango, Vte
 
 from minios_gui import (
-    HelpPopoverButton, LogView, StatusBanner, TokenCompletionPopover, ask_confirmation,
-    classify_module, format_bytes, new_header_bar, new_icon, show_error_dialog,
-    show_info_dialog,
+    BackgroundTask, CommandRunner, HelpPopoverButton, LogView, ProgressDialog,
+    StatePlaceholder, StatusBanner, TokenCompletionPopover, ask_confirmation,
+    choose_folder, choose_open_file,
+    choose_open_files, choose_save_file, classify_module, format_bytes,
+    new_header_bar, new_header_icon_button, new_icon, resolve_icon,
+    show_error_dialog, show_info_dialog,
 )
 
 from .backend import (
     CAPTURE_CANCELLED, activate_for_session, add_to_next_boot, cancel_chroot_session,
     capture_current_session, chroot_shell_argv, create_module_from_folder,
     create_module_from_packages, create_module_from_script,
-    deactivate_for_session, extract_module, finish_chroot_session,
+    deactivate_for_session, delete_disabled_module, enable_for_next_boot,
+    finish_chroot_session,
     load_module_inspection, load_next_boot_snapshot, load_running_snapshot,
-    new_capture_cancel_marker, prepare_chroot_session, query_package_names,
-    remove_from_next_boot, request_capture_cancel,
+    module_extraction_argv, new_capture_cancel_marker, package_indexes_available,
+    prepare_chroot_session,
+    query_package_names, remove_from_next_boot, request_capture_cancel,
+    update_package_indexes,
 )
 from .i18n import _
 from .model import LoadState, ModuleRecord
@@ -41,20 +51,39 @@ CREATE_METHODS = (
      _('For eligible changes that have already been made in this live session.')),
 )
 
+
+def module_presentation_order(modules):
+    """Keep backend order within system and custom module groups."""
+    def is_custom(module):
+        if module.origin in ('modules', 'persistence'):
+            return True
+        if module.origin == 'base':
+            return False
+        if module.source:
+            parent = os.path.basename(os.path.dirname(module.source))
+            if parent == 'modules':
+                return True
+            if parent == 'minios':
+                return False
+        return classify_module(module.name)[0] == 'custom'
+
+    return tuple(sorted(modules, key=is_custom))
+
+
 CREATE_HELP = {
     'packages': (
         _('Install packages from repositories or local .deb files and save the result as a module.'),
         (
             (_('What to enter'),
-             _('• <b>Repository packages</b> — package names separated by spaces. Use <tt>↑</tt>/<tt>↓</tt> to choose a suggestion and <tt>Tab</tt> or <tt>Enter</tt> to accept it.\n• <b>Local packages</b> — add <tt>.deb</tt> files from disk.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.')),
+             _('• <b>Repository packages</b> — package names separated by spaces. Use <tt>↑</tt>/<tt>↓</tt> to choose a suggestion and <tt>Tab</tt> or <tt>Enter</tt> to accept it.\n• <b>Local packages</b> — add <tt>.deb</tt> files from disk.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.\n• <b>Build base level</b> — choose the highest numbered active module to include; all active numbered modules up to it and all active unnumbered modules are used together.')),
             (_('How it works'),
-             _('APT installs the selected packages and their dependencies. Recommended packages are included when the checkbox is enabled. Package installation runs with administrator privileges. The current MiniOS session is not changed, and the new module is not loaded automatically.')),
+             _('APT installs the selected packages and their dependencies. MiniOS does not install recommended or suggested packages by default; enable the corresponding checkboxes to include them explicitly. Package installation runs with administrator privileges. The current MiniOS session is not changed, and the new module is not loaded automatically.')),
         )),
     'script': (
         _('Run an installation script and save the changes it makes as a module.'),
         (
             (_('What to enter'),
-             _('• <b>Installation script</b> — the script that performs the installation or setup.\n• <b>Seed folder</b> — optional files to copy into the module before the script runs.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.')),
+             _('• <b>Installation script</b> — the script that performs the installation or setup.\n• <b>Seed folder</b> — optional files to copy into the module before the script runs.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.\n• <b>Build base level</b> — choose the highest numbered active module to include; all active numbered modules up to it and all active unnumbered modules are used together.')),
             (_('How it works'),
              _('The script runs with administrator privileges and <b>without an interactive terminal</b>. If it asks questions or needs manual work, use <b>Interactive Chroot</b> instead. The script itself is not stored in the module. The current MiniOS session is not changed.')),
         )),
@@ -62,7 +91,7 @@ CREATE_HELP = {
         _('Open a temporary MiniOS system in a terminal and save your changes as a module.'),
         (
             (_('Before you start'),
-             _('• <b>Seed folder</b> — optional files to copy into the temporary system before the shell opens.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.')),
+             _('• <b>Seed folder</b> — optional files to copy into the temporary system before the shell opens.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.\n• <b>Build base level</b> — choose the highest numbered active module to include; all active numbered modules up to it and all active unnumbered modules are used together.')),
             (_('How to finish'),
              _('Work in the terminal as <b>root</b>. When you are finished, type <tt>exit</tt>. Then choose <b>Create Module</b> to save the changes, <b>Reopen Shell</b> to continue working, or <b>Discard Changes</b> to cancel. The current MiniOS session is not changed.')),
         )),
@@ -85,11 +114,299 @@ CREATE_HELP = {
 }
 
 
+class ModuleExtractionJob(object):
+    """Run sb2dir with phase feedback and cancellable streamed diagnostics."""
+
+    def __init__(self, parent, source, target, finished_callback):
+        self.target = target
+        self.finished_callback = finished_callback
+        self.result = None
+        self.protocol_error = None
+        self.stderr = deque(maxlen=200)
+        self.dialog = ProgressDialog(
+            parent=parent, title=_('Extract Module'), status=_('Preparing…'),
+            show_log=True, cancellable=True)
+        self.dialog.set_default_size(520, 260)
+        self.dialog.set_deletable(False)
+        self.dialog.connect('response', self._on_response)
+        argv = module_extraction_argv(source, target)
+        self.runner = None if argv is None else CommandRunner(
+            argv, self._handle_stdout, self._finished,
+            stderr_callback=self._handle_stderr,
+            maximum_output_bytes=1024 * 1024)
+
+    def start(self):
+        if self.runner is None:
+            self.finished_callback(
+                False, False, _('MiniOS Tools is not installed.'))
+            return
+        self.dialog.show_all()
+        self.dialog.operation_view.set_state('running')
+        try:
+            self.runner.start()
+        except Exception as error:
+            self.dialog.destroy()
+            self.finished_callback(False, False, str(error))
+
+    def _on_response(self, _dialog, response):
+        if response != Gtk.ResponseType.CANCEL or self.runner is None:
+            return
+        self.dialog.operation_view.set_status(_('Cancelling…'))
+        self.runner.cancel()
+
+    def _set_phase(self, phase):
+        labels = {
+            'prepare': _('Preparing extraction…'),
+            'extract': _('Extracting module…'),
+            'publish': _('Publishing extracted files…'),
+            'complete': _('Finishing…'),
+        }
+        text = labels.get(phase, _('Working…'))
+        self.dialog.operation_view.set_status(text)
+        self.dialog.operation_view.feed(text + '\n')
+
+    def _handle_stdout(self, line):
+        line = line.strip()
+        if not line:
+            return
+        try:
+            record = json.loads(line)
+        except ValueError:
+            self.protocol_error = _(
+                'The module tool returned invalid progress data.')
+            return
+        if not isinstance(record, dict):
+            self.protocol_error = _(
+                'The module tool returned invalid progress data.')
+            return
+        if record.get('event') == 'phase':
+            phase = record.get('phase')
+            if isinstance(phase, str):
+                self._set_phase(phase)
+            else:
+                self.protocol_error = _(
+                    'The module tool returned invalid progress data.')
+            return
+        if record.get('product') == 'sb2dir':
+            output = record.get('output')
+            if (not isinstance(output, str) or
+                    os.path.abspath(output) != os.path.abspath(self.target)):
+                self.protocol_error = _(
+                    'The module tool returned an unexpected extraction result.')
+                return
+            self.result = record
+            return
+        self.protocol_error = _(
+            'The module tool returned invalid progress data.')
+
+    def _handle_stderr(self, line):
+        self.stderr.append(line.rstrip())
+        self.dialog.operation_view.feed(line)
+
+    def _finished(self, returncode, cancelled):
+        details = '\n'.join(self.stderr).strip()
+        if self.protocol_error:
+            details = '{}{}{}'.format(
+                self.protocol_error, '\n' if details else '', details)
+        success = returncode == 0 and not cancelled and not self.protocol_error
+        if success and self.result is None:
+            success = False
+            details = _('The module tool completed without an extraction result.')
+        self.dialog.destroy()
+        self.finished_callback(success, cancelled, details)
+        return False
+
+
+class BuildBaseSelector(Gtk.MenuButton):
+    """Compact build-base field backed by a scrollable module popover."""
+
+    def __init__(self):
+        Gtk.MenuButton.__init__(self)
+        self.set_hexpand(True)
+        self.set_halign(Gtk.Align.FILL)
+        self.set_focus_on_click(False)
+        self._build_base_levels = {}
+        self._items = {}
+        self._rows = {}
+        self._active_id = None
+
+        summary = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self._summary_icon = Gtk.Image()
+        summary.pack_start(self._summary_icon, False, False, 0)
+        self._summary_label = Gtk.Label(xalign=0)
+        self._summary_label.set_ellipsize(Pango.EllipsizeMode.END)
+        summary.pack_start(self._summary_label, True, True, 0)
+        arrow = Gtk.Image.new_from_icon_name('pan-down-symbolic', Gtk.IconSize.BUTTON)
+        summary.pack_end(arrow, False, False, 0)
+        self.add(summary)
+
+        self._popover = Gtk.Popover.new(self)
+        self._popover.set_no_show_all(True)
+        self._popover.set_position(Gtk.PositionType.BOTTOM)
+        self._popover.connect('show', self._on_popover_show)
+        self.connect('size-allocate', self._on_size_allocate)
+        self._scrolled = Gtk.ScrolledWindow()
+        self._scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self._scrolled.set_max_content_height(280)
+        self._scrolled.set_propagate_natural_height(True)
+        self._list = Gtk.ListBox()
+        self._list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._list.set_activate_on_single_click(True)
+        self._list.set_header_func(self._build_row_header)
+        self._list.connect('row-activated', self._on_row_activated)
+        self._scrolled.add(self._list)
+        self._popover.add(self._scrolled)
+        self._scrolled.show_all()
+        self.set_popover(self._popover)
+
+    @staticmethod
+    def _build_row_header(row, before):
+        row.set_header(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+                       if before is not None else None)
+
+    def _on_size_allocate(self, _widget, allocation):
+        # Keep the picker compact on wide windows.  The field itself spans the
+        # form, but the rich choices do not need to become a full-width panel.
+        width = min(max(280, allocation.width - 16), 680)
+        self._scrolled.set_min_content_width(width)
+        # Gtk 3.22 does not reliably propagate min-content-width from a
+        # ScrolledWindow into Popover sizing, so keep an explicit width request.
+        self._scrolled.set_size_request(width, -1)
+
+    def _on_popover_show(self, _popover):
+        width = min(max(280, self.get_allocated_width() - 16), 680)
+        self._scrolled.set_min_content_width(width)
+        self._scrolled.set_size_request(width, -1)
+
+    def _make_row(self, item_id, title, subtitle, icon_name, size):
+        row = Gtk.ListBoxRow()
+        row._build_base_id = item_id
+        content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        content.set_margin_top(2)
+        content.set_margin_bottom(2)
+        content.set_margin_start(8)
+        content.set_margin_end(8)
+        icon = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
+        content.pack_start(icon, False, False, 0)
+
+        title_label = Gtk.Label(label=title, xalign=0)
+        title_label.get_style_context().add_class('row-title')
+        title_label.set_ellipsize(Pango.EllipsizeMode.END)
+        content.pack_start(title_label, True, True, 0)
+
+        if subtitle:
+            filename_label = Gtk.Label(label=subtitle, xalign=1)
+            filename_label.get_style_context().add_class('row-meta')
+            filename_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+            filename_label.set_max_width_chars(38)
+            content.pack_end(filename_label, False, False, 0)
+        row.add(content)
+        return row
+
+    def set_choices(self, choices, active_id='all'):
+        for child in self._list.get_children():
+            self._list.remove(child)
+        self._items = {}
+        self._rows = {}
+        self._build_base_levels = {}
+        for item_id, level, title, subtitle, icon_name, size in choices:
+            self._items[item_id] = (title, subtitle, icon_name, size)
+            self._build_base_levels[item_id] = level
+            row = self._make_row(item_id, title, subtitle, icon_name, size)
+            self._rows[item_id] = row
+            self._list.add(row)
+        self._list.show_all()
+        self.set_active_id(active_id if active_id in self._items else 'all')
+
+    def get_active_id(self):
+        return self._active_id
+
+    def set_active_id(self, item_id):
+        if item_id not in self._items:
+            return False
+        self._active_id = item_id
+        title, subtitle, icon_name, size = self._items[item_id]
+        self._summary_icon.set_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
+        self._summary_label.set_text(subtitle or title)
+        tooltip = title
+        if subtitle:
+            tooltip += '\n' + subtitle
+        if size:
+            tooltip += ' · ' + size
+        self.set_tooltip_text(tooltip)
+        row = self._rows.get(item_id)
+        if row is not None:
+            self._list.select_row(row)
+        return True
+
+    def _on_row_activated(self, _listbox, row):
+        self.set_active_id(row._build_base_id)
+        self._popover.popdown()
+
+
+class ModuleFileViewer(Gtk.Overlay):
+    """Tree-view container that paints rounded masking and frame above its child."""
+
+    def __init__(self):
+        Gtk.Overlay.__init__(self)
+        self.get_style_context().add_class('content-card')
+        self.get_style_context().add_class('module-file-viewer-frame')
+
+    def do_draw(self, cr):
+        # Let GtkOverlay draw the scrolled TreeView first.  Painting the mask
+        # and frame here afterwards keeps them visually above the table while
+        # leaving pointer events entirely to the TreeView/ScrolledWindow.
+        result = Gtk.Overlay.do_draw(self, cr)
+        allocation = self.get_allocation()
+        width = float(allocation.width)
+        height = float(allocation.height)
+        radius = min(6.0, width / 2.0, height / 2.0)
+        if radius <= 0:
+            return result
+
+        cr.save()
+        self._clip_outside_rounded_corners(cr, width, height, radius)
+        found, color = self.get_style_context().lookup_color('theme_bg_color')
+        if not found:
+            color = self.get_style_context().get_background_color(Gtk.StateFlags.NORMAL)
+        Gdk.cairo_set_source_rgba(cr, color)
+        cr.paint()
+        cr.restore()
+        Gtk.render_frame(self.get_style_context(), cr, 0, 0, width, height)
+        return result
+
+    @staticmethod
+    def _clip_outside_rounded_corners(cr, width, height, radius):
+        half_pi = 1.5707963267948966
+        pi = 3.141592653589793
+
+        cr.move_to(0, 0)
+        cr.line_to(radius, 0)
+        cr.arc_negative(radius, radius, radius, -half_pi, -pi)
+        cr.close_path()
+        cr.move_to(width - radius, 0)
+        cr.line_to(width, 0)
+        cr.line_to(width, radius)
+        cr.arc_negative(width - radius, radius, radius, 0, -half_pi)
+        cr.close_path()
+        cr.move_to(0, height - radius)
+        cr.line_to(0, height)
+        cr.line_to(radius, height)
+        cr.arc(radius, height - radius, radius, half_pi, pi)
+        cr.close_path()
+        cr.move_to(width, height - radius)
+        cr.line_to(width, height)
+        cr.line_to(width - radius, height)
+        cr.arc_negative(width - radius, height - radius, radius, half_pi, 0)
+        cr.close_path()
+        cr.clip()
+
+
 class ModuleManagerWindow(Gtk.ApplicationWindow):
     def __init__(self, application):
         Gtk.ApplicationWindow.__init__(
             self, application=application, title=_('MiniOS Module Manager'))
-        self.set_default_size(800, 460)
+        self.set_default_size(800, 490)
         self._running_request = 0
         self._next_boot_request = 0
         self._inspection_request = 0
@@ -99,6 +416,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._next_boot_snapshot = None
         self._detail_runtime_action = None
         self._detail_next_boot_action = None
+        self._detail_delete_action = None
         self._chroot_session_id = None
         self._chroot_config = None
         self._chroot_shell_running = False
@@ -107,6 +425,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._close_after_chroot_cancel = False
         self._session_capture_busy = False
         self._session_capture_cancel = None
+        self._package_indexes_busy = False
+        self._extract_job = None
+        self._build_base_combos = []
         self.connect('delete-event', self._on_window_delete)
         self._build_header()
         self._build_content()
@@ -116,7 +437,60 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.refresh_next_boot_snapshot()
 
     def _build_header(self):
-        self.set_titlebar(new_header_bar(_('MiniOS Module Manager')))
+        self.header_bar = new_header_bar(_('MiniOS Module Manager'))
+        self.header_back = new_header_icon_button(
+            ('go-previous', 'go-previous-symbolic'), _('Back'))
+        self.header_back.set_always_show_image(True)
+        self.header_back.set_no_show_all(True)
+        self.header_back.connect('clicked', self._on_header_back)
+        self.header_back.hide()
+        self.header_bar.pack_start(self.header_back)
+        self._header_back_target = None
+        self.set_titlebar(self.header_bar)
+
+    def _on_header_back(self, _button):
+        target = self._header_back_target
+        if target is None:
+            return
+        scope, page = target
+        if scope == 'modules':
+            self._show_module_composition()
+        elif scope == 'create':
+            self.create_pages.set_visible_child_name(page)
+
+    def _update_header_back(self, widget=None, _page=None, page_num=None):
+        target = None
+        if hasattr(self, 'workspace_notebook'):
+            # GtkNotebook::switch-page is emitted while get_current_page() may
+            # still report the page being left. Use the signal's destination
+            # page directly so Back never inherits stale visibility state.
+            if widget is self.workspace_notebook and page_num is not None:
+                workspace = page_num
+            else:
+                workspace = self.workspace_notebook.get_current_page()
+            if workspace == 0 and self.module_pages.get_visible_child_name() == 'details':
+                target = ('modules', 'composition')
+            elif workspace == 1:
+                page = self.create_pages.get_visible_child_name()
+                target_page = {
+                    'folder-configure': 'methods',
+                    'package-configure': 'methods',
+                    'script-configure': 'methods',
+                    'chroot-configure': 'methods',
+                    'session-configure': 'methods',
+                    'folder-review': 'folder-configure',
+                    'package-review': 'package-configure',
+                    'script-review': 'script-configure',
+                    'chroot-review': 'chroot-configure',
+                    'session-review': 'session-configure',
+                }.get(page)
+                if target_page is not None:
+                    target = ('create', target_page)
+        self._header_back_target = target
+        if target is None:
+            self.header_back.hide()
+        else:
+            self.header_back.show()
 
     def _disable_pointer_focus(self, widget):
         if isinstance(widget, Gtk.Button):
@@ -125,19 +499,156 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             for child in widget.get_children():
                 self._disable_pointer_focus(child)
 
-    def _back_button(self, callback):
-        button = Gtk.Button(label=_('Back'))
-        button.set_image(new_icon('go-previous-symbolic', accessible_name=_('Back')))
-        button.set_always_show_image(True)
-        button.get_style_context().add_class('minios-text-button')
-        button.set_focus_on_click(False)
-        button.connect('clicked', callback)
-        return button
-
     def _page_title_label(self, text):
         label = Gtk.Label(label=text, xalign=0)
         label.get_style_context().add_class('page-title')
         return label
+
+    @staticmethod
+    def _field_label_with_help(text, help_button):
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        box.set_halign(Gtk.Align.FILL)
+        box.set_valign(Gtk.Align.CENTER)
+        label = Gtk.Label(label=text, xalign=0)
+        label.set_halign(Gtk.Align.START)
+        help_button.set_halign(Gtk.Align.END)
+        help_button.set_valign(Gtk.Align.CENTER)
+        box.pack_start(label, False, False, 0)
+        box.pack_end(help_button, False, False, 0)
+        return box
+
+    @staticmethod
+    def _review_card(field_labels):
+        grid = Gtk.Grid(column_spacing=18, row_spacing=8)
+        grid.set_hexpand(True)
+        grid.get_style_context().add_class('content-card')
+        values = {}
+        for row, (field_id, caption) in enumerate(field_labels):
+            key = Gtk.Label(label=caption, xalign=0, yalign=0)
+            key.set_valign(Gtk.Align.START)
+            key.get_style_context().add_class('dim-label')
+            value = Gtk.Label(xalign=0, yalign=0)
+            value.set_hexpand(True)
+            value.set_line_wrap(True)
+            value.set_selectable(True)
+            value.set_valign(Gtk.Align.START)
+            grid.attach(key, 0, row, 1, 1)
+            grid.attach(value, 1, row, 1, 1)
+            values[field_id] = value
+        return grid, values
+
+    @staticmethod
+    def _set_review_values(values, rows):
+        for field_id, value in rows:
+            values[field_id].set_text(str(value))
+            values[field_id].select_region(0, 0)
+
+    @staticmethod
+    def _module_build_level(name):
+        match = re.match(r'^(\d+)', name or '')
+        return int(match.group(1), 10) if match else None
+
+    def _new_build_base_combo(self):
+        combo = BuildBaseSelector()
+        combo.set_choices((
+            ('all', None, _('All active modules'), '',
+             resolve_icon(('application-x-sb', 'package-x-generic'),
+                          fallback='package-x-generic'), ''),
+        ))
+        self._build_base_combos.append(combo)
+        return combo
+
+    def _refresh_build_base_choices(self):
+        snapshot = self._running_snapshot
+        modules = snapshot.modules if snapshot is not None and snapshot.usable else ()
+        for combo in self._build_base_combos:
+            active_id = combo.get_active_id() or 'all'
+            choices = [(
+                'all', None, _('All active modules'), '',
+                resolve_icon(('application-x-sb', 'package-x-generic'),
+                             fallback='package-x-generic'), '')]
+            for module in modules:
+                level = self._module_build_level(module.name)
+                if level is None:
+                    continue
+                role, icons, size = self._module_display(module)
+                choices.append((
+                    module.name, level, role, module.name,
+                    resolve_icon(icons, fallback='package-x-generic'), size or ''))
+            combo.set_choices(choices, active_id)
+
+    @staticmethod
+    def _build_level_value(combo):
+        item_id = combo.get_active_id() or 'all'
+        levels = getattr(combo, '_build_base_levels', {})
+        if item_id not in levels:
+            return None, _('The selected build base is no longer active.')
+        return levels[item_id], ''
+
+    def _compression_help_button(self):
+        return HelpPopoverButton(
+            _('Compression'),
+            _('Compression controls the trade-off between module size and CPU work when MiniOS reads files from it.'),
+            (
+                (_('Quick choice'),
+                 _('<b>LZ4</b> — fastest decompression and the best choice when runtime responsiveness matters most; it produces the largest modules.\n<b>Zstandard (zstd)</b> — recommended balance: fast decompression with much better compression than LZ4.\n<b>XZ</b> — usually produces the smallest modules, but needs the most CPU and is normally the slowest to read.')),
+                (_('Other formats'),
+                 _('<b>LZO</b> — fast legacy option; usually larger than zstd.\n<b>Gzip</b> — compatibility-oriented legacy option; usually neither as fast as LZ4 nor as compact as zstd or XZ.\nActual performance also depends on the CPU and storage: on slow media, reading a smaller module can sometimes offset slower decompression.')),
+            ),
+            compact=True, tooltip=_('Which compression should I choose?'),
+            markup=True, width=500)
+
+    def _build_base_help_button(self):
+        return HelpPopoverButton(
+            _('Build base level'),
+            _('The selected module is a cutoff level for the active module stack, not a single module to build on.'),
+            (
+                (_('How the level works'),
+                 _('If you select <b>03-gui-base…</b>, the temporary system is composed from every active numbered module from 00 through 03, plus every active unnumbered module. Numbered modules 04 and above are excluded. <b>All active modules</b> uses the complete active stack.')),
+                (_('Why it matters'),
+                 _('Packages and libraries that already exist in the selected base stack are not copied into the new module. Building on a lower level therefore causes missing dependencies to be installed into the new module, which can make it more self-contained but larger. Building on the full stack can make a smaller module, but it may depend on higher-level modules that happened to be active during the build.')),
+                (_('What is changed'),
+                 _('The base modules are never modified or merged. Only changes made in the temporary build environment are captured into the new .sb module.')),
+            ),
+            compact=True, tooltip=_('How does the build level work?'),
+            markup=True, width=540)
+
+    def _recommended_packages_help_button(self):
+        return HelpPopoverButton(
+            _('Recommended packages'),
+            _('APT classifies some packages as recommended rather than required dependencies.'),
+            (
+                (_('When disabled'),
+                 _('Module Manager uses the MiniOS default: APT does not automatically install recommended packages.')),
+                (_('When enabled'),
+                 _('Module Manager passes --install-recommends, explicitly overriding the MiniOS default so APT installs recommended packages.')),
+            ),
+            compact=True, tooltip=_('How are recommended packages handled?'),
+            width=500)
+
+    def _suggested_packages_help_button(self):
+        return HelpPopoverButton(
+            _('Suggested packages'),
+            _('APT classifies suggested packages as optional additions that may complement an installed package.'),
+            (
+                (_('When disabled'),
+                 _('Module Manager uses the MiniOS default: APT does not automatically install suggested packages.')),
+                (_('When enabled'),
+                 _('Module Manager passes --install-suggests, explicitly overriding the MiniOS default so APT installs suggested packages.')),
+            ),
+            compact=True, tooltip=_('How are suggested packages handled?'),
+            width=500)
+
+    def _build_level_text(self, combo, level):
+        if level is None:
+            return _('all active modules')
+        item_id = combo.get_active_id()
+        return item_id or _('selected active module')
+
+    def _style_log_view(self, log):
+        log.set_shadow_type(Gtk.ShadowType.NONE)
+        log.get_style_context().add_class('minios-list')
+        return log
 
     def _build_run_output(self, initial_text):
         progress = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -147,54 +658,148 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         status = Gtk.Label(label=initial_text, xalign=0)
         status.set_line_wrap(True)
         progress.pack_start(status, True, True, 0)
-        log = LogView(maximum_characters=200000)
+        log = self._style_log_view(LogView(maximum_characters=200000))
         log.set_min_content_height(100)
         return progress, status, spinner, log
 
     def _build_result_output(self):
+        output = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         stack = Gtk.Stack()
         stack.set_hhomogeneous(False)
         stack.set_vhomogeneous(False)
+
+        summary_stack = Gtk.Stack()
+        summary_stack.set_hhomogeneous(False)
+        summary_stack.set_vhomogeneous(False)
         summary = Gtk.Label(xalign=0, yalign=0)
         summary.set_line_wrap(True)
-        log = LogView(maximum_characters=200000)
+        summary.set_selectable(True)
+        details = Gtk.Grid(column_spacing=18, row_spacing=8)
+        details.set_hexpand(True)
+        details.get_style_context().add_class('content-card')
+        summary_stack.add_named(summary, 'text')
+        summary_stack.add_named(details, 'details')
+        summary_stack.set_visible_child_name('text')
+
+        log = self._style_log_view(LogView(maximum_characters=200000))
         log.set_min_content_height(160)
-        stack.add_named(summary, 'summary')
+        stack.add_named(summary_stack, 'summary')
         stack.add_named(log, 'log')
         stack.set_visible_child_name('summary')
-        return stack, summary, log
+        output.pack_start(stack, True, True, 0)
+        toggle = Gtk.ToggleButton(label=_('View Build Log'))
+        toggle.set_halign(Gtk.Align.START)
+        toggle.set_no_show_all(True)
+        toggle.hide()
+        toggle.connect('toggled', self._toggle_result_log, output)
+        output.pack_start(toggle, False, False, 0)
+        output._result_stack = stack
+        output._result_summary_stack = summary_stack
+        output._result_details = details
+        output._result_toggle = toggle
+        return output, summary, log
+
+    @staticmethod
+    def _result_size(value):
+        try:
+            count = int(value)
+        except (TypeError, ValueError):
+            return str(value)
+        return '{} ({:,} {})'.format(format_bytes(count), count, _('bytes'))
+
+    def _set_result_details(self, output, log, rows, build_log=''):
+        grid = output._result_details
+        for child in grid.get_children():
+            grid.remove(child)
+        for row, (caption, value) in enumerate(rows):
+            key = Gtk.Label(label=caption, xalign=0, yalign=0)
+            key.set_valign(Gtk.Align.START)
+            key.get_style_context().add_class('dim-label')
+            value_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+            value_box.set_hexpand(True)
+            label = Gtk.Label(label=str(value), xalign=0, yalign=0)
+            label.set_hexpand(True)
+            label.set_line_wrap(True)
+            label.set_selectable(True)
+            label.set_valign(Gtk.Align.START)
+            value_box.pack_start(label, True, True, 0)
+            grid.attach(key, 0, row, 1, 1)
+            grid.attach(value_box, 1, row, 1, 1)
+        grid.show_all()
+        output._result_summary_stack.set_visible_child_name('details')
+        self._set_result_log_state(output, log, build_log, False, '')
+
+    def _set_result_log_state(self, output, log, build_log, diagnostic, text):
+        build_log = str(build_log or '')
+        log.clear()
+        log_text = build_log
+        if diagnostic:
+            if log_text and not log_text.endswith('\n'):
+                log_text += '\n'
+            if log_text:
+                log_text += '\n'
+            log_text += _('Result: {}').format(text)
+        if log_text:
+            log.feed(log_text)
+            output._result_toggle.show()
+        else:
+            output._result_toggle.hide()
+        show_log = self._result_uses_log(text, diagnostic)
+        output._result_toggle.set_active(show_log)
+        output._result_stack.set_visible_child_name(
+            'log' if show_log else 'summary')
+        output._result_toggle.set_label(
+            _('Show Summary') if show_log else _('View Build Log'))
 
     @staticmethod
     def _result_uses_log(text, diagnostic=False):
         text = str(text or '')
         return diagnostic and ('\n' in text or len(text) > 240)
 
-    def _set_result_output(self, stack, summary, log, text, diagnostic=False):
-        text = str(text or '')
-        if self._result_uses_log(text, diagnostic):
-            log.clear()
-            log.feed(text)
-            stack.set_visible_child_name('log')
-        else:
-            summary.set_text(text)
-            stack.set_visible_child_name('summary')
+    def _toggle_result_log(self, button, output):
+        show_log = button.get_active()
+        output._result_stack.set_visible_child_name(
+            'log' if show_log else 'summary')
+        button.set_label(_('Show Summary') if show_log else _('View Build Log'))
 
-    def _create_method_header(self, outer, method_id, title, back_callback):
+    def _set_result_output(self, output, summary, log, text, diagnostic=False,
+                           build_log=''):
+        text = str(text or '')
+        summary.set_text(text)
+        summary.select_region(0, 0)
+        output._result_summary_stack.set_visible_child_name('text')
+        self._set_result_log_state(
+            output, log, build_log, diagnostic, text)
+
+    def _create_method_header(self, outer, method_id, title, _back_callback):
         summary, sections = CREATE_HELP[method_id]
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        controls.pack_start(self._back_button(back_callback), False, False, 0)
-        controls.pack_start(self._page_title_label(title), True, True, 0)
+        controls.pack_start(self._page_title_label(title), False, False, 0)
         help_button = HelpPopoverButton(
             _('Help: {}').format(title), summary, sections,
-            label=_('Help'), tooltip=_('Show help for this creation method'),
+            compact=True, tooltip=_('Show help for this creation method'),
             markup=True)
-        help_button.set_focus_on_click(False)
-        controls.pack_end(help_button, False, False, 0)
+        controls.pack_start(help_button, False, False, 0)
         outer.pack_start(controls, False, False, 0)
         purpose = Gtk.Label(label=summary, xalign=0)
         purpose.set_line_wrap(True)
         purpose.get_style_context().add_class('page-subtitle')
         outer.pack_start(purpose, False, False, 0)
+
+    def _module_state_help_button(self):
+        return HelpPopoverButton(
+            _('Module Sets'),
+            _('MiniOS can use one module set in the current session and a different set after restart.'),
+            (
+                (_('Running Now'),
+                 _('Shows modules that are currently loaded into the live system. Changes made here affect this session only and do not decide what MiniOS will load after restart.')),
+                (_('Next Boot'),
+                 _('Use Add Module to copy a module into persistent storage for the next startup. Excluding a user module moves it to the disabled module store instead of deleting it; select an excluded module to include it again. Base modules and modules outside persistent writable storage cannot be changed here. These actions do not change the current session.')),
+                (_('Why the lists can differ'),
+                 _('You can temporarily activate or deactivate a module for testing while keeping the next-boot configuration unchanged, or prepare a different module set for the next restart. Compare both tabs before rebooting when you want the change to persist.')),
+            ),
+            compact=True, tooltip=_('How do Running Now and Next Boot differ?'),
+            markup=True, width=520)
 
     def _build_content(self):
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -204,37 +809,54 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         root.set_margin_end(8)
         self.add(root)
 
-        self.workspace_stack = Gtk.Stack()
-        self.workspace_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        switcher = Gtk.StackSwitcher(stack=self.workspace_stack)
-        switcher.set_halign(Gtk.Align.CENTER)
-        root.pack_start(switcher, False, False, 0)
-
-        self.workspace_stack.add_titled(
-            self._build_modules_workspace(), 'modules', _('Modules'))
-        self.workspace_stack.add_titled(
-            self._build_create_workspace(), 'create', _('Create'))
-        root.pack_start(self.workspace_stack, True, True, 0)
+        self.workspace_notebook = Gtk.Notebook()
+        self.workspace_notebook.get_style_context().add_class('module-manager-notebook')
+        self.workspace_notebook.set_tab_pos(Gtk.PositionType.TOP)
+        self.workspace_notebook.set_scrollable(False)
+        modules_page = self._build_modules_workspace()
+        create_page = self._build_create_workspace()
+        for page in (modules_page, create_page):
+            page.set_margin_top(12)
+            page.set_margin_bottom(12)
+            page.set_margin_start(12)
+            page.set_margin_end(12)
+        self.workspace_notebook.append_page(
+            modules_page, Gtk.Label(label=_('Manage Modules')))
+        self.workspace_notebook.append_page(
+            create_page, Gtk.Label(label=_('Create Module')))
+        self.workspace_notebook.connect('switch-page', self._update_header_back)
+        self.module_pages.connect('notify::visible-child-name', self._update_header_back)
+        self.create_pages.connect('notify::visible-child-name', self._update_header_back)
+        root.pack_start(self.workspace_notebook, True, True, 0)
+        self._update_header_back()
 
     def _build_modules_workspace(self):
         self.module_pages = Gtk.Stack()
         self.module_pages.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        title = Gtk.Label(label=_('Module composition'), xalign=0)
+        heading = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        title = Gtk.Label(label=_('Module Sets'), xalign=0)
         title.get_style_context().add_class('page-title')
-        box.pack_start(title, False, False, 0)
+        heading.pack_start(title, False, False, 0)
+        heading.pack_start(self._module_state_help_button(), False, False, 0)
+        box.pack_start(heading, False, False, 0)
 
-        snapshots = Gtk.Stack()
-        snapshots.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        switcher = Gtk.StackSwitcher(stack=snapshots)
-        switcher.set_halign(Gtk.Align.START)
-        box.pack_start(switcher, False, False, 0)
-
-        snapshots.add_titled(
-            self._build_running_snapshot(), 'running', _('Running Now'))
-        snapshots.add_titled(
-            self._build_next_boot_snapshot(), 'next-boot', _('Next Boot'))
-        box.pack_start(snapshots, True, True, 0)
+        self.snapshot_notebook = Gtk.Notebook()
+        self.snapshot_notebook.get_style_context().add_class('module-manager-notebook')
+        self.snapshot_notebook.set_tab_pos(Gtk.PositionType.TOP)
+        self.snapshot_notebook.set_scrollable(False)
+        running_page = self._build_running_snapshot()
+        next_boot_page = self._build_next_boot_snapshot()
+        for page in (running_page, next_boot_page):
+            page.set_margin_top(12)
+            page.set_margin_bottom(12)
+            page.set_margin_start(12)
+            page.set_margin_end(12)
+        self.snapshot_notebook.append_page(
+            running_page, Gtk.Label(label=_('Running Now')))
+        self.snapshot_notebook.append_page(
+            next_boot_page, Gtk.Label(label=_('Next Boot')))
+        box.pack_start(self.snapshot_notebook, True, True, 0)
         self.module_pages.add_named(box, 'composition')
         self.module_pages.add_named(self._build_module_details(), 'details')
         return self.module_pages
@@ -281,8 +903,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.next_boot_add.set_image(new_icon('list-add-symbolic', accessible_name=_('Add Module…')))
         self.next_boot_add.get_style_context().add_class('minios-text-button')
         self.next_boot_add.set_always_show_image(True)
-        self.next_boot_add.set_no_show_all(True)
-        self.next_boot_add.hide()
+        self.next_boot_add.set_sensitive(False)
         self.next_boot_add.connect('clicked', self._choose_next_boot_module)
         controls.pack_end(self.next_boot_add, False, False, 0)
         refresh = Gtk.Button(label=_('Refresh'))
@@ -292,6 +913,13 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         refresh.connect('clicked', lambda _button: self.refresh_next_boot_snapshot())
         controls.pack_end(refresh, False, False, 0)
         box.pack_start(controls, False, False, 0)
+
+        self.next_boot_storage_notice = StatusBanner(
+            _('Modules cannot be added or removed because no durable writable MiniOS module storage is available.'),
+            intent='warning')
+        self.next_boot_storage_notice.set_no_show_all(True)
+        self.next_boot_storage_notice.hide()
+        box.pack_start(self.next_boot_storage_notice, False, False, 0)
 
         self.next_boot_stack = Gtk.Stack()
         self.next_boot_message = self._snapshot_placeholder(
@@ -314,8 +942,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
     def _build_module_details(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(lambda _button: self._show_module_composition())
-        controls.pack_start(back, False, False, 0)
         self.detail_title = Gtk.Label(label=_('Module Details'), xalign=0)
         self.detail_title.get_style_context().add_class('page-title')
         controls.pack_start(self.detail_title, True, True, 0)
@@ -331,6 +957,17 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.detail_next_boot.connect(
             'clicked', lambda _button: self._run_detail_action('next-boot'))
         controls.pack_end(self.detail_next_boot, False, False, 0)
+        self.detail_delete = Gtk.Button(label=_('Delete Module'))
+        self.detail_delete.set_image(new_icon(
+            ('edit-delete-symbolic', 'edit-delete'), Gtk.IconSize.BUTTON,
+            accessible_name=_('Delete Module')))
+        self.detail_delete.set_always_show_image(True)
+        self.detail_delete.set_no_show_all(True)
+        self.detail_delete.get_style_context().add_class('destructive-action')
+        self.detail_delete.hide()
+        self.detail_delete.connect(
+            'clicked', lambda _button: self._run_detail_action('delete'))
+        controls.pack_end(self.detail_delete, False, False, 0)
         self.detail_extract = Gtk.Button(label=_('Extract to Folder…'))
         self.detail_extract.set_image(new_icon('document-save-symbolic', accessible_name=_('Extract to Folder…')))
         self.detail_extract.get_style_context().add_class('minios-text-button')
@@ -346,9 +983,14 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         outer.pack_start(self.detail_source, False, False, 0)
         self.detail_meta = Gtk.Label(xalign=0)
         outer.pack_start(self.detail_meta, False, False, 0)
-        self.detail_status = Gtk.Label(xalign=0)
-        self.detail_status.set_line_wrap(True)
-        outer.pack_start(self.detail_status, False, False, 0)
+
+        self.detail_notice_revealer = Gtk.Revealer()
+        self.detail_notice_revealer.set_transition_type(
+            Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.detail_notice = StatusBanner('', intent='error')
+        self.detail_notice_revealer.add(self.detail_notice)
+        self.detail_notice_revealer.set_reveal_child(False)
+        outer.pack_start(self.detail_notice_revealer, False, False, 0)
 
         search_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self.detail_search = Gtk.SearchEntry()
@@ -356,6 +998,14 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.detail_search.connect('search-changed', self._on_detail_search_changed)
         search_row.pack_start(self.detail_search, True, True, 0)
         outer.pack_start(search_row, False, False, 0)
+
+        # Keep transient selection/action text below the search field so the
+        # search position never moves as inspection state changes.
+        self.detail_status = Gtk.Label(xalign=0)
+        self.detail_status.set_line_wrap(True)
+        self.detail_status.set_no_show_all(True)
+        self.detail_status.hide()
+        outer.pack_start(self.detail_status, False, False, 0)
 
         # icon, name, type, size, full path, is directory, target, mode
         self.detail_store = Gtk.TreeStore(str, str, str, str, str, bool, str, str)
@@ -389,31 +1039,41 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         scrolled.add(self.detail_tree)
-        outer.pack_start(scrolled, True, True, 0)
+
+        # Paint the rounded mask and frame after GtkTreeView without adding
+        # overlay child widgets.  That preserves the visual stacking while all
+        # pointer events continue to reach the table normally.
+        viewer = ModuleFileViewer()
+        viewer.add(scrolled)
+        outer.pack_start(viewer, True, True, 0)
         self._detail_inspection = None
         return outer
 
+    def _set_detail_status(self, text):
+        text = str(text or '')
+        self.detail_status.set_text(text)
+        if text:
+            self.detail_status.show()
+        else:
+            self.detail_status.hide()
+
+    def _set_detail_notice(self, text=None, intent='error'):
+        if not text:
+            self.detail_notice_revealer.set_reveal_child(False)
+            self.detail_notice.set_text('')
+            return
+        self.detail_notice.set_intent(intent)
+        self.detail_notice.set_text(str(text))
+        self.detail_notice_revealer.set_reveal_child(True)
+
     def _snapshot_placeholder(self, title, detail):
-        frame = Gtk.Frame()
-        frame.get_style_context().add_class('empty-state')
-        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        body.set_valign(Gtk.Align.CENTER)
-        body.set_halign(Gtk.Align.CENTER)
-        body.set_margin_top(24)
-        body.set_margin_bottom(24)
-        body.set_margin_start(12)
-        body.set_margin_end(12)
-        heading = Gtk.Label(label=title)
-        heading.get_style_context().add_class('empty-state-title')
-        heading.set_line_wrap(True)
-        heading.set_justify(Gtk.Justification.CENTER)
-        body.pack_start(heading, False, False, 0)
-        text = Gtk.Label(label=detail)
-        text.set_line_wrap(True)
-        text.set_justify(Gtk.Justification.CENTER)
-        body.pack_start(text, False, False, 0)
-        frame.add(body)
-        return frame
+        return StatePlaceholder(title, detail)
+
+    @staticmethod
+    def _task_pair(outcome):
+        if outcome.succeeded:
+            return outcome.value
+        return False, str(outcome.error or '')
 
     def _set_running_message(self, title, detail):
         current = self.running_stack.get_child_by_name('message')
@@ -431,14 +1091,19 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._set_running_message(
             _('Loading running modules…'),
             _('Reading the authoritative module order from MiniOS Tools.'))
-        thread = threading.Thread(
-            target=self._load_running_worker, args=(request,))
-        thread.daemon = True
-        thread.start()
+        BackgroundTask(
+            lambda _token: load_running_snapshot(),
+            lambda outcome: self._apply_running_snapshot_outcome(request, outcome),
+            owner=self).start()
 
-    def _load_running_worker(self, request):
-        snapshot = load_running_snapshot()
-        GLib.idle_add(self._apply_running_snapshot, request, snapshot)
+    def _apply_running_snapshot_outcome(self, request, outcome):
+        if outcome.succeeded:
+            return self._apply_running_snapshot(request, outcome.value)
+        if request == self._running_request:
+            self.running_status.set_text(_('Running module state unavailable'))
+            self._set_running_message(
+                _('Could not load running modules'), str(outcome.error))
+        return False
 
     def _apply_running_snapshot(self, request, snapshot):
         if request != self._running_request:
@@ -448,7 +1113,8 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.running_list.remove(child)
 
         if snapshot.state == LoadState.READY:
-            for index, module in enumerate(snapshot.modules):
+            for index, module in enumerate(
+                    module_presentation_order(snapshot.modules)):
                 self.running_list.add(self._running_module_row(index, module))
             self.running_list.show_all()
             self.running_status.set_text(
@@ -466,6 +1132,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self._set_running_message(
                 _('Could not load running modules'),
                 snapshot.message or _('The running module state is unavailable.'))
+        self._refresh_build_base_choices()
         if self._detail_module is not None:
             self._update_detail_actions()
         return False
@@ -498,7 +1165,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         row.scope = scope
         content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
 
-        order = Gtk.Label(label=str(index + 1))
+        order = Gtk.Label(label='' if index is None else str(index + 1))
         order.set_width_chars(2)
         order.set_xalign(1)
         order.get_style_context().add_class('row-meta')
@@ -557,37 +1224,51 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
     def refresh_next_boot_snapshot(self):
         self._next_boot_request += 1
         request = self._next_boot_request
-        self.next_boot_add.hide()
+        self.next_boot_add.set_sensitive(False)
+        self.next_boot_storage_notice.hide()
         self.next_boot_status.set_text(_('Loading next-boot module state…'))
         self._set_next_boot_message(
             _('Loading next-boot modules…'),
             _('Applying the current MiniOS boot module rules.'))
-        thread = threading.Thread(
-            target=self._load_next_boot_worker, args=(request,))
-        thread.daemon = True
-        thread.start()
+        BackgroundTask(
+            lambda _token: load_next_boot_snapshot(),
+            lambda outcome: self._apply_next_boot_snapshot_outcome(request, outcome),
+            owner=self).start()
 
-    def _load_next_boot_worker(self, request):
-        snapshot = load_next_boot_snapshot()
-        GLib.idle_add(self._apply_next_boot_snapshot, request, snapshot)
+    def _apply_next_boot_snapshot_outcome(self, request, outcome):
+        if outcome.succeeded:
+            return self._apply_next_boot_snapshot(request, outcome.value)
+        if request == self._next_boot_request:
+            self.next_boot_status.set_text(_('Next-boot module state unavailable'))
+            self._set_next_boot_message(
+                _('Could not load next-boot modules'), str(outcome.error))
+        return False
 
     def _apply_next_boot_snapshot(self, request, snapshot):
         if request != self._next_boot_request:
             return False
         self._next_boot_snapshot = snapshot
-        self.next_boot_add.hide()
-        if snapshot.usable and snapshot.add_available:
-            self.next_boot_add.show()
+        add_available = snapshot.usable and snapshot.add_available
+        self.next_boot_add.set_sensitive(add_available)
+        self.next_boot_add.set_tooltip_text(
+            None if add_available else
+            _('Adding modules requires durable writable MiniOS module storage.'))
+        if snapshot.usable and not snapshot.add_available:
+            self.next_boot_storage_notice.show()
+        else:
+            self.next_boot_storage_notice.hide()
         for child in self.next_boot_list.get_children():
             self.next_boot_list.remove(child)
 
         if snapshot.state == LoadState.READY:
-            for index, module in enumerate(snapshot.modules):
+            for index, module in enumerate(
+                    module_presentation_order(snapshot.modules)):
                 self.next_boot_list.add(self._next_boot_module_row(index, module))
+            for module in snapshot.disabled_modules:
+                self.next_boot_list.add(self._next_boot_module_row(None, module))
             self.next_boot_list.show_all()
             self.next_boot_status.set_text(
-                _('{} next-boot modules · .{}').format(
-                    len(snapshot.modules), snapshot.bundle_extension))
+                _('{} next-boot modules').format(len(snapshot.modules)))
             self.next_boot_status.set_tooltip_text(snapshot.data_root)
             self.next_boot_stack.set_visible_child_name('list')
         elif snapshot.state == LoadState.EMPTY:
@@ -611,29 +1292,24 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             'base': _('Base system'),
             'modules': _('Modules'),
             'persistence': _('Persistence'),
+            'disabled-modules': _('Excluded'),
+            'disabled-persistence': _('Excluded'),
         }
+        scope = ('next-boot-disabled'
+                 if module.origin.startswith('disabled-') else 'next-boot')
         return self._module_row(
-            index, module, 'next-boot',
+            index, module, scope,
             origin_names.get(module.origin, module.origin))
 
     def _choose_next_boot_module(self, _button):
         snapshot = self._next_boot_snapshot
         if snapshot is None or not snapshot.usable or not snapshot.add_available:
             return
-        dialog = Gtk.FileChooserDialog(
-            title=_('Add Module to Next Boot'), parent=self,
-            action=Gtk.FileChooserAction.OPEN)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        file_filter = Gtk.FileFilter()
-        file_filter.set_name(_('MiniOS modules'))
-        file_filter.add_pattern('*.{}'.format(snapshot.bundle_extension or 'sb'))
-        dialog.add_filter(file_filter)
-        response = dialog.run()
-        source = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        source = choose_open_file(
+            self, _('Add Module to Next Boot'),
+            filters=((_('MiniOS modules'),
+                      ('*.{}'.format(snapshot.bundle_extension or 'sb'),)),),
+            accept_label=_('Select'))
         if not source:
             return
         if not self._confirm_action(
@@ -642,14 +1318,10 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return
         self.next_boot_add.set_sensitive(False)
         self.next_boot_status.set_text(_('Adding module to Next Boot…'))
-        thread = threading.Thread(
-            target=self._next_boot_add_worker, args=(source,))
-        thread.daemon = True
-        thread.start()
-
-    def _next_boot_add_worker(self, source):
-        success, message = add_to_next_boot(source)
-        GLib.idle_add(self._apply_next_boot_add_result, success, message)
+        BackgroundTask(
+            lambda _token: add_to_next_boot(source),
+            lambda outcome: self._apply_next_boot_add_result(
+                *self._task_pair(outcome)), owner=self).start()
 
     def _apply_next_boot_add_result(self, success, message):
         if not success:
@@ -657,7 +1329,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             snapshot = self._next_boot_snapshot
             if snapshot is not None and snapshot.usable and snapshot.add_available:
                 self.next_boot_add.set_sensitive(True)
-                self.next_boot_add.show()
             return False
         self.refresh_next_boot_snapshot()
         return False
@@ -682,26 +1353,46 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.detail_search.set_text('')
         self.detail_title.set_text(module.name)
         self.detail_source.set_text(module.source or _('Backing source unavailable'))
-        self.detail_meta.set_text('')
+        # GtkLabel is selectable so the path can still be copied, but opening
+        # the details page must not present the path as a pre-selected value.
+        self.detail_source.select_region(0, 0)
+        # Use the metadata line itself as the loading indicator. It is
+        # replaced by the size/count summary when inspection completes, which
+        # keeps the search field at exactly the same vertical position.
+        self.detail_meta.set_text(_('Reading module contents…'))
+        self._set_detail_status('')
+        self._set_detail_notice()
         self.detail_extract.set_sensitive(False)
         self.module_pages.set_visible_child_name('details')
+        # Clear any focus GTK transferred to the first selectable label while
+        # switching Stack pages. Manual mouse selection remains available.
+        self.set_focus(None)
+        self.detail_source.select_region(0, 0)
         self._update_detail_actions()
 
         if not module.source:
-            self.detail_status.set_text(
-                _('The backing module source is unavailable for inspection.'))
+            self.detail_meta.set_text('')
+            self._set_detail_notice(
+                _('The backing module source is unavailable for inspection.'),
+                intent='warning')
             return
 
-        self.detail_status.set_text(_('Reading module contents…'))
-        thread = threading.Thread(
-            target=self._load_inspection_worker,
-            args=(request, module.source))
-        thread.daemon = True
-        thread.start()
+        source = module.source
+        allow_privileged = scope == 'runtime'
+        BackgroundTask(
+            lambda _token: load_module_inspection(
+                source, allow_privileged=allow_privileged),
+            lambda outcome: self._apply_inspection_outcome(request, outcome),
+            owner=self).start()
 
-    def _load_inspection_worker(self, request, source):
-        inspection = load_module_inspection(source)
-        GLib.idle_add(self._apply_module_inspection, request, inspection)
+    def _apply_inspection_outcome(self, request, outcome):
+        if outcome.succeeded:
+            return self._apply_module_inspection(request, outcome.value)
+        if request == self._inspection_request:
+            self.detail_meta.set_text('')
+            self._set_detail_notice(str(outcome.error))
+            self.detail_extract.set_sensitive(False)
+        return False
 
     def _apply_module_inspection(self, request, inspection):
         if request != self._inspection_request:
@@ -720,11 +1411,13 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                 summary += _(' · {directories} folders · {files} files · {links} links').format(
                     directories=counts['directory'], files=counts['file'], links=counts['symlink'])
             self.detail_meta.set_text(summary)
-            self.detail_status.set_text('')
+            self._set_detail_status('')
+            self._set_detail_notice()
             self.detail_extract.set_sensitive(True)
         else:
             self.detail_meta.set_text('')
-            self.detail_status.set_text(
+            self._set_detail_status('')
+            self._set_detail_notice(
                 inspection.message or _('Module inspection failed.'))
             self.detail_extract.set_sensitive(False)
         return False
@@ -800,7 +1493,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         model, tree_iter = selection.get_selected()
         if tree_iter is None:
             if self._detail_inspection is not None:
-                self.detail_status.set_text('')
+                self._set_detail_status('')
             return
         path = model.get_value(tree_iter, 4)
         target = model.get_value(tree_iter, 6)
@@ -810,7 +1503,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             details += _(' → {}').format(target)
         if mode:
             details += _(' · {}').format(mode)
-        self.detail_status.set_text(details)
+        self._set_detail_status(details)
 
     @staticmethod
     def _snapshot_module(snapshot, name):
@@ -832,12 +1525,17 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             button.hide()
             return
         button.set_label(action[0])
+        button.set_image(new_icon(
+            action[5], Gtk.IconSize.BUTTON, accessible_name=action[0]))
+        button.set_always_show_image(True)
         button.set_sensitive(True)
         button.show()
 
     def _update_detail_actions(self):
         self._set_detail_action('runtime', None)
         self._set_detail_action('next-boot', None)
+        self._detail_delete_action = None
+        self.detail_delete.hide()
         module = self._detail_module
         running = self._running_snapshot
         next_boot = self._next_boot_snapshot
@@ -846,16 +1544,28 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
 
         running_match = self._snapshot_module(running, module.name)
         next_match = self._snapshot_module(next_boot, module.name)
-        if self._detail_scope == 'running':
-            if (running is not None and running.usable and
-                    running.union_backend == 'aufs' and
-                    next_boot is not None and next_boot.usable and
-                    (next_match is None or next_match.origin != 'base')):
+        aufs_available = (
+            running is not None and running.usable and
+            running.union_backend == 'aufs')
+        if aufs_available:
+            if running_match is None and module.source and module.origin != 'base':
                 self._set_detail_action('runtime', (
-                    _('Deactivate for This Session'),
-                    _('Deactivate {} for this session? Next Boot will not change.').format(
+                    _('Mount Module'),
+                    _('Mount {} in the running MiniOS session? Next Boot will not change.').format(
                         module.name),
-                    deactivate_for_session, module.name))
+                    activate_for_session, module.source, False,
+                    ('media-mount', 'drive-harddisk')))
+            elif (running_match is not None and
+                  next_boot is not None and next_boot.usable and
+                  (next_match is None or next_match.origin != 'base')):
+                self._set_detail_action('runtime', (
+                    _('Unmount Module'),
+                    _('Unmount {} from the running MiniOS session? Next Boot will not change.').format(
+                        module.name),
+                    deactivate_for_session, running_match.name, False,
+                    ('media-eject', 'media-eject-symbolic')))
+
+        if self._detail_scope == 'running':
             if (next_boot is not None and next_boot.usable and
                     next_boot.add_available and next_match is None and
                     module.source):
@@ -863,104 +1573,154 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                     _('Add to Next Boot'),
                     _('Add {} to Next Boot? The running system will not change.').format(
                         module.name),
-                    add_to_next_boot, module.source))
-        elif self._detail_scope == 'next-boot':
-            if module.removable:
-                self._set_detail_action('next-boot', (
-                    _('Remove from Next Boot'),
-                    _('Remove {} from Next Boot? The running system will not change.').format(
-                        module.name),
-                    remove_from_next_boot, module.name))
-            if (module.origin != 'base' and module.source and
-                    running is not None and running.usable and
-                    running.union_backend == 'aufs' and running_match is None):
-                self._set_detail_action('runtime', (
-                    _('Activate for This Session'),
-                    _('Activate {} for this session? Next Boot will not change.').format(
-                        module.name),
-                    activate_for_session, module.source))
+                    add_to_next_boot, module.source, False,
+                    ('list-add-symbolic', 'list-add')))
+        elif self._detail_scope == 'next-boot' and module.removable:
+            self._set_detail_action('next-boot', (
+                _('Remove from Next Boot'),
+                _('Remove {} from Next Boot? Its file will be kept in the disabled module store so it can be restored later. The running system will not change.').format(
+                    module.name),
+                remove_from_next_boot, module.name, False,
+                ('list-remove-symbolic', 'list-remove')))
+        elif self._detail_scope == 'next-boot-disabled' and module.removable:
+            self._set_detail_action('next-boot', (
+                _('Include in Next Boot'),
+                _('Include {} in Next Boot? The running system will not change.').format(
+                    module.name),
+                enable_for_next_boot, module.name, False,
+                ('list-add-symbolic', 'list-add')))
+            self._detail_delete_action = (
+                _('Delete Module'),
+                _('Permanently delete {}? This cannot be undone.').format(
+                    module.name),
+                delete_disabled_module, module.name, True,
+                ('edit-delete-symbolic', 'edit-delete'))
+            self.detail_delete.set_sensitive(True)
+            self.detail_delete.show()
 
-    def _confirm_action(self, text, confirm_label=None):
+    def _confirm_action(self, text, confirm_label=None, destructive=False):
         return ask_confirmation(
-            self, text, confirm_label=confirm_label or _('Continue'))
+            self, text, destructive=destructive,
+            confirm_label=confirm_label or _('Continue'))
 
     def _run_detail_action(self, scope):
-        action = (self._detail_runtime_action if scope == 'runtime'
-                  else self._detail_next_boot_action)
+        if scope == 'runtime':
+            action = self._detail_runtime_action
+        elif scope == 'delete':
+            action = self._detail_delete_action
+        else:
+            action = self._detail_next_boot_action
         module = self._detail_module
         if (action is None or module is None or
-                not self._confirm_action(action[1], action[0])):
+                not self._confirm_action(action[1], action[0], action[4])):
             return
         self.detail_runtime.set_sensitive(False)
         self.detail_next_boot.set_sensitive(False)
-        self.detail_status.set_text(_('Applying module change…'))
-        thread = threading.Thread(
-            target=self._detail_action_worker,
-            args=(module.name, action[2], action[3]))
-        thread.daemon = True
-        thread.start()
+        self.detail_delete.set_sensitive(False)
+        self._set_detail_notice()
+        self._set_detail_status(_('Applying module change…'))
+        module_name = module.name
+        function, argument = action[2], action[3]
+        BackgroundTask(
+            lambda _token: function(argument),
+            lambda outcome: self._apply_detail_action_result(
+                module_name, scope, *self._task_pair(outcome)),
+            owner=self).start()
 
-    def _detail_action_worker(self, module_name, function, argument):
-        success, message = function(argument)
-        GLib.idle_add(
-            self._apply_detail_action_result, module_name, success, message)
-
-    def _apply_detail_action_result(self, module_name, success, message):
+    def _apply_detail_action_result(self, module_name, scope, success, message):
         module = self._detail_module
         if module is None or module.name != module_name:
             return False
         if not success:
-            self.detail_status.set_text(message or _('Module change failed.'))
+            self._set_detail_status('')
+            self._set_detail_notice(message or _('Module change failed.'))
             self._update_detail_actions()
             return False
-        self.module_pages.set_visible_child_name('composition')
-        self.refresh_running_snapshot()
-        self.refresh_next_boot_snapshot()
+        if scope == 'delete':
+            self._detail_module = None
+            self._show_module_composition()
+            self.refresh_next_boot_snapshot()
+            return False
+        self._set_detail_notice()
+        self._set_detail_status(_('Module state updated.'))
+        if scope == 'runtime':
+            self.refresh_running_snapshot()
+        else:
+            self.refresh_next_boot_snapshot()
         return False
 
     def _choose_extract_target(self, _button):
         module = self._detail_module
         if module is None or not module.source:
             return
-        dialog = Gtk.FileChooserDialog(
-            title=_('Extract Module to Folder'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Extract'), Gtk.ResponseType.ACCEPT)
-        dialog.set_create_folders(True)
-        dialog.set_local_only(True)
         default_name = os.path.splitext(module.name)[0] or module.name
-        dialog.set_current_name(default_name)
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = choose_save_file(
+            self, _('Extract Module to Folder'), current_name=default_name,
+            accept_label=_('Extract'), overwrite_confirmation=False)
         if target:
             self._start_module_extraction(module.source, target)
 
     def _start_module_extraction(self, source, target):
         self.detail_extract.set_sensitive(False)
-        self.detail_status.set_text(_('Extracting module…'))
-        thread = threading.Thread(
-            target=self._extract_module_worker, args=(source, target))
-        thread.daemon = True
-        thread.start()
+        self._set_detail_status('')
+        self._set_detail_notice()
+        self._extract_job = ModuleExtractionJob(
+            self, source, target,
+            lambda success, cancelled, message: self._apply_extraction_result(
+                source, target, success, cancelled, message))
+        self._extract_job.start()
 
-    def _extract_module_worker(self, source, target):
-        success, message = extract_module(source, target)
-        GLib.idle_add(
-            self._apply_extraction_result, source, success, message)
-
-    def _apply_extraction_result(self, source, success, message):
+    def _apply_extraction_result(self, source, target, success, cancelled, message):
+        self._extract_job = None
         module = self._detail_module
         if module is None or module.source != source:
             return False
         self.detail_extract.set_sensitive(True)
         if success:
-            self.detail_status.set_text(_('Extracted to {}').format(message))
+            self._set_detail_status(_('Extracted to {}').format(target))
+        elif cancelled:
+            self._set_detail_status(_('Extraction cancelled.'))
         else:
-            self.detail_status.set_text(message)
+            self._set_detail_status('')
+            show_error_dialog(
+                self, _('Could not extract the module.'),
+                message or _('The module operation failed.'))
         return False
+
+    def _scrollable_configure_page(self, child):
+        # Keep page navigation/help and the primary action fixed.  Only the
+        # configure body scrolls when the window is too short.
+        children = child.get_children()
+        if len(children) < 4:
+            return child
+
+        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        header = children[:2]
+        body_children = children[2:-1]
+        footer = children[-1]
+
+        for widget in children:
+            child.remove(widget)
+        for widget in header:
+            page.pack_start(widget, False, False, 0)
+
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        for widget in body_children:
+            body.pack_start(widget, False, False, 0)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_shadow_type(Gtk.ShadowType.NONE)
+        scrolled.set_propagate_natural_height(False)
+        scrolled.set_hexpand(True)
+        scrolled.set_vexpand(True)
+        scrolled.add_with_viewport(body)
+        viewport = body.get_parent()
+        if isinstance(viewport, Gtk.Viewport):
+            viewport.set_shadow_type(Gtk.ShadowType.NONE)
+        page.pack_start(scrolled, True, True, 0)
+        page.pack_end(footer, False, False, 0)
+        return page
 
     def _build_create_workspace(self):
         self.create_pages = Gtk.Stack()
@@ -968,23 +1728,28 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.create_pages.set_hhomogeneous(False)
         self.create_pages.set_vhomogeneous(False)
         self.create_pages.add_named(self._build_create_methods(), 'methods')
-        self.create_pages.add_named(self._build_package_configure(), 'package-configure')
+        self.create_pages.add_named(self._scrollable_configure_page(
+            self._build_package_configure()), 'package-configure')
         self.create_pages.add_named(self._build_package_review(), 'package-review')
         self.create_pages.add_named(self._build_package_run(), 'package-run')
         self.create_pages.add_named(self._build_package_result(), 'package-result')
-        self.create_pages.add_named(self._build_script_configure(), 'script-configure')
+        self.create_pages.add_named(self._scrollable_configure_page(
+            self._build_script_configure()), 'script-configure')
         self.create_pages.add_named(self._build_script_review(), 'script-review')
         self.create_pages.add_named(self._build_script_run(), 'script-run')
         self.create_pages.add_named(self._build_script_result(), 'script-result')
-        self.create_pages.add_named(self._build_chroot_configure(), 'chroot-configure')
+        self.create_pages.add_named(self._scrollable_configure_page(
+            self._build_chroot_configure()), 'chroot-configure')
         self.create_pages.add_named(self._build_chroot_review(), 'chroot-review')
         self.create_pages.add_named(self._build_chroot_run(), 'chroot-run')
         self.create_pages.add_named(self._build_chroot_result(), 'chroot-result')
-        self.create_pages.add_named(self._build_folder_configure(), 'folder-configure')
+        self.create_pages.add_named(self._scrollable_configure_page(
+            self._build_folder_configure()), 'folder-configure')
         self.create_pages.add_named(self._build_folder_review(), 'folder-review')
         self.create_pages.add_named(self._build_folder_run(), 'folder-run')
         self.create_pages.add_named(self._build_folder_result(), 'folder-result')
-        self.create_pages.add_named(self._build_session_configure(), 'session-configure')
+        self.create_pages.add_named(self._scrollable_configure_page(
+            self._build_session_configure()), 'session-configure')
         self.create_pages.add_named(self._build_session_review(), 'session-review')
         self.create_pages.add_named(self._build_session_run(), 'session-run')
         self.create_pages.add_named(self._build_session_result(), 'session-result')
@@ -1029,12 +1794,16 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         listbox.unselect_all()
         method = getattr(row, 'method_name', None)
         if method == 'packages':
+            self._refresh_build_base_choices()
             self.package_config_status.set_text('')
             self.create_pages.set_visible_child_name('package-configure')
+            self._refresh_package_index_notice()
         elif method == 'script':
+            self._refresh_build_base_choices()
             self.script_config_status.set_text('')
             self.create_pages.set_visible_child_name('script-configure')
         elif method == 'chroot':
+            self._refresh_build_base_choices()
             self.chroot_config_status.set_text('')
             self.create_pages.set_visible_child_name('chroot-configure')
         elif method == 'folder':
@@ -1072,8 +1841,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         for item in ('zstd', 'xz', 'gzip', 'lzo', 'lz4'):
             self.folder_compression.append_text(item)
         self.folder_compression.set_active(0)
-        grid.attach(Gtk.Label(label=_('Compression'), xalign=0), 0, 2, 1, 1)
-        grid.attach(self.folder_compression, 1, 2, 1, 1)
+        grid.attach(self._field_label_with_help(
+            _('Compression'), self._compression_help_button()), 0, 2, 1, 1)
+        grid.attach(self.folder_compression, 1, 2, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.folder_config_status = Gtk.Label(xalign=0)
@@ -1093,17 +1863,23 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return snapshot.bundle_extension
         return 'sb'
 
+    def _choose_output_path(self, entry, default_name):
+        current = entry.get_text().strip()
+        current_folder = None
+        current_name = default_name
+        if current:
+            directory = os.path.dirname(current)
+            if os.path.isdir(directory):
+                current_folder = directory
+            current_name = os.path.basename(current)
+        return choose_save_file(
+            self, _('Choose Output Module'), current_folder=current_folder,
+            current_name=current_name, accept_label=_('Select'),
+            overwrite_confirmation=False)
+
     def _choose_folder_source(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Source Folder'), parent=self,
-            action=Gtk.FileChooserAction.SELECT_FOLDER)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        response = dialog.run()
-        source = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        source = choose_folder(
+            self, _('Choose Source Folder'), accept_label=_('Select'))
         if not source:
             return
         self.folder_source.set_text(source)
@@ -1114,24 +1890,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                              '{}.{}'.format(name, self._current_bundle_extension())))
 
     def _choose_folder_target(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Output Module'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        current = self.folder_target.get_text().strip()
-        if current:
-            directory = os.path.dirname(current)
-            if os.path.isdir(directory):
-                dialog.set_current_folder(directory)
-            dialog.set_current_name(os.path.basename(current))
-        else:
-            dialog.set_current_name('module.{}'.format(self._current_bundle_extension()))
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = self._choose_output_path(
+            self.folder_target,
+            'module.{}'.format(self._current_bundle_extension()))
         if target:
             self.folder_target.set_text(target)
 
@@ -1155,21 +1916,16 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
     def _build_folder_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(
-            lambda _b: self.create_pages.set_visible_child_name('folder-configure'))
-        controls.pack_start(back, False, False, 0)
         controls.pack_start(self._page_title_label(_('Review Folder Module')), True, True, 0)
         outer.pack_start(controls, False, False, 0)
-        self.folder_review_source = Gtk.Label(xalign=0)
-        self.folder_review_source.set_selectable(True)
-        self.folder_review_target = Gtk.Label(xalign=0)
-        self.folder_review_target.set_selectable(True)
-        self.folder_review_options = Gtk.Label(xalign=0)
-        for widget in (
-                self.folder_review_source, self.folder_review_target,
-                self.folder_review_options):
-            widget.set_line_wrap(True)
-            outer.pack_start(widget, False, False, 0)
+        card, values = self._review_card((
+            ('source', _('Source folder')),
+            ('target', _('Output module')),
+            ('compression', _('Compression')),
+            ('privileges', _('Privileges')),
+        ))
+        self.folder_review_values = values
+        outer.pack_start(card, False, False, 0)
         effect = StatusBanner(
             _('The source folder is not modified. A new module is created '
               'rootlessly; an existing output is never replaced.'),
@@ -1190,10 +1946,12 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._folder_config = configuration
         source, target, compression = configuration
         self.folder_config_status.set_text('')
-        self.folder_review_source.set_text(_('Source: {}').format(source))
-        self.folder_review_target.set_text(_('Output: {}').format(target))
-        self.folder_review_options.set_text(
-            _('Compression: {} · Privileges: none').format(compression))
+        self._set_review_values(self.folder_review_values, (
+            ('source', source),
+            ('target', target),
+            ('compression', compression),
+            ('privileges', _('None')),
+        ))
         self.create_pages.set_visible_child_name('folder-review')
 
     def _build_folder_run(self):
@@ -1220,10 +1978,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.folder_result_back.connect(
             'clicked', lambda _b: self.create_pages.set_visible_child_name('folder-configure'))
         controls.pack_start(self.folder_result_back, False, False, 0)
-        done = Gtk.Button(label=_('Done'))
-        done.get_style_context().add_class('suggested-action')
-        done.connect('clicked', lambda _b: self.create_pages.set_visible_child_name('methods'))
-        controls.pack_end(done, False, False, 0)
         outer.pack_end(controls, False, False, 0)
         return outer
 
@@ -1261,24 +2015,29 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             'publish': _('Publishing module…'),
             'complete': _('Finishing…'),
         }
-        self.folder_run_status.set_text(labels.get(phase, phase))
+        text = labels.get(phase, phase)
+        self.folder_run_status.set_text(text)
+        self.folder_run_log.feed(text + '\n')
         return False
 
     def _apply_folder_result(self, success, result):
         self.folder_spinner.stop()
         if success:
             self.folder_result_title.set_text(_('Module Created'))
-            self._set_result_output(
-                self.folder_result_output, self.folder_result_text,
-                self.folder_result_log,
-                _('Output: {output}\nSize: {size} bytes\nCompression: {compression}'
-                  '\nSHA-256: {sha256}').format(**result))
+            self._set_result_details(
+                self.folder_result_output, self.folder_result_log, (
+                    (_('Output module'), result['output']),
+                    (_('Size'), self._result_size(result['size'])),
+                    (_('Compression'), result['compression']),
+                    (_('SHA-256'), result['sha256']),
+                ), build_log=self.folder_run_log.get_text())
             self.folder_result_back.set_label(_('Create Another'))
         else:
             self.folder_result_title.set_text(_('Module Creation Failed'))
             self._set_result_output(
                 self.folder_result_output, self.folder_result_text,
-                self.folder_result_log, result, diagnostic=True)
+                self.folder_result_log, result, diagnostic=True,
+                build_log=self.folder_run_log.get_text())
             self.folder_result_back.set_label(_('Back to Folder'))
         self.create_pages.set_visible_child_name('folder-result')
         return False
@@ -1289,6 +2048,24 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._create_method_header(
             outer, 'packages', _('Packages'),
             lambda _b: self.create_pages.set_visible_child_name('methods'))
+
+        self.package_index_revealer = Gtk.Revealer()
+        self.package_index_revealer.set_transition_type(
+            Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.package_index_notice = StatusBanner('', intent='warning')
+        self.package_index_action = Gtk.Stack()
+        self.package_index_update = Gtk.Button(label=_('Update Package Lists'))
+        self.package_index_update.get_style_context().add_class('suggested-action')
+        self.package_index_update.connect('clicked', self._update_package_indexes)
+        self.package_index_spinner = Gtk.Spinner()
+        self.package_index_spinner.set_halign(Gtk.Align.CENTER)
+        self.package_index_action.add_named(self.package_index_update, 'update')
+        self.package_index_action.add_named(self.package_index_spinner, 'progress')
+        self.package_index_action.set_visible_child_name('update')
+        self.package_index_notice.pack_end(self.package_index_action, False, False, 0)
+        self.package_index_revealer.add(self.package_index_notice)
+        self.package_index_revealer.set_reveal_child(False)
+        outer.pack_start(self.package_index_revealer, False, False, 0)
 
         grid = Gtk.Grid(column_spacing=12, row_spacing=10)
         grid.get_style_context().add_class('content-card')
@@ -1324,44 +2101,99 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
 
         self.package_compression = Gtk.ComboBoxText()
         self.package_compression.set_hexpand(True)
-        for item in ('zstd', 'xz', 'gzip', 'lzo'):
+        for item in ('zstd', 'lz4', 'xz', 'gzip', 'lzo'):
             self.package_compression.append_text(item)
         self.package_compression.set_active(0)
-        grid.attach(Gtk.Label(label=_('Compression'), xalign=0), 0, 3, 1, 1)
-        grid.attach(self.package_compression, 1, 3, 1, 1)
+        grid.attach(self._field_label_with_help(
+            _('Compression'), self._compression_help_button()), 0, 3, 1, 1)
+        grid.attach(self.package_compression, 1, 3, 2, 1)
 
-        self.package_recommends = Gtk.CheckButton(label=_('Install recommended packages'))
-        self.package_recommends.set_active(True)
-        grid.attach(self.package_recommends, 1, 4, 2, 1)
+        self.package_level = self._new_build_base_combo()
+        grid.attach(self._field_label_with_help(
+            _('Build base level'), self._build_base_help_button()), 0, 4, 1, 1)
+        grid.attach(self.package_level, 1, 4, 2, 1)
+
+        recommends_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        self.package_recommends = Gtk.CheckButton(
+            label=_('Allow installation of recommended packages'))
+        self.package_recommends.set_active(False)
+        recommends_box.pack_start(self.package_recommends, True, True, 0)
+        recommends_box.pack_end(
+            self._recommended_packages_help_button(), False, False, 0)
+        grid.attach(recommends_box, 1, 5, 2, 1)
+
+        suggests_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        self.package_suggests = Gtk.CheckButton(
+            label=_('Allow installation of suggested packages'))
+        self.package_suggests.set_active(False)
+        suggests_box.pack_start(self.package_suggests, True, True, 0)
+        suggests_box.pack_end(
+            self._suggested_packages_help_button(), False, False, 0)
+        grid.attach(suggests_box, 1, 6, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.package_config_status = Gtk.Label(xalign=0)
         self.package_config_status.get_style_context().add_class('inline-error')
         self.package_config_status.set_line_wrap(True)
         outer.pack_start(self.package_config_status, False, False, 0)
-        review = Gtk.Button(label=_('Review'))
-        review.get_style_context().add_class('suggested-action')
-        review.set_halign(Gtk.Align.END)
-        review.connect('clicked', self._review_package_creation)
-        outer.pack_end(review, False, False, 0)
+        self.package_review = Gtk.Button(label=_('Review'))
+        self.package_review.get_style_context().add_class('suggested-action')
+        self.package_review.set_halign(Gtk.Align.END)
+        self.package_review.connect('clicked', self._review_package_creation)
+        outer.pack_end(self.package_review, False, False, 0)
         return outer
 
+    def _refresh_package_index_notice(self):
+        if self._package_indexes_busy:
+            return
+        self.package_index_notice.set_tooltip_text(None)
+        if package_indexes_available():
+            self.package_index_revealer.set_reveal_child(False)
+            return
+        self.package_index_notice.set_intent('warning')
+        self.package_index_notice.set_text(
+            _('Package lists have not been downloaded. Update them to enable '
+              'autocomplete for repository package names.'))
+        self.package_index_action.set_visible_child_name('update')
+        self.package_index_revealer.set_reveal_child(True)
+
+    def _update_package_indexes(self, _button):
+        if self._package_indexes_busy:
+            return
+        self._package_indexes_busy = True
+        self.package_review.set_sensitive(False)
+        self.package_index_notice.set_intent('info')
+        self.package_index_notice.set_text(_('Updating package lists…'))
+        self.package_index_notice.set_tooltip_text(None)
+        self.package_index_action.set_visible_child_name('progress')
+        self.package_index_spinner.start()
+        BackgroundTask(
+            lambda _token: update_package_indexes(),
+            lambda outcome: self._apply_package_index_update(
+                *self._task_pair(outcome)), owner=self).start()
+
+    def _apply_package_index_update(self, success, message):
+        self._package_indexes_busy = False
+        self.package_index_spinner.stop()
+        self.package_review.set_sensitive(True)
+        self.package_index_action.set_visible_child_name('update')
+        if success:
+            self._refresh_package_index_notice()
+            self.package_names.emit('changed')
+        else:
+            self.package_index_notice.set_intent('error')
+            self.package_index_notice.set_text(
+                _('Could not update package lists. Check the network connection '
+                  'and try again.'))
+            self.package_index_notice.set_tooltip_text(message or None)
+            self.package_index_revealer.set_reveal_child(True)
+        return False
+
     def _choose_package_debs(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Local Debian Packages'), parent=self,
-            action=Gtk.FileChooserAction.OPEN)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Add'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        dialog.set_select_multiple(True)
-        file_filter = Gtk.FileFilter()
-        file_filter.set_name(_('Debian packages'))
-        file_filter.add_pattern('*.deb')
-        dialog.add_filter(file_filter)
-        response = dialog.run()
-        files = dialog.get_filenames() if response == Gtk.ResponseType.ACCEPT else []
-        dialog.destroy()
+        files = choose_open_files(
+            self, _('Choose Local Debian Packages'),
+            filters=((_('Debian packages'), ('*.deb',)),),
+            accept_label=_('Add'))
         if not files:
             return
         for path in files:
@@ -1381,24 +2213,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.package_local_label.set_text(_('No local .deb files selected'))
 
     def _choose_package_target(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Output Module'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        current = self.package_target.get_text().strip()
-        if current:
-            directory = os.path.dirname(current)
-            if os.path.isdir(directory):
-                dialog.set_current_folder(directory)
-            dialog.set_current_name(os.path.basename(current))
-        else:
-            dialog.set_current_name('packages.{}'.format(self._current_bundle_extension()))
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = self._choose_output_path(
+            self.package_target,
+            'packages.{}'.format(self._current_bundle_extension()))
         if target:
             self.package_target.set_text(target)
 
@@ -1423,29 +2240,29 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return None, _('Output directory is not writable.')
         compression = self.package_compression.get_active_text() or 'zstd'
         recommends = self.package_recommends.get_active()
-        return (names, local_files, target, compression, recommends), ''
+        suggests = self.package_suggests.get_active()
+        level, error = self._build_level_value(self.package_level)
+        if error:
+            return None, error
+        return (names, local_files, target, compression, recommends, suggests, level), ''
     def _build_package_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(
-            lambda _b: self.create_pages.set_visible_child_name('package-configure'))
-        controls.pack_start(back, False, False, 0)
         controls.pack_start(self._page_title_label(_('Review Package Module')), True, True, 0)
         outer.pack_start(controls, False, False, 0)
 
-        self.package_review_packages = Gtk.Label(xalign=0)
-        self.package_review_packages.set_line_wrap(True)
-        self.package_review_local = Gtk.Label(xalign=0)
-        self.package_review_local.set_line_wrap(True)
-        self.package_review_target = Gtk.Label(xalign=0)
-        self.package_review_target.set_line_wrap(True)
-        self.package_review_options = Gtk.Label(xalign=0)
-        self.package_review_options.set_line_wrap(True)
-        for widget in (
-                self.package_review_packages, self.package_review_local,
-                self.package_review_target, self.package_review_options):
-            widget.set_selectable(True)
-            outer.pack_start(widget, False, False, 0)
+        card, values = self._review_card((
+            ('packages', _('Repository packages')),
+            ('local', _('Local packages')),
+            ('target', _('Output module')),
+            ('compression', _('Compression')),
+            ('base', _('Build base')),
+            ('recommends', _('Recommended packages')),
+            ('suggests', _('Suggested packages')),
+            ('privileges', _('Privileges')),
+        ))
+        self.package_review_values = values
+        outer.pack_start(card, False, False, 0)
 
         effect = StatusBanner(
             _('APT and package maintainer scripts run as root inside a temporary '
@@ -1464,17 +2281,18 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.package_config_status.set_text(error)
             return
         self._package_config = configuration
-        names, local_files, target, compression, recommends = configuration
+        names, local_files, target, compression, recommends, suggests, level = configuration
         self.package_config_status.set_text('')
-        self.package_review_packages.set_text(
-            _('Repository packages: {}').format(' '.join(names) if names else _('none')))
-        self.package_review_local.set_text(
-            _('Local packages: {}').format(
-                ', '.join(local_files) if local_files else _('none')))
-        self.package_review_target.set_text(_('Output: {}').format(target))
-        self.package_review_options.set_text(
-            _('Compression: {} · Recommends: {} · Privileges: authentication required').format(
-                compression, _('yes') if recommends else _('no')))
+        self._set_review_values(self.package_review_values, (
+            ('packages', ' '.join(names) if names else _('None')),
+            ('local', ', '.join(local_files) if local_files else _('None')),
+            ('target', target),
+            ('compression', compression),
+            ('base', self._build_level_text(self.package_level, level)),
+            ('recommends', _('Yes') if recommends else _('No')),
+            ('suggests', _('Yes') if suggests else _('No')),
+            ('privileges', _('Administrator authentication required')),
+        ))
         self.create_pages.set_visible_child_name('package-review')
 
     def _build_package_run(self):
@@ -1501,10 +2319,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.package_result_back.connect(
             'clicked', lambda _b: self.create_pages.set_visible_child_name('package-configure'))
         controls.pack_start(self.package_result_back, False, False, 0)
-        done = Gtk.Button(label=_('Done'))
-        done.get_style_context().add_class('suggested-action')
-        done.connect('clicked', lambda _b: self.create_pages.set_visible_child_name('methods'))
-        controls.pack_end(done, False, False, 0)
         outer.pack_end(controls, False, False, 0)
         return outer
 
@@ -1525,14 +2339,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         thread.start()
 
     def _package_creation_worker(self, names, local_files, target,
-                                 compression, recommends):
+                                 compression, recommends, suggests, level):
         def phase_callback(phase):
             GLib.idle_add(self._apply_package_phase, phase)
         def log_callback(text):
             GLib.idle_add(self.package_run_log.feed, text)
         success, result = create_module_from_packages(
             names, local_files, target, compression, recommends,
-            phase_callback, log_callback)
+            phase_callback, log_callback, level=level,
+            install_suggests=suggests)
         GLib.idle_add(self._apply_package_result, success, result)
 
     def _apply_package_phase(self, phase):
@@ -1543,25 +2358,30 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             'capture': _('Capturing module…'),
             'complete': _('Finishing…'),
         }
-        self.package_run_status.set_text(labels.get(phase, phase))
+        text = labels.get(phase, phase)
+        self.package_run_status.set_text(text)
+        self.package_run_log.feed(text + '\n')
         return False
     def _apply_package_result(self, success, result):
         self.package_spinner.stop()
         if success:
             self.package_result_title.set_text(_('Module Created'))
-            self._set_result_output(
-                self.package_result_output, self.package_result_text,
-                self.package_result_log,
-                _('Output: {output}\nCompressed size: {compressed_size} bytes'
-                  '\nUncompressed size: {uncompressed_size} bytes'
-                  '\nEntries: {entry_count}\nCompression: {compression}'
-                  '\nSHA-256: {sha256}').format(**result))
+            self._set_result_details(
+                self.package_result_output, self.package_result_log, (
+                    (_('Output module'), result['output']),
+                    (_('Compressed size'), self._result_size(result['compressed_size'])),
+                    (_('Uncompressed size'), self._result_size(result['uncompressed_size'])),
+                    (_('Entries'), result['entry_count']),
+                    (_('Compression'), result['compression']),
+                    (_('SHA-256'), result['sha256']),
+                ), build_log=self.package_run_log.get_text())
             self.package_result_back.set_label(_('Create Another'))
         else:
             self.package_result_title.set_text(_('Module Creation Failed'))
             self._set_result_output(
                 self.package_result_output, self.package_result_text,
-                self.package_result_log, result, diagnostic=True)
+                self.package_result_log, result, diagnostic=True,
+                build_log=self.package_run_log.get_text())
             self.package_result_back.set_label(_('Back to Packages'))
         self.create_pages.set_visible_child_name('package-result')
         return False
@@ -1606,11 +2426,16 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
 
         self.script_compression = Gtk.ComboBoxText()
         self.script_compression.set_hexpand(True)
-        for item in ('zstd', 'xz', 'gzip', 'lzo'):
+        for item in ('zstd', 'lz4', 'xz', 'gzip', 'lzo'):
             self.script_compression.append_text(item)
         self.script_compression.set_active(0)
-        grid.attach(Gtk.Label(label=_('Compression'), xalign=0), 0, 3, 1, 1)
-        grid.attach(self.script_compression, 1, 3, 1, 1)
+        grid.attach(self._field_label_with_help(
+            _('Compression'), self._compression_help_button()), 0, 3, 1, 1)
+        grid.attach(self.script_compression, 1, 3, 2, 1)
+        self.script_level = self._new_build_base_combo()
+        grid.attach(self._field_label_with_help(
+            _('Build base level'), self._build_base_help_button()), 0, 4, 1, 1)
+        grid.attach(self.script_level, 1, 4, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.script_config_status = Gtk.Label(xalign=0)
@@ -1625,16 +2450,8 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         return outer
 
     def _choose_script_source(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Installation Script'), parent=self,
-            action=Gtk.FileChooserAction.OPEN)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        response = dialog.run()
-        source = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        source = choose_open_file(
+            self, _('Choose Installation Script'), accept_label=_('Select'))
         if not source:
             return
         self.script_source.set_text(source)
@@ -1645,39 +2462,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                 '{}.{}'.format(base, self._current_bundle_extension())))
 
     def _choose_script_seed(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Seed Folder'), parent=self,
-            action=Gtk.FileChooserAction.SELECT_FOLDER)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        response = dialog.run()
-        seed = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        seed = choose_folder(
+            self, _('Choose Seed Folder'), accept_label=_('Select'))
         if seed:
             self.script_seed.set_text(seed)
 
     def _choose_script_target(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Output Module'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        current = self.script_target.get_text().strip()
-        if current:
-            directory = os.path.dirname(current)
-            if os.path.isdir(directory):
-                dialog.set_current_folder(directory)
-            dialog.set_current_name(os.path.basename(current))
-        else:
-            dialog.set_current_name(
-                'script-module.{}'.format(self._current_bundle_extension()))
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = self._choose_output_path(
+            self.script_target,
+            'script-module.{}'.format(self._current_bundle_extension()))
         if target:
             self.script_target.set_text(target)
 
@@ -1704,28 +2497,28 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         if not os.path.isdir(parent) or not os.access(parent, os.W_OK | os.X_OK):
             return None, _('Output directory is not writable.')
         compression = self.script_compression.get_active_text() or 'zstd'
-        return (script, target, compression, seed), ''
+        level, error = self._build_level_value(self.script_level)
+        if error:
+            return None, error
+        return (script, target, compression, seed, level), ''
 
     def _build_script_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(
-            lambda _b: self.create_pages.set_visible_child_name('script-configure'))
-        controls.pack_start(back, False, False, 0)
         controls.pack_start(
             self._page_title_label(_('Review Installation Script')), True, True, 0)
         outer.pack_start(controls, False, False, 0)
 
-        self.script_review_source = Gtk.Label(xalign=0)
-        self.script_review_seed = Gtk.Label(xalign=0)
-        self.script_review_target = Gtk.Label(xalign=0)
-        self.script_review_options = Gtk.Label(xalign=0)
-        for widget in (
-                self.script_review_source, self.script_review_seed,
-                self.script_review_target, self.script_review_options):
-            widget.set_line_wrap(True)
-            widget.set_selectable(True)
-            outer.pack_start(widget, False, False, 0)
+        card, values = self._review_card((
+            ('script', _('Installation script')),
+            ('seed', _('Seed folder')),
+            ('target', _('Output module')),
+            ('compression', _('Compression')),
+            ('base', _('Build base')),
+            ('privileges', _('Privileges')),
+        ))
+        self.script_review_values = values
+        outer.pack_start(card, False, False, 0)
 
         effect = StatusBanner(
             _('The installation script runs as root inside a temporary MiniOS '
@@ -1745,14 +2538,16 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.script_config_status.set_text(error)
             return
         self._script_config = configuration
-        script, target, compression, seed = configuration
+        script, target, compression, seed, level = configuration
         self.script_config_status.set_text('')
-        self.script_review_source.set_text(_('Script: {}').format(script))
-        self.script_review_seed.set_text(
-            _('Seed folder: {}').format(seed if seed else _('none')))
-        self.script_review_target.set_text(_('Output: {}').format(target))
-        self.script_review_options.set_text(
-            _('Compression: {} · Privileges: authentication required').format(compression))
+        self._set_review_values(self.script_review_values, (
+            ('script', script),
+            ('seed', seed if seed else _('None')),
+            ('target', target),
+            ('compression', compression),
+            ('base', self._build_level_text(self.script_level, level)),
+            ('privileges', _('Administrator authentication required')),
+        ))
         self.create_pages.set_visible_child_name('script-review')
 
     def _build_script_run(self):
@@ -1779,10 +2574,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.script_result_back.connect(
             'clicked', lambda _b: self.create_pages.set_visible_child_name('script-configure'))
         controls.pack_start(self.script_result_back, False, False, 0)
-        done = Gtk.Button(label=_('Done'))
-        done.get_style_context().add_class('suggested-action')
-        done.connect('clicked', lambda _b: self.create_pages.set_visible_child_name('methods'))
-        controls.pack_end(done, False, False, 0)
         outer.pack_end(controls, False, False, 0)
         return outer
 
@@ -1802,13 +2593,14 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         thread.daemon = True
         thread.start()
 
-    def _script_creation_worker(self, script, target, compression, seed):
+    def _script_creation_worker(self, script, target, compression, seed, level):
         def phase_callback(phase):
             GLib.idle_add(self._apply_script_phase, phase)
         def log_callback(text):
             GLib.idle_add(self.script_run_log.feed, text)
         success, result = create_module_from_script(
-            script, target, compression, seed, phase_callback, log_callback)
+            script, target, compression, seed, phase_callback, log_callback,
+            level=level)
         GLib.idle_add(self._apply_script_result, success, result)
 
     def _apply_script_phase(self, phase):
@@ -1819,25 +2611,31 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             'capture': _('Capturing module…'),
             'complete': _('Finishing…'),
         }
-        self.script_run_status.set_text(labels.get(phase, phase))
+        text = labels.get(phase, phase)
+        self.script_run_status.set_text(text)
+        self.script_run_log.feed(text + '\n')
         return False
     def _apply_script_result(self, success, result):
         self.script_spinner.stop()
         if success:
             self.script_result_title.set_text(_('Module Created'))
-            self._set_result_output(
-                self.script_result_output, self.script_result_text,
-                self.script_result_log,
-                _('Output: {output}\nCompressed size: {compressed_size} bytes'
-                  '\nUncompressed size: {uncompressed_size} bytes'
-                  '\nEntries: {entry_count}\nCompression: {compression}'
-                  '\nSeed folder: {seed_directory}\nSHA-256: {sha256}').format(**result))
+            self._set_result_details(
+                self.script_result_output, self.script_result_log, (
+                    (_('Output module'), result['output']),
+                    (_('Compressed size'), self._result_size(result['compressed_size'])),
+                    (_('Uncompressed size'), self._result_size(result['uncompressed_size'])),
+                    (_('Entries'), result['entry_count']),
+                    (_('Compression'), result['compression']),
+                    (_('Seed folder'), _('Yes') if result.get('seed_directory') else _('No')),
+                    (_('SHA-256'), result['sha256']),
+                ), build_log=self.script_run_log.get_text())
             self.script_result_back.set_label(_('Create Another'))
         else:
             self.script_result_title.set_text(_('Module Creation Failed'))
             self._set_result_output(
                 self.script_result_output, self.script_result_text,
-                self.script_result_log, result, diagnostic=True)
+                self.script_result_log, result, diagnostic=True,
+                build_log=self.script_run_log.get_text())
             self.script_result_back.set_label(_('Back to Script'))
         self.create_pages.set_visible_child_name('script-result')
         return False
@@ -1868,11 +2666,16 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         grid.attach(choose_target, 2, 1, 1, 1)
         self.chroot_compression = Gtk.ComboBoxText()
         self.chroot_compression.set_hexpand(True)
-        for item in ('zstd', 'xz', 'gzip', 'lzo'):
+        for item in ('zstd', 'lz4', 'xz', 'gzip', 'lzo'):
             self.chroot_compression.append_text(item)
         self.chroot_compression.set_active(0)
-        grid.attach(Gtk.Label(label=_('Compression'), xalign=0), 0, 2, 1, 1)
-        grid.attach(self.chroot_compression, 1, 2, 1, 1)
+        grid.attach(self._field_label_with_help(
+            _('Compression'), self._compression_help_button()), 0, 2, 1, 1)
+        grid.attach(self.chroot_compression, 1, 2, 2, 1)
+        self.chroot_level = self._new_build_base_combo()
+        grid.attach(self._field_label_with_help(
+            _('Build base level'), self._build_base_help_button()), 0, 3, 1, 1)
+        grid.attach(self.chroot_level, 1, 3, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.chroot_config_status = Gtk.Label(xalign=0)
@@ -1887,16 +2690,8 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         return outer
 
     def _choose_chroot_seed(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Seed Folder'), parent=self,
-            action=Gtk.FileChooserAction.SELECT_FOLDER)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        response = dialog.run()
-        seed = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        seed = choose_folder(
+            self, _('Choose Seed Folder'), accept_label=_('Select'))
         if seed:
             self.chroot_seed.set_text(seed)
             if not self.chroot_target.get_text().strip():
@@ -1905,25 +2700,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                     'chroot.{}'.format(self._current_bundle_extension())))
 
     def _choose_chroot_target(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Output Module'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        current = self.chroot_target.get_text().strip()
-        if current:
-            directory = os.path.dirname(current)
-            if os.path.isdir(directory):
-                dialog.set_current_folder(directory)
-            dialog.set_current_name(os.path.basename(current))
-        else:
-            dialog.set_current_name(
-                'chroot.{}'.format(self._current_bundle_extension()))
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = self._choose_output_path(
+            self.chroot_target,
+            'chroot.{}'.format(self._current_bundle_extension()))
         if target:
             self.chroot_target.set_text(target)
 
@@ -1942,26 +2721,26 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         if not os.path.isdir(parent) or not os.access(parent, os.W_OK | os.X_OK):
             return None, _('Output directory is not writable.')
         compression = self.chroot_compression.get_active_text() or 'zstd'
-        return (seed, target, compression), ''
+        level, error = self._build_level_value(self.chroot_level)
+        if error:
+            return None, error
+        return (seed, target, compression, level), ''
 
     def _build_chroot_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(
-            lambda _b: self.create_pages.set_visible_child_name('chroot-configure'))
-        controls.pack_start(back, False, False, 0)
         controls.pack_start(self._page_title_label(_('Review Interactive Chroot')), True, True, 0)
         outer.pack_start(controls, False, False, 0)
 
-        self.chroot_review_seed = Gtk.Label(xalign=0)
-        self.chroot_review_target = Gtk.Label(xalign=0)
-        self.chroot_review_options = Gtk.Label(xalign=0)
-        for widget in (
-                self.chroot_review_seed, self.chroot_review_target,
-                self.chroot_review_options):
-            widget.set_line_wrap(True)
-            widget.set_selectable(True)
-            outer.pack_start(widget, False, False, 0)
+        card, values = self._review_card((
+            ('seed', _('Seed folder')),
+            ('target', _('Output module')),
+            ('compression', _('Compression')),
+            ('base', _('Build base')),
+            ('privileges', _('Privileges')),
+        ))
+        self.chroot_review_values = values
+        outer.pack_start(card, False, False, 0)
         effect = StatusBanner(
             _('A root shell will run inside a temporary MiniOS build union. '
               'Exit the shell when finished; you can then create the module '
@@ -1980,13 +2759,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.chroot_config_status.set_text(error)
             return
         self._chroot_config = configuration
-        seed, target, compression = configuration
+        seed, target, compression, level = configuration
         self.chroot_config_status.set_text('')
-        self.chroot_review_seed.set_text(
-            _('Seed folder: {}').format(seed if seed else _('none')))
-        self.chroot_review_target.set_text(_('Output: {}').format(target))
-        self.chroot_review_options.set_text(
-            _('Compression: {} · Privileges: authentication required').format(compression))
+        self._set_review_values(self.chroot_review_values, (
+            ('seed', seed if seed else _('None')),
+            ('target', target),
+            ('compression', compression),
+            ('base', self._build_level_text(self.chroot_level, level)),
+            ('privileges', _('Administrator authentication required')),
+        ))
         self.create_pages.set_visible_child_name('chroot-review')
 
     def _build_chroot_run(self):
@@ -2007,6 +2788,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.chroot_terminal.set_scrollback_lines(10000)
         self.chroot_terminal.set_hexpand(True)
         self.chroot_terminal.set_vexpand(True)
+        self.chroot_terminal.get_style_context().add_class('terminal-frame')
         self.chroot_terminal.connect('child-exited', self._on_chroot_child_exited)
         outer.pack_start(self.chroot_terminal, True, True, 0)
 
@@ -2043,10 +2825,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         again.connect(
             'clicked', lambda _b: self.create_pages.set_visible_child_name('chroot-configure'))
         controls.pack_start(again, False, False, 0)
-        done = Gtk.Button(label=_('Done'))
-        done.get_style_context().add_class('suggested-action')
-        done.connect('clicked', lambda _b: self.create_pages.set_visible_child_name('methods'))
-        controls.pack_end(done, False, False, 0)
         outer.pack_end(controls, False, False, 0)
         return outer
 
@@ -2072,11 +2850,11 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         thread.daemon = True
         thread.start()
 
-    def _prepare_chroot_worker(self, seed, target, compression):
+    def _prepare_chroot_worker(self, seed, target, compression, level):
         def phase_callback(phase):
             GLib.idle_add(self._apply_chroot_prepare_phase, phase)
         success, result = prepare_chroot_session(
-            seed, target, compression, phase_callback)
+            seed, target, compression, phase_callback, level=level)
         GLib.idle_add(self._apply_chroot_prepare_result, success, result)
 
     def _apply_chroot_prepare_phase(self, phase):
@@ -2156,6 +2934,13 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.chroot_finish.set_sensitive(True)
             self.chroot_discard.set_sensitive(True)
 
+    def _chroot_build_log(self):
+        try:
+            text, _attributes = self.chroot_terminal.get_text(None, None)
+        except (GLib.Error, TypeError):
+            return ''
+        return str(text or '').rstrip()
+
     def _finish_chroot_session(self, _button):
         if not self._chroot_session_id or self._chroot_shell_running:
             return
@@ -2165,7 +2950,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._chroot_busy = True
         self.chroot_run_status.set_text(_('Capturing chroot changes…'))
         session_id = self._chroot_session_id
-        seed, _target, compression = self._chroot_config
+        seed, _target, compression, _level = self._chroot_config
         thread = threading.Thread(
             target=self._finish_chroot_worker,
             args=(session_id, compression, bool(seed)))
@@ -2199,13 +2984,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return False
         self._chroot_session_id = None
         self.chroot_result_title.set_text(_('Module Created'))
-        self._set_result_output(
-            self.chroot_result_output, self.chroot_result_text,
-            self.chroot_result_log,
-            _('Output: {output}\nCompressed size: {compressed_size} bytes'
-              '\nUncompressed size: {uncompressed_size} bytes'
-              '\nEntries: {entry_count}\nCompression: {compression}'
-              '\nSHA-256: {sha256}').format(**result))
+        self._set_result_details(
+            self.chroot_result_output, self.chroot_result_log, (
+                (_('Output module'), result['output']),
+                (_('Compressed size'), self._result_size(result['compressed_size'])),
+                (_('Uncompressed size'), self._result_size(result['uncompressed_size'])),
+                (_('Entries'), result['entry_count']),
+                (_('Compression'), result['compression']),
+                (_('SHA-256'), result['sha256']),
+            ), build_log=self._chroot_build_log())
         self.create_pages.set_visible_child_name('chroot-result')
         return False
 
@@ -2296,11 +3083,12 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
 
         self.session_compression = Gtk.ComboBoxText()
         self.session_compression.set_hexpand(True)
-        for item in ('zstd', 'xz', 'gzip', 'lzo'):
+        for item in ('zstd', 'lz4', 'xz', 'gzip', 'lzo'):
             self.session_compression.append_text(item)
         self.session_compression.set_active(0)
-        grid.attach(Gtk.Label(label=_('Compression'), xalign=0), 0, 1, 1, 1)
-        grid.attach(self.session_compression, 1, 1, 1, 1)
+        grid.attach(self._field_label_with_help(
+            _('Compression'), self._compression_help_button()), 0, 1, 1, 1)
+        grid.attach(self.session_compression, 1, 1, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.session_config_status = Gtk.Label(xalign=0)
@@ -2315,25 +3103,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         return outer
 
     def _choose_session_target(self, _button):
-        dialog = Gtk.FileChooserDialog(
-            title=_('Choose Output Module'), parent=self,
-            action=Gtk.FileChooserAction.SAVE)
-        dialog.add_buttons(
-            _('Cancel'), Gtk.ResponseType.CANCEL,
-            _('Select'), Gtk.ResponseType.ACCEPT)
-        dialog.set_local_only(True)
-        current = self.session_target.get_text().strip()
-        if current:
-            directory = os.path.dirname(current)
-            if os.path.isdir(directory):
-                dialog.set_current_folder(directory)
-            dialog.set_current_name(os.path.basename(current))
-        else:
-            dialog.set_current_name(
-                'session-changes.{}'.format(self._current_bundle_extension()))
-        response = dialog.run()
-        target = dialog.get_filename() if response == Gtk.ResponseType.ACCEPT else None
-        dialog.destroy()
+        target = self._choose_output_path(
+            self.session_target,
+            'session-changes.{}'.format(self._current_bundle_extension()))
         if target:
             self.session_target.set_text(target)
 
@@ -2353,21 +3125,19 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
     def _build_session_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        back = self._back_button(
-            lambda _b: self.create_pages.set_visible_child_name('session-configure'))
-        controls.pack_start(back, False, False, 0)
         controls.pack_start(
             self._page_title_label(_('Review Current Session Changes')),
             True, True, 0)
         outer.pack_start(controls, False, False, 0)
 
-        self.session_review_target = Gtk.Label(xalign=0)
-        self.session_review_target.set_line_wrap(True)
-        self.session_review_target.set_selectable(True)
-        outer.pack_start(self.session_review_target, False, False, 0)
-        self.session_review_options = Gtk.Label(xalign=0)
-        self.session_review_options.set_line_wrap(True)
-        outer.pack_start(self.session_review_options, False, False, 0)
+        card, values = self._review_card((
+            ('target', _('Output module')),
+            ('compression', _('Compression')),
+            ('policy', _('Capture policy')),
+            ('privileges', _('Privileges')),
+        ))
+        self.session_review_values = values
+        outer.pack_start(card, False, False, 0)
         effect = StatusBanner(
             _('MiniOS will capture the authoritative current writable layer '
               'using its standard savechanges policy. Runtime paths, logs, '
@@ -2389,10 +3159,12 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self._session_capture_config = configuration
         target, compression = configuration
         self.session_config_status.set_text('')
-        self.session_review_target.set_text(_('Output: {}').format(target))
-        self.session_review_options.set_text(
-            _('Compression: {} · Policy: standard MiniOS savechanges · '
-            'Privileges: authentication required').format(compression))
+        self._set_review_values(self.session_review_values, (
+            ('target', target),
+            ('compression', compression),
+            ('policy', _('Standard MiniOS savechanges')),
+            ('privileges', _('Administrator authentication required')),
+        ))
         self.create_pages.set_visible_child_name('session-review')
 
     def _build_session_run(self):
@@ -2423,10 +3195,6 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         again.connect(
             'clicked', lambda _b: self.create_pages.set_visible_child_name('session-configure'))
         controls.pack_start(again, False, False, 0)
-        done = Gtk.Button(label=_('Done'))
-        done.get_style_context().add_class('suggested-action')
-        done.connect('clicked', lambda _b: self.create_pages.set_visible_child_name('methods'))
-        controls.pack_end(done, False, False, 0)
         outer.pack_end(controls, False, False, 0)
         return outer
 
@@ -2472,7 +3240,9 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             'publish': _('Publishing module…'),
             'complete': _('Finishing…'),
         }
-        self.session_run_status.set_text(labels.get(phase, phase))
+        text = labels.get(phase, phase)
+        self.session_run_status.set_text(text)
+        self.session_run_log.feed(text + '\n')
         return False
 
     def _cancel_session_capture(self, _button):
@@ -2499,23 +3269,27 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         self.session_cancel.set_sensitive(False)
         if success:
             self.session_result_title.set_text(_('Module Created'))
-            self._set_result_output(
-                self.session_result_output, self.session_result_text,
-                self.session_result_log,
-                _('Output: {output}\nCompressed size: {compressed_size} bytes'
-                  '\nUncompressed size: {uncompressed_size} bytes'
-                  '\nEntries: {entry_count}\nSHA-256: {sha256}').format(**result))
+            self._set_result_details(
+                self.session_result_output, self.session_result_log, (
+                    (_('Output module'), result['output']),
+                    (_('Compressed size'), self._result_size(result['compressed_size'])),
+                    (_('Uncompressed size'), self._result_size(result['uncompressed_size'])),
+                    (_('Entries'), result['entry_count']),
+                    (_('SHA-256'), result['sha256']),
+                ), build_log=self.session_run_log.get_text())
         elif result is CAPTURE_CANCELLED:
             self.session_result_title.set_text(_('Capture Cancelled'))
             self._set_result_output(
                 self.session_result_output, self.session_result_text,
                 self.session_result_log,
-                _('Current session capture was cancelled. No completed module was reported.'))
+                _('Current session capture was cancelled. No completed module was reported.'),
+                build_log=self.session_run_log.get_text())
         else:
             self.session_result_title.set_text(_('Session Capture Failed'))
             self._set_result_output(
                 self.session_result_output, self.session_result_text,
-                self.session_result_log, result, diagnostic=True)
+                self.session_result_log, result, diagnostic=True,
+                build_log=self.session_run_log.get_text())
         self.create_pages.set_visible_child_name('session-result')
         return False
 
@@ -2528,7 +3302,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return
         module = ModuleRecord(
             name=os.path.basename(path), source=path)
-        self.workspace_stack.set_visible_child_name('modules')
+        self.workspace_notebook.set_current_page(0)
         self._open_module_details(module, 'local')
 
     def _setup_drag_and_drop(self):
@@ -2556,7 +3330,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             return False
         if len(paths) == 1 and os.path.isdir(paths[0]):
             source = paths[0]
-            self.workspace_stack.set_visible_child_name('create')
+            self.workspace_notebook.set_current_page(1)
             self.create_pages.set_visible_child_name('folder-configure')
             self.folder_source.set_text(source)
             if not self.folder_target.get_text().strip():
@@ -2568,7 +3342,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
 
         if all(os.path.isfile(path) and path.lower().endswith('.deb')
                for path in paths):
-            self.workspace_stack.set_visible_child_name('create')
+            self.workspace_notebook.set_current_page(1)
             self.create_pages.set_visible_child_name('package-configure')
             for path in paths:
                 if path not in self._package_local_files:
@@ -2583,7 +3357,7 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             if path.lower().endswith(('.sb', extension)):
                 self.open_local_module(path)
                 return True
-            self.workspace_stack.set_visible_child_name('create')
+            self.workspace_notebook.set_current_page(1)
             self.create_pages.set_visible_child_name('script-configure')
             self.script_source.set_text(path)
             if not self.script_target.get_text().strip():

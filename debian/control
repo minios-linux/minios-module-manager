@@ -4,8 +4,9 @@ Priority: optional
 Maintainer: crims0n <crims0n@minios.dev>
 Build-Depends: debhelper (>= 11),
                gettext,
+               gir1.2-vte-2.91,
                python3,
-               python3-minios-gui (>= 1.1.0)
+               python3-minios-gui (>= 1.4.0)
 Standards-Version: 4.1.3
 Homepage: https://minios.dev
 
@@ -17,10 +18,10 @@ Depends: ${misc:Depends},
          gir1.2-gtk-3.0,
          gir1.2-vte-2.91,
          shared-mime-info,
-         python3-minios-gui (>= 1.1.0),
+         python3-minios-gui (>= 1.4.0),
          polkitd | policykit-1,
          pkexec | policykit-1,
-         minios-tools (>= 1.6.3)
+         minios-tools (>= 1.7.0)
 Description: GTK interface for MiniOS module composition
  GTK 3 application for inspecting, creating, and managing MiniOS modules.
  It presents Running Now and Next Boot composition and delegates module

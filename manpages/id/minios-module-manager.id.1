@@ -3,7 +3,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MINIOS\-MODULE\-MANAGER 1 "September 2026" "Manajer Modul MiniOS 1.0.7" "Perintah Pengguna"
+.TH MINIOS\-MODULE\-MANAGER 1 "September 2026" "Manajer Modul MiniOS 1.1.0" "Perintah Pengguna"
 .SH NAMA
 minios\-module\-manager \- memeriksa, membuat, dan mengelola modul MiniOS
 .SH SINOPSIS
@@ -26,14 +26,21 @@ jika root union yang ter\-mount adalah AUFS.
 .TP  4
 \fBBoot Berikutnya\fP
 Menampilkan komposisi modul berurutan yang otoritatif sesuai dengan aturan
-boot MiniOS saat ini. Modul pengguna dapat ditambahkan atau dihapus dari
-penyimpanan modul yang persisten ketika MiniOS Tools melaporkan bahwa
-penyimpanan tersebut tersedia.
+boot MiniOS saat ini. Modul pengguna dapat ditambahkan ke penyimpanan modul
+yang tahan lama ketika Tools MiniOS melaporkan bahwa penyimpanan tersebut
+tersedia. Mengecualikan modul pengguna akan memindahkannya ke penyimpanan
+dinonaktifkan, dari mana modul tersebut dapat diikutsertakan
+kembali. Penghapusan permanen hanya tersedia untuk modul yang dapat dilepas
+yang sudah dikecualikan dan memerlukan konfirmasi
+terpisah. Tindakan\-tindakan ini tidak mengubah status Running Now.
 .PP
-Memilih sebuah modul akan membuka detail yang hanya\-baca. Ketika berkas
-sumber pendukungnya tersedia, detail juga menampilkan isi SquashFS dan
-memungkinkan ekstraksi ke direktori baru. Proses ekstraksi dilakukan secara
-eksplisit dan tidak pernah menimpa tujuan yang sudah ada.
+Memilih sebuah modul akan membuka detail hanya\-baca. Ketika berkas sumber
+pendukungnya tersedia, detail juga menampilkan konten SquashFS dan
+memungkinkan ekstraksi ke direktori baru. Ekstraksi merupakan operasi
+eksplisit dan tidak pernah menimpa tujuan yang sudah ada. Berkas pendukung
+modul aktif yang dilindungi dapat diperiksa setelah otentikasi
+administrator. Proses ekstraksi menampilkan kemajuan fase yang dapat
+dibatalkan dan diagnostik backend yang dialirkan.
 .SH BUAT
 Ruang kerja Create menyediakan alur kerja yang telah ditinjau untuk paket
 Debian dari repositori atau lokal, skrip instalasi, chroot interaktif,
@@ -42,6 +49,14 @@ folder yang sudah ada, dan perubahan sesi saat ini.
 Setiap alur kerja memisahkan konfigurasi, peninjauan, eksekusi, dan
 hasil. Membuat modul tidak secara otomatis mengaktifkannya atau
 menambahkannya ke boot berikutnya.
+.PP
+Alur kerja paket, skrip\-instalasi, dan chroot\-interaktif memilih basis build
+dari stack aktif. Pemilihan bernomor mencakup setiap modul bernomor aktif
+hingga level tersebut dan setiap modul tak bernomor aktif. Pembuatan paket
+tidak akan menginstal Recommends atau Suggests kecuali setiap opsi
+diaktifkan secara eksplisit; indeks APT lokal yang hilang dapat diperbarui
+sebelum penyelesaian nama paket digunakan. Pembuatan mendukung zstd, LZ4,
+XZ, LZO, dan gzip jika Tools MiniOS mendukung metode yang dipilih.
 .PP
 Chroot interaktif menggunakan terminal VTE terintegrasi dan siklus hidup
 \fBchroot2sb\fP(1)  prepare/shell/finish/cancel yang terlindungi. Penangkapan
@@ -57,10 +72,18 @@ berkas paket Debian akan mengisi Packages, sebuah direktori akan mengisi
 Folder, dan berkas reguler lain akan mengisi Installation
 Script. Menjatuhkan item tidak pernah mengeksekusi kode atau mengubah
 komposisi modul secara otomatis.
+.SH "TIPE MIME"
+Aplikasi ini mendeklarasikan dukungan untuk \fBapplication/x\-sb\fP.  Tipe MIME
+dan asosiasi nama berkas *.sb didefinisikan dan diinstal oleh Tools MiniOS;
+Manajer Modul tidak menginstal entri basis data MIME yang bersaing.
 .SH "HAK ISTIMEWA"
 Aplikasi grafis tidak pernah dijalankan sebagai root. Operasi yang
 membutuhkan hak istimewa dijalankan melalui pkexec dan backend MiniOS Tools
 yang relevan.
+.SH PERSYARATAN
+Antarmuka bersama memerlukan python3\-minios\-gui 1.4.0 atau yang lebih
+baru. Pengelolaan dan pembuatan modul backend memerlukan minios\-tools 1.7.0
+atau yang lebih baru.
 .SH "LIHAT JUGA"
 \fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
 \fBchroot2sb\fP(1), \fBsavechanges\fP(1)

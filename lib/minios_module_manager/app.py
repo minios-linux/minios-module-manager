@@ -23,7 +23,7 @@ class ModuleManagerApplication(Gtk.Application):
 
     def do_activate(self):
         if not self._css_loaded:
-            apply_minios_css()
+            apply_minios_css('/usr/share/minios-module-manager/style.css')
             self._css_loaded = True
         if self.window is None:
             self.window = ModuleManagerWindow(self)

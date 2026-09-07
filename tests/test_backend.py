@@ -93,22 +93,31 @@ def next_boot_result(modules=None, extension='sb', add_available=False):
         'bundle_extension': extension,
         'add_available': add_available,
         'modules': modules or [],
+        'disabled_modules': [],
     })
 
 
 class ParseNextBootResultTests(unittest.TestCase):
     def test_ready_result_preserves_order_origin_and_actions(self):
-        snapshot = backend.parse_next_boot_result(next_boot_result([
+        result = json.loads(next_boot_result([
             {'name': '00-core.sb', 'source': '/minios/00-core.sb',
              'origin': 'base', 'removable': False},
             {'name': '50-user.sb', 'source': '/minios/modules/50-user.sb',
              'origin': 'modules', 'removable': True},
         ], add_available=True))
+        result['disabled_modules'] = [
+            {'name': '60-disabled.sb',
+             'source': '/minios/modules-disabled/60-disabled.sb',
+             'origin': 'disabled-modules', 'removable': True}]
+        snapshot = backend.parse_next_boot_result(json.dumps(result))
         self.assertEqual(snapshot.state, LoadState.READY)
         self.assertEqual(snapshot.bundle_extension, 'sb')
         self.assertEqual(snapshot.modules[1].origin, 'modules')
         self.assertTrue(snapshot.modules[1].removable)
         self.assertTrue(snapshot.add_available)
+        self.assertEqual(snapshot.disabled_modules[0].name, '60-disabled.sb')
+        self.assertEqual(
+            snapshot.disabled_modules[0].origin, 'disabled-modules')
         self.assertEqual(snapshot.data_root, '/run/initramfs/memory/data/minios')
 
     def test_incomplete_source_is_rejected(self):
@@ -191,6 +200,28 @@ class LoadInspectionTests(unittest.TestCase):
             stderr=subprocess.PIPE,
             universal_newlines=True)
 
+    def test_unreadable_active_module_uses_pkexec_when_allowed(self):
+        process = mock.Mock()
+        process.communicate.return_value = (inspect_result(['etc']), '')
+        process.returncode = 0
+
+        def which(name):
+            return {'sb': '/usr/bin/sb', 'pkexec': '/usr/bin/pkexec'}.get(name)
+
+        with mock.patch.object(backend.shutil, 'which', side_effect=which), \
+                mock.patch.object(backend.os, 'access', return_value=False), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
+            result_value = backend.load_module_inspection(
+                '/run/initramfs/memory/modules/example.sb',
+                allow_privileged=True)
+        self.assertEqual(result_value.state, LoadState.READY)
+        popen.assert_called_once_with(
+            ['/usr/bin/pkexec', '/usr/bin/sb', 'inspect',
+             '/run/initramfs/memory/modules/example.sb', '--json'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True)
+
 
 class ExtractModuleTests(unittest.TestCase):
     def test_success_uses_fixed_argv(self):
@@ -204,7 +235,8 @@ class ExtractModuleTests(unittest.TestCase):
         self.assertTrue(success)
         self.assertEqual(result_value, '/tmp/example')
         popen.assert_called_once_with(
-            ['/usr/bin/sb2dir', '--json', '/modules/example.sb', '/tmp/example'],
+            ['/usr/bin/sb2dir', '--json', '--',
+             '/modules/example.sb', '/tmp/example'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True)
@@ -252,7 +284,15 @@ class PrivilegedMutationTests(unittest.TestCase):
              '/modules/50-user.sb', '--json'])
         self._run_success(
             backend.remove_from_next_boot, '50-user.sb',
-            ['/usr/bin/pkexec', '/usr/bin/sb', 'next-boot', 'remove',
+            ['/usr/bin/pkexec', '/usr/bin/sb', 'next-boot', 'disable',
+             '50-user.sb', '--json'])
+        self._run_success(
+            backend.enable_for_next_boot, '50-user.sb',
+            ['/usr/bin/pkexec', '/usr/bin/sb', 'next-boot', 'enable',
+             '50-user.sb', '--json'])
+        self._run_success(
+            backend.delete_disabled_module, '50-user.sb',
+            ['/usr/bin/pkexec', '/usr/bin/sb', 'next-boot', 'delete',
              '50-user.sb', '--json'])
 
 
@@ -336,15 +376,56 @@ class ProtocolDrainTests(unittest.TestCase):
         self.assertEqual(process.stdout.tell(), len(output))
 
 
+class PackageIndexTests(unittest.TestCase):
+    def test_index_availability_requires_nonempty_packages_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with open(os.path.join(directory, 'mirror_InRelease'), 'w') as stream:
+                stream.write('release metadata')
+            self.assertFalse(backend.package_indexes_available(directory))
+            packages = os.path.join(
+                directory, 'mirror_dists_stable_main_binary-amd64_Packages')
+            open(packages, 'w').close()
+            self.assertFalse(backend.package_indexes_available(directory))
+            with open(packages, 'w') as stream:
+                stream.write('Package: example\n')
+            self.assertTrue(backend.package_indexes_available(directory))
+
+    def test_update_uses_trusted_fixed_argv(self):
+        result = subprocess.CompletedProcess(
+            [backend.PKEXEC_PATH, backend.APT_GET_PATH, 'update'], 0,
+            stdout='Hit:1 repository\n', stderr='')
+        with mock.patch.object(
+                backend, '_trusted_root_executable', return_value=True) as trusted, \
+                mock.patch.object(backend.subprocess, 'run', return_value=result) as run:
+            success, message = backend.update_package_indexes()
+        self.assertTrue(success)
+        self.assertEqual(message, '')
+        self.assertEqual(trusted.call_args_list, [
+            mock.call(backend.PKEXEC_PATH), mock.call(backend.APT_GET_PATH)])
+        self.assertEqual(run.call_args[0][0], [
+            backend.PKEXEC_PATH, backend.APT_GET_PATH, 'update'])
+
+    def test_update_failure_returns_apt_diagnostic(self):
+        result = subprocess.CompletedProcess(
+            [backend.PKEXEC_PATH, backend.APT_GET_PATH, 'update'], 100,
+            stdout='', stderr='repository unavailable\n')
+        with mock.patch.object(
+                backend, '_trusted_root_executable', return_value=True), \
+                mock.patch.object(backend.subprocess, 'run', return_value=result):
+            success, message = backend.update_package_indexes()
+        self.assertFalse(success)
+        self.assertEqual(message, 'repository unavailable')
+
+
 class PackageCreationTests(unittest.TestCase):
     @staticmethod
-    def _result(count=2):
+    def _result(count=2, compression='zstd'):
         return json.dumps({
             'type': 'result', 'product_kind': 'minios-tool-result',
             'schema_version': 1, 'tool': 'apt2sb', 'operation': 'install',
             'output': '/tmp/packages.sb', 'compressed_size': 4096,
             'uncompressed_size': 8192, 'entry_count': 8,
-            'sha256': 'a' * 64, 'compression': 'zstd',
+            'sha256': 'a' * 64, 'compression': compression,
             'package_count': count,
         })
 
@@ -366,15 +447,41 @@ class PackageCreationTests(unittest.TestCase):
                 mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
             success, result_value = backend.create_module_from_packages(
                 ['curl'], ['/tmp/local.deb'], '/tmp/packages.sb',
-                'zstd', False, phases.append, logs.append)
+                'zstd', True, phases.append, logs.append, level=3,
+                install_suggests=True)
         self.assertTrue(success)
         self.assertEqual(result_value['output'], '/tmp/packages.sb')
         self.assertEqual(phases, list(backend.PACKAGE_PHASES))
         self.assertEqual(logs, ['Get:1 package index\n'])
         self.assertEqual(popen.call_args[0][0], [
             '/usr/bin/pkexec', '/usr/bin/apt2sb', 'install', '--json', '-y',
-            '--name', '/tmp/packages.sb', '--comp', 'zstd',
-            '--no-install-recommends', 'curl', '/tmp/local.deb'])
+            '--name', '/tmp/packages.sb', '--comp', 'zstd', '--level', '3',
+            '--install-recommends', '--install-suggests',
+            'curl', '/tmp/local.deb'])
+    def test_lz4_is_forwarded_to_apt2sb(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO(
+            '{"event":"phase","phase":"prepare"}\n'
+            '{"event":"phase","phase":"update"}\n'
+            '{"event":"phase","phase":"packages"}\n'
+            '{"event":"phase","phase":"capture"}\n'
+            '{"event":"phase","phase":"complete"}\n' + self._result(count=1, compression='lz4') + '\n')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 0
+        def which(name):
+            return {'apt2sb': '/usr/bin/apt2sb', 'pkexec': '/usr/bin/pkexec'}.get(name)
+        with mock.patch.object(backend.shutil, 'which', side_effect=which), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
+            success, result_value = backend.create_module_from_packages(
+                ['curl'], [], '/tmp/packages.sb', compression='lz4')
+        self.assertTrue(success)
+        self.assertEqual(result_value['compression'], 'lz4')
+        self.assertIn('lz4', popen.call_args[0][0])
+        self.assertNotIn('--install-recommends', popen.call_args[0][0])
+        self.assertNotIn('--no-install-recommends', popen.call_args[0][0])
+        self.assertNotIn('--install-suggests', popen.call_args[0][0])
+        self.assertNotIn('--no-install-suggests', popen.call_args[0][0])
+
     def test_inconsistent_result_is_rejected(self):
         process = mock.Mock()
         process.stdout = io.StringIO(self._result(count=1) + '\n')
@@ -403,6 +510,16 @@ class PackageCreationTests(unittest.TestCase):
         self.assertFalse(success)
         self.assertIn('unsupported record', message)
 
+    def test_invalid_build_level_is_rejected_before_start(self):
+        with mock.patch.object(backend.shutil, 'which', side_effect=lambda name: {
+                'apt2sb': '/usr/bin/apt2sb', 'pkexec': '/usr/bin/pkexec'}.get(name)), \
+                mock.patch.object(backend.subprocess, 'Popen') as popen:
+            success, message = backend.create_module_from_packages(
+                ['curl'], [], '/tmp/packages.sb', level=-1)
+        self.assertFalse(success)
+        self.assertIn('non-negative integer', message)
+        popen.assert_not_called()
+
 
 class ScriptCreationTests(unittest.TestCase):
     def test_success_uses_pkexec_fixed_argv_and_phases(self):
@@ -430,7 +547,7 @@ class ScriptCreationTests(unittest.TestCase):
                 mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
             success, result_value = backend.create_module_from_script(
                 '/tmp/install.sh', '/tmp/script.sb', 'zstd', '/tmp/seed',
-                phases.append, logs.append)
+                phases.append, logs.append, level=3)
         self.assertTrue(success)
         self.assertEqual(result_value['output'], '/tmp/script.sb')
         self.assertEqual(
@@ -439,7 +556,7 @@ class ScriptCreationTests(unittest.TestCase):
         self.assertEqual(popen.call_args[0][0], [
             '/usr/bin/pkexec', '/usr/bin/script2sb', '--json', '--script',
             '/tmp/install.sh', '--name', '/tmp/script.sb', '--comp', 'zstd',
-            '--directory', '/tmp/seed'])
+            '--level', '3', '--directory', '/tmp/seed'])
 
     def test_seed_mismatch_is_rejected(self):
         value = {
@@ -490,13 +607,14 @@ class ChrootLifecycleTests(unittest.TestCase):
         with mock.patch.object(backend.shutil, 'which', side_effect=self._which), \
                 mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
             success, value = backend.prepare_chroot_session(
-                '/seed', '/tmp/out.sb', 'zstd', phases.append)
+                '/seed', '/tmp/out.sb', 'zstd', phases.append, level=3)
         self.assertTrue(success)
         self.assertEqual(value['session_id'], 'session.ABC123')
         self.assertEqual(phases, ['prepare', 'seed'])
         self.assertEqual(popen.call_args[0][0], [
             '/usr/bin/pkexec', '/usr/bin/chroot2sb', 'prepare', '--json',
-            '--name', '/tmp/out.sb', '--comp', 'zstd', '--directory', '/seed'])
+            '--name', '/tmp/out.sb', '--comp', 'zstd', '--level', '3',
+            '--directory', '/seed'])
 
     def test_prepare_protocol_error_drains_stdout_before_wait(self):
         output = 'not-json\n' + ('diagnostic output\n' * 4096)

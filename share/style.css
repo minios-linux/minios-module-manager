@@ -1,0 +1,13 @@
+/* MiniOS Module Manager — app-specific notebook integration. */
+
+notebook.module-manager-notebook > header {
+    background-color: transparent;
+    background-image: none;
+}
+
+/* The viewer masks its four corners after the TreeView has drawn, then
+ * repaints this frame on top without changing the table geometry. */
+.content-card.module-file-viewer-frame {
+    margin: 0;
+    padding: 0;
+}

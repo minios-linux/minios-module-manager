@@ -1,3 +1,37 @@
+minios-module-manager (1.1.0) unstable; urgency=medium
+
+  * Redesign the interface around native GTK tabs for module management and
+    module creation, with separate Running Now and Next Boot views, contextual
+    help, header Back navigation, and scrollable creation workflows.
+  * Add build-base stack selection to package, script, and interactive-chroot
+    creation; follow the MiniOS default for Recommends and Suggests while
+    allowing each to be enabled explicitly, and allow refreshing missing APT
+    indexes for repository package completion.
+  * Make Next Boot management explicit with persistent add controls, clear
+    storage-availability diagnostics, reversible module exclusion, and
+    confirmed permanent deletion of excluded modules.
+  * Delegate Running Now activation and deactivation to MiniOS Tools without
+    changing the separately configured Next Boot module set.
+  * Support LZ4 consistently across module-creation workflows and explain the
+    size/speed trade-offs of available SquashFS compression methods.
+  * Improve module inspection with a compact framed file viewer, clipped
+    rounded corners, stable search layout, clearer error presentation, and
+    authenticated inspection of unreadable active-module backing files when
+    required; show cancellable phase progress and streamed diagnostics while
+    extracting modules.
+  * Improve creation review, progress, and result pages with structured
+    summaries, retained phase-aware build logs, human-readable sizes, and
+    selectable SHA-256 checksums.
+  * Use the canonical application/x-sb MIME type owned by minios-tools instead
+    of registering a competing Module Manager MIME definition.
+  * Require minios-tools 1.7.0 for reversible Next Boot management, build-base
+    selection, LZ4 creation, and the canonical module MIME contract.
+  * Require python3-minios-gui 1.4.0 and reuse its help, completion, module
+    presentation, operation, chooser, dialog, and structured result widgets.
+  * Refresh translations.
+
+ -- crims0n <crims0n@minios.dev>  Mon, 07 Sep 2026 03:09:59 +0300
+
 minios-module-manager (1.0.7) unstable; urgency=medium
 
   * Accept the phase record schema emitted by savechanges

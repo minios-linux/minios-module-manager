@@ -3,10 +3,10 @@ PREFIX ?= /usr
 BINDIR = $(PREFIX)/bin
 LIBDIR = $(PREFIX)/lib/minios-module-manager
 APPLICATIONSDIR = $(PREFIX)/share/applications
+STYLEDIR = $(PREFIX)/share/minios-module-manager
 MANDIR = $(PREFIX)/share/man/man1
 MANROOT = $(PREFIX)/share/man
 MANPAGE_LANGUAGES = de es fr id it pt pt_BR ru
-MIMEDIR = $(PREFIX)/share/mime/packages
 LOCALEDIR = $(PREFIX)/share/locale
 PO_FILES = $(wildcard po/*.po)
 
@@ -31,14 +31,14 @@ install:
 	install -m644 lib/minios_module_manager/*.py $(DESTDIR)$(LIBDIR)/minios_module_manager/
 	install -Dm644 share/applications/minios-module-manager.desktop \
 		$(DESTDIR)$(APPLICATIONSDIR)/minios-module-manager.desktop
+	install -Dm644 share/style.css \
+		$(DESTDIR)$(STYLEDIR)/style.css
 	install -Dm644 manpages/en/minios-module-manager.1 \
 		$(DESTDIR)$(MANDIR)/minios-module-manager.1
 	@for lang in $(MANPAGE_LANGUAGES); do \
 		install -Dm644 manpages/$$lang/minios-module-manager.$$lang.1 \
 			$(DESTDIR)$(MANROOT)/$$lang/man1/minios-module-manager.1; \
 	done
-	install -Dm644 share/mime/packages/minios-module-manager.xml \
-		$(DESTDIR)$(MIMEDIR)/minios-module-manager.xml
 	@for po in $(PO_FILES); do \
 		lang=$${po##*/}; lang=$${lang%.po}; \
 		install -d $(DESTDIR)$(LOCALEDIR)/$$lang/LC_MESSAGES; \

@@ -3,7 +3,7 @@
 .\" This file was generated with po4a. Translate the source file.
 .\"
 .\"*******************************************************************
-.TH MINIOS\-MODULE\-MANAGER 1 "septiembre de 2026" "Gestor de módulos de MiniOS 1.0.7" "Comandos de usuario"
+.TH MINIOS\-MODULE\-MANAGER 1 "septiembre de 2026" "Gestor de módulos de MiniOS 1.1.0" "Comandos de usuario"
 .SH NOMBRE
 minios\-module\-manager \- inspecciona, crea y gestiona módulos de MiniOS
 .SH SINOPSIS
@@ -28,14 +28,21 @@ AUFS.
 \fBPróximo arranque\fP
 Muestra la composición de módulos ordenada y autorizada seleccionada por las
 reglas de arranque actuales de MiniOS. Los módulos de usuario pueden
-añadirse o eliminarse del almacenamiento duradero de módulos cuando MiniOS
-Tools informa que dicho almacenamiento está disponible.
+añadirse al almacenamiento duradero de módulos cuando MiniOS Tools informa
+que dicho almacenamiento está disponible. Excluir un módulo de usuario lo
+mueve al almacenamiento deshabilitado, desde donde puede incluirse
+nuevamente. La eliminación permanente solo está disponible para un módulo
+extraíble ya excluido y requiere confirmación adicional. Estas acciones no
+modifican la ejecución actual.
 .PP
-Al seleccionar un módulo se abren los detalles en modo solo lectura. Cuando
-el archivo fuente de respaldo está disponible, los detalles también muestran
-su contenido SquashFS y permiten la extracción a un nuevo directorio. La
+Seleccionar un módulo abre los detalles en modo solo lectura. Cuando el
+archivo fuente de respaldo está disponible, los detalles también muestran su
+contenido SquashFS y permiten la extracción a un nuevo directorio. La
 extracción es una operación explícita y nunca sobrescribe un destino
-existente.
+existente. Los archivos protegidos de respaldo de módulos activos pueden
+inspeccionarse tras la autenticación del administrador. La extracción
+muestra el progreso de las fases, que se puede cancelar, y diagnósticos del
+backend en tiempo real.
 .SH CREAR
 El espacio de trabajo Crear ofrece flujos de trabajo revisados para paquetes
 Debian de repositorio o locales, scripts de instalación, un chroot
@@ -44,6 +51,16 @@ interactivo, carpetas existentes y los cambios de la sesión actual.
 Cada flujo de trabajo separa la configuración, la revisión, la ejecución y
 el resultado. La creación de un módulo no lo activa ni lo añade
 automáticamente al próximo arranque.
+.PP
+Los flujos de trabajo de paquetes, scripts de instalación e
+interactive\-chroot seleccionan una base de compilación de la pila
+activa. Una selección numerada incluye todos los módulos numerados activos
+hasta ese nivel y todos los módulos no numerados activos. La creación de
+paquetes no instala Recommends ni Suggests a menos que cada opción se
+habilite explícitamente; los índices locales de APT que falten pueden
+actualizarse antes de usar la autocompletación de nombres de paquetes. La
+creación admite zstd, LZ4, XZ, LZO y gzip donde MiniOS Tools admite el
+método seleccionado.
 .PP
 El chroot interactivo utiliza un terminal VTE embebido y el ciclo de vida
 protegido \fBchroot2sb\fP(1) preparar/shell/finalizar/cancelar. La captura de
@@ -57,10 +74,19 @@ Arrastrar y soltar es un atajo de entrada. Un módulo abre la inspección, los
 archivos de paquetes Debian rellenan Paquetes, un directorio rellena Carpeta
 y otro archivo regular rellena Script de instalación. Soltar un elemento
 nunca ejecuta código ni modifica la composición de módulos por sí solo.
+.SH "TIPO MIME"
+La aplicación declara compatibilidad con \fBapplication/x\-sb\fP.  El tipo MIME
+y su asociación de nombre de archivo *.sb están definidos e instalados por
+MiniOS Tools; Module Manager no instala una entrada de base de datos MIME
+que compita.
 .SH PRIVILEGIOS
 La aplicación gráfica nunca se ejecuta como root. Las operaciones que
 requieren privilegios se inician mediante pkexec y el backend
 correspondiente de MiniOS Tools.
+.SH REQUISITOS
+La interfaz compartida requiere python3\-minios\-gui 1.4.0 o superior. La
+gestión y creación de módulos en el backend requiere minios\-tools 1.7.0 o
+superior.
 .SH "VÉASE TAMBIÉN"
 \fBsb\fP(1), \fBdir2sb\fP(1), \fBsb2dir\fP(1), \fBapt2sb\fP(1), \fBscript2sb\fP(1),
 \fBchroot2sb\fP(1), \fBsavechanges\fP(1)
