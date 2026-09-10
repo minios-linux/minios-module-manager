@@ -1,3 +1,11 @@
+minios-module-manager (1.1.1) unstable; urgency=medium
+
+  * Set the application icon for direct and menu launches.
+  * Run the GTK test suite under Xvfb and declare its Cairo and X11 test
+    dependencies explicitly.
+
+ -- crims0n <crims0n@minios.dev>  Thu, 10 Sep 2026 16:16:47 +0300
+
 minios-module-manager (1.1.0) unstable; urgency=medium
 
   * Redesign the interface around native GTK tabs for module management and

@@ -15,7 +15,7 @@ PO_FILES = $(wildcard po/*.po)
 all:
 
 test:
-	PYTHONPATH=lib $(PYTHON) -m unittest discover -s tests -v
+	PYTHONPATH=lib xvfb-run -a $(PYTHON) -m unittest discover -s tests -v
 
 check:
 	$(PYTHON) -m py_compile \
