@@ -1,3 +1,10 @@
+minios-module-manager (1.1.2) unstable; urgency=medium
+
+  * Run privileged module operations directly when already root, while keeping
+    pkexec elevation for unprivileged invocations.
+
+ -- crims0n <crims0n@minios.dev>  Wed, 16 Sep 2026 20:40:22 +0300
+
 minios-module-manager (1.1.1) unstable; urgency=medium
 
   * Set the application icon for direct and menu launches.

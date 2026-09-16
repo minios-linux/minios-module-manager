@@ -254,6 +254,20 @@ class ExtractModuleTests(unittest.TestCase):
 
 
 class PrivilegedMutationTests(unittest.TestCase):
+    def test_root_runs_mutation_without_pkexec(self):
+        process = mock.Mock()
+        process.communicate.return_value = ('', '')
+        process.returncode = 0
+        with mock.patch.object(backend.os, 'geteuid', return_value=0), \
+                mock.patch.object(backend.shutil, 'which', side_effect=lambda name: {
+                    'sb': '/usr/bin/sb'}.get(name)), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
+            success, message = backend.activate_for_session('/modules/50-user.sb')
+        self.assertTrue(success)
+        self.assertEqual(message, '')
+        self.assertEqual(popen.call_args[0][0], [
+            '/usr/bin/sb', 'activate', '/modules/50-user.sb'])
+
     def _run_success(self, function, argument, expected):
         process = mock.Mock()
         process.communicate.return_value = ('', '')
@@ -401,7 +415,7 @@ class PackageIndexTests(unittest.TestCase):
         self.assertTrue(success)
         self.assertEqual(message, '')
         self.assertEqual(trusted.call_args_list, [
-            mock.call(backend.PKEXEC_PATH), mock.call(backend.APT_GET_PATH)])
+            mock.call(backend.APT_GET_PATH), mock.call(backend.PKEXEC_PATH)])
         self.assertEqual(run.call_args[0][0], [
             backend.PKEXEC_PATH, backend.APT_GET_PATH, 'update'])
 
@@ -415,6 +429,37 @@ class PackageIndexTests(unittest.TestCase):
             success, message = backend.update_package_indexes()
         self.assertFalse(success)
         self.assertEqual(message, 'repository unavailable')
+
+    def test_root_update_does_not_require_pkexec(self):
+        result = subprocess.CompletedProcess(
+            [backend.APT_GET_PATH, 'update'], 0, stdout='', stderr='')
+
+        def trusted(path):
+            return path == backend.APT_GET_PATH
+
+        with mock.patch.object(backend.os, 'geteuid', return_value=0), \
+                mock.patch.object(backend, '_trusted_root_executable', side_effect=trusted), \
+                mock.patch.object(backend.subprocess, 'run', return_value=result) as run:
+            success, message = backend.update_package_indexes()
+        self.assertTrue(success)
+        self.assertEqual(message, '')
+        self.assertEqual(run.call_args[0][0], [backend.APT_GET_PATH, 'update'])
+
+
+class RootPrivilegeCommandTests(unittest.TestCase):
+    def test_root_command_does_not_resolve_pkexec(self):
+        with mock.patch.object(backend.os, 'geteuid', return_value=0), \
+                mock.patch.object(backend.shutil, 'which') as which:
+            argv = backend._privileged_argv(['/usr/bin/example', '--flag'])
+        self.assertEqual(argv, ['/usr/bin/example', '--flag'])
+        which.assert_not_called()
+
+    def test_non_root_command_uses_pkexec(self):
+        with mock.patch.object(backend.os, 'geteuid', return_value=1000), \
+                mock.patch.object(backend.shutil, 'which', return_value='/usr/bin/pkexec'):
+            argv = backend._privileged_argv(['/usr/bin/example', '--flag'])
+        self.assertEqual(argv, [
+            '/usr/bin/pkexec', '/usr/bin/example', '--flag'])
 
 
 class PackageCreationTests(unittest.TestCase):

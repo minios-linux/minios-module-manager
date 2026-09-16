@@ -41,6 +41,18 @@ def _trusted_root_executable(path):
     )
 
 
+def _privileged_argv(argv, pkexec=None):
+    """Prefix an administrative command only for an unprivileged caller."""
+    argv = list(argv)
+    if os.geteuid() == 0:
+        return argv
+    if pkexec is None:
+        pkexec = shutil.which('pkexec')
+    if not pkexec:
+        return None
+    return [pkexec] + argv
+
+
 def _start_stderr_reader(process, callback=None):
     chunks = []
 
@@ -304,12 +316,12 @@ def load_module_inspection(path, allow_privileged=False):
 
     argv = [executable, 'inspect', path, '--json']
     if allow_privileged and not os.access(path, os.R_OK):
-        pkexec = shutil.which('pkexec')
-        if not pkexec:
+        privileged_argv = _privileged_argv(argv)
+        if privileged_argv is None:
             return Inspection(
                 state=LoadState.ERROR, path=path,
                 message=_('Administrator authentication is required to inspect this mounted module, but pkexec is not available.'))
-        argv = [pkexec] + argv
+        argv = privileged_argv
     try:
         process = subprocess.Popen(
             argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -355,14 +367,14 @@ def module_extraction_argv(source, target):
 
 def _run_privileged_sb(arguments):
     sb = shutil.which('sb')
-    pkexec = shutil.which('pkexec')
     if not sb:
         return False, _('MiniOS Tools is not installed.')
-    if not pkexec:
+    argv = _privileged_argv([sb] + list(arguments))
+    if argv is None:
         return False, _('pkexec is not available.')
     try:
         process = subprocess.Popen(
-            [pkexec, sb] + list(arguments),
+            argv,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             universal_newlines=True)
@@ -518,11 +530,8 @@ def create_module_from_packages(package_names, local_packages, target,
                                 phase_callback=None, log_callback=None, level=None,
                                 install_suggests=False):
     apt2sb = shutil.which('apt2sb')
-    pkexec = shutil.which('pkexec')
     if not apt2sb:
         return False, _('MiniOS Tools is not installed.')
-    if not pkexec:
-        return False, _('pkexec is not available.')
     if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
     if level is not None and (type(level) is not int or level < 0):
@@ -533,10 +542,12 @@ def create_module_from_packages(package_names, local_packages, target,
     if any(not isinstance(item, str) or not item for item in requested):
         return False, _('Package input is invalid.')
 
-    argv = [
-        pkexec, apt2sb, 'install', '--json', '-y',
+    argv = _privileged_argv([
+        apt2sb, 'install', '--json', '-y',
         '--name', target, '--comp', compression,
-    ]
+    ])
+    if argv is None:
+        return False, _('pkexec is not available.')
     if level is not None:
         argv.extend(['--level', str(level)])
     if install_recommends:
@@ -631,11 +642,8 @@ def create_module_from_script(script, target, compression='zstd',
                               seed_directory=None, phase_callback=None,
                               log_callback=None, level=None):
     script2sb = shutil.which('script2sb')
-    pkexec = shutil.which('pkexec')
     if not script2sb:
         return False, _('MiniOS Tools is not installed.')
-    if not pkexec:
-        return False, _('pkexec is not available.')
     if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
     if level is not None and (type(level) is not int or level < 0):
@@ -643,8 +651,11 @@ def create_module_from_script(script, target, compression='zstd',
     if not isinstance(script, str) or not script:
         return False, _('Choose an installation script.')
 
-    argv = [pkexec, script2sb, '--json', '--script', script,
-            '--name', target, '--comp', compression]
+    argv = _privileged_argv([
+        script2sb, '--json', '--script', script,
+        '--name', target, '--comp', compression])
+    if argv is None:
+        return False, _('pkexec is not available.')
     if level is not None:
         argv.extend(['--level', str(level)])
     if seed_directory:
@@ -721,13 +732,15 @@ def package_indexes_available(directory=APT_LISTS_DIR):
 
 def update_package_indexes():
     """Refresh APT package lists with administrator privileges."""
-    if not _trusted_root_executable(PKEXEC_PATH):
-        return False, _('pkexec is not available or is not trusted.')
     if not _trusted_root_executable(APT_GET_PATH):
         return False, _('apt-get is not available or is not trusted.')
+    if os.geteuid() != 0 and not _trusted_root_executable(PKEXEC_PATH):
+        return False, _('pkexec is not available or is not trusted.')
+    argv = _privileged_argv(
+        [APT_GET_PATH, 'update'], pkexec=PKEXEC_PATH)
     try:
         result = subprocess.run(
-            [PKEXEC_PATH, APT_GET_PATH, 'update'],
+            argv,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             universal_newlines=True, check=False)
     except OSError as error:
@@ -826,12 +839,12 @@ def _chroot_finish_result(value, compression, seed_directory):
 
 def _chroot_tools():
     chroot2sb = shutil.which('chroot2sb')
-    pkexec = shutil.which('pkexec')
     if not chroot2sb:
         return None, None, _('MiniOS Tools is not installed.')
-    if not pkexec:
+    argv_prefix = _privileged_argv([])
+    if argv_prefix is None:
         return None, None, _('pkexec is not available.')
-    return chroot2sb, pkexec, ''
+    return chroot2sb, argv_prefix, ''
 
 
 def _run_chroot_ndjson(argv, phases, result_parser, phase_callback):
@@ -886,15 +899,15 @@ def _run_chroot_ndjson(argv, phases, result_parser, phase_callback):
 
 def prepare_chroot_session(seed_directory, target, compression='zstd',
                            phase_callback=None, level=None):
-    chroot2sb, pkexec, error = _chroot_tools()
+    chroot2sb, argv_prefix, error = _chroot_tools()
     if error:
         return False, error
     if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
     if level is not None and (type(level) is not int or level < 0):
         return False, _('Build level must be a non-negative integer.')
-    argv = [
-        pkexec, chroot2sb, 'prepare', '--json',
+    argv = argv_prefix + [
+        chroot2sb, 'prepare', '--json',
         '--name', target, '--comp', compression,
     ]
     if level is not None:
@@ -911,20 +924,20 @@ def prepare_chroot_session(seed_directory, target, compression='zstd',
 def chroot_shell_argv(session_id):
     if not _valid_chroot_session_id(session_id):
         return False, _('Invalid chroot session id.')
-    chroot2sb, pkexec, error = _chroot_tools()
+    chroot2sb, argv_prefix, error = _chroot_tools()
     if error:
         return False, error
-    return True, [pkexec, chroot2sb, 'shell', session_id]
+    return True, argv_prefix + [chroot2sb, 'shell', session_id]
 
 
 def finish_chroot_session(session_id, compression, seed_directory,
                           phase_callback=None):
     if not _valid_chroot_session_id(session_id):
         return False, _('Invalid chroot session id.')
-    chroot2sb, pkexec, error = _chroot_tools()
+    chroot2sb, argv_prefix, error = _chroot_tools()
     if error:
         return False, error
-    argv = [pkexec, chroot2sb, 'finish', session_id, '--json']
+    argv = argv_prefix + [chroot2sb, 'finish', session_id, '--json']
     return _run_chroot_ndjson(
         argv, CHROOT_FINISH_PHASES,
         lambda value: _chroot_finish_result(
@@ -935,10 +948,10 @@ def finish_chroot_session(session_id, compression, seed_directory,
 def cancel_chroot_session(session_id):
     if not _valid_chroot_session_id(session_id):
         return False, _('Invalid chroot session id.')
-    chroot2sb, pkexec, error = _chroot_tools()
+    chroot2sb, argv_prefix, error = _chroot_tools()
     if error:
         return False, error
-    argv = [pkexec, chroot2sb, 'cancel', session_id, '--json']
+    argv = argv_prefix + [chroot2sb, 'cancel', session_id, '--json']
     try:
         process = subprocess.Popen(
             argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -1132,17 +1145,17 @@ def capture_current_session(target, compression='zstd', phase_callback=None,
                             cancel_context=None, log_callback=None):
     if not _trusted_root_executable(SAVECHANGES_PATH):
         return False, _('MiniOS Tools is not installed.')
-    if not _trusted_root_executable(PKEXEC_PATH):
+    if os.geteuid() != 0 and not _trusted_root_executable(PKEXEC_PATH):
         return False, _('pkexec is not available.')
     if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
     if cancel_context is None:
         cancel_context = new_capture_cancel_marker()
     _parent, marker = cancel_context
-    argv = [
-        PKEXEC_PATH, SAVECHANGES_PATH, '--json', '--cancel-file', marker,
+    argv = _privileged_argv([
+        SAVECHANGES_PATH, '--json', '--cancel-file', marker,
         '--comp', compression, target,
-    ]
+    ], pkexec=PKEXEC_PATH)
     final_result = None
     stderr = ''
     returncode = 1
