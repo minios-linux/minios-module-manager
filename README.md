@@ -1,5 +1,7 @@
 # MiniOS Module Manager
 
+## Overview
+
 GTK 3 application for inspecting, creating, and managing MiniOS `.sb` modules.
 
 The application is organized around two top-level notebook tabs:
@@ -28,3 +30,7 @@ Run tests:
 ```sh
 make test
 ```
+
+## License
+
+Distributed under the GNU General Public License v2 or later.
