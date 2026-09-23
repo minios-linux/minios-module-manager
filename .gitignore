@@ -8,6 +8,8 @@ build/
 dist/
 *.egg-info/
 *.mo
+/.pc/
+/obj-*/
 /*.deb
 /*.udeb
 /*.build

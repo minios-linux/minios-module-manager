@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: minios-module-manager 1.0.7\n"
-"POT-Creation-Date: 2026-09-07 02:27+0300\n"
-"PO-Revision-Date: 2026-09-06 23:27+0000\n"
+"POT-Creation-Date: 2026-09-23 18:06+0300\n"
+"PO-Revision-Date: 2026-09-22 17:43+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: pt\n"
@@ -31,8 +31,8 @@ msgstr "setembro de 2026"
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS Module Manager 1.1.0"
-msgstr "Gestor de módulos MiniOS 1.1.0"
+msgid "MiniOS Module Manager 1.1.4"
+msgstr "Gestor de módulos MiniOS 1.1.4"
 
 #. type: TH
 #: en/minios-module-manager.1:1
@@ -71,10 +71,10 @@ msgstr "DESCRIÇÃO"
 #. type: Plain text
 #: en/minios-module-manager.1:12
 msgid ""
-"B<MiniOS Module Manager> is a GTK 3 interface for MiniOS module composition "
-"and module creation.  It runs as the desktop user and delegates privileged "
-"or filesystem-sensitive operations to MiniOS Tools through fixed argument "
-"vectors."
+"B<MiniOS Module Manager 1.1.4> is a GTK 3 interface for MiniOS module "
+"composition and module creation.  It runs as the desktop user and delegates "
+"privileged or filesystem-sensitive operations to MiniOS Tools through fixed "
+"argument vectors."
 msgstr ""
 "B<Gestor de módulos MiniOS> é uma interface GTK 3 para composição e criação "
 "de módulos MiniOS. Ele é executado como o usuário da sessão gráfica e delega "
