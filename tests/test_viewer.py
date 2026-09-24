@@ -12,7 +12,10 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gio, GLib, Gtk
 
 from minios_module_manager.app import ModuleManagerApplication
-from minios_module_manager.model import Inspection, InspectionEntry, LoadState
+from minios_module_manager.model import (
+    Inspection, InspectionEntry, LoadState, ModuleRecord, Snapshot,
+)
+from minios_module_manager import backend
 
 
 class ModuleViewerTests(unittest.TestCase):
@@ -38,6 +41,23 @@ class ModuleViewerTests(unittest.TestCase):
                 source.write_bytes(b'hsqs')
                 application.open([Gio.File.new_for_path(str(source))], '')
                 window = application.window
+                self.assertFalse(window.detail_next_boot.get_visible())
+                window._next_boot_snapshot = Snapshot(
+                    state=LoadState.EMPTY, add_available=True)
+                window._update_detail_actions()
+                self.assertEqual(window.detail_next_boot.get_label(), 'Install Module')
+                self.assertTrue(window.detail_next_boot.get_visible())
+                self.assertEqual(window._detail_next_boot_action[2:4],
+                                 (backend.add_to_next_boot, str(source)))
+                window._next_boot_snapshot = Snapshot(
+                    state=LoadState.READY, add_available=True,
+                    modules=[ModuleRecord('example.sb', source='/minios/modules/example.sb')])
+                window._update_detail_actions()
+                self.assertFalse(window.detail_next_boot.get_visible())
+                window._next_boot_snapshot = Snapshot(
+                    state=LoadState.EMPTY, add_available=False)
+                window._update_detail_actions()
+                self.assertFalse(window.detail_next_boot.get_visible())
                 window._apply_module_inspection(window._inspection_request, Inspection(
                     state=LoadState.READY, path='/tmp/example.sb', size=4096,
                     entries=(InspectionEntry('usr', 'directory'),

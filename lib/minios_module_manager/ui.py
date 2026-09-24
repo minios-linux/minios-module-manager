@@ -1566,11 +1566,12 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
                     deactivate_for_session, running_match.name, False,
                     ('media-eject', 'media-eject-symbolic')))
 
-        if self._detail_scope == 'running':
+        if self._detail_scope in ('running', 'local'):
             if (next_boot is not None and next_boot.usable and
                     next_boot.add_available and next_match is None and
                     module.source):
                 self._set_detail_action('next-boot', (
+                    _('Install Module') if self._detail_scope == 'local' else
                     _('Add to Next Boot'),
                     _('Add {} to Next Boot? The running system will not change.').format(
                         module.name),

@@ -1,10 +1,17 @@
-minios-module-manager (1.1.4) unstable; urgency=medium
+minios-module-manager (1.2.0) unstable; urgency=medium
+
+  * Allow installing a local module into the Next Boot set from its details
+    when durable writable module storage is available.
+
+ -- crims0n <crims0n@minios.dev>  Thu, 24 Sep 2026 18:21:48 +0300
+
+minios-module-manager (1.2.0) unstable; urgency=medium
 
   * Refresh localized manuals and Debian build-artifact exclusions.
 
  -- crims0n <crims0n@minios.dev>  Wed, 23 Sep 2026 18:06:54 +0300
 
-minios-module-manager (1.1.4) unstable; urgency=medium
+minios-module-manager (1.2.0) unstable; urgency=medium
 
   * Refresh user documentation and translations.
 

@@ -32,8 +32,8 @@ msgstr "сентябрь 2026"
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS Module Manager 1.1.4"
-msgstr "Менеджер модулей MiniOS 1.1.4"
+msgid "MiniOS Module Manager 1.2.0"
+msgstr "Менеджер модулей MiniOS 1.2.0"
 
 #. type: TH
 #: en/minios-module-manager.1:1
@@ -73,7 +73,7 @@ msgstr "ОПИСАНИЕ"
 #. type: Plain text
 #: en/minios-module-manager.1:12
 msgid ""
-"B<MiniOS Module Manager 1.1.4> is a GTK 3 interface for MiniOS module "
+"B<MiniOS Module Manager 1.2.0> is a GTK 3 interface for MiniOS module "
 "composition and module creation.  It runs as the desktop user and delegates "
 "privileged or filesystem-sensitive operations to MiniOS Tools through fixed "
 "argument vectors."

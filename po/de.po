@@ -3,10 +3,10 @@
 # This file is distributed under the same license as the minios-module-manager package.
 msgid ""
 msgstr ""
-"Project-Id-Version: minios-module-manager 1.1.4\n"
+"Project-Id-Version: minios-module-manager 1.2.0\n"
 "Report-Msgid-Bugs-To: support@minios.dev\n"
-"POT-Creation-Date: 2026-09-17 21:19+0300\n"
-"PO-Revision-Date: 2026-09-06 21:46+0000\n"
+"POT-Creation-Date: 2026-09-24 18:19+0300\n"
+"PO-Revision-Date: 2026-09-24 15:19+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -325,7 +325,7 @@ msgid "script2sb compression is invalid"
 msgstr "script2sb-Komprimierung ist ungültig"
 
 #: lib/minios_module_manager/backend.py:652
-#: lib/minios_module_manager/ui.py:2481
+#: lib/minios_module_manager/ui.py:2482
 msgid "Choose an installation script."
 msgstr "Wählen Sie ein Installationsskript aus."
 
@@ -514,7 +514,7 @@ msgstr "savechanges konnte die aktuellen Sitzungsänderungen nicht erfassen."
 msgid "savechanges completed without a result."
 msgstr "savechanges wurde ohne Ergebnis abgeschlossen."
 
-#: lib/minios_module_manager/ui.py:43 lib/minios_module_manager/ui.py:2050
+#: lib/minios_module_manager/ui.py:43 lib/minios_module_manager/ui.py:2051
 msgid "Packages"
 msgstr "Pakete"
 
@@ -522,7 +522,7 @@ msgstr "Pakete"
 msgid "For software from APT repositories or local .deb packages; dependencies are installed automatically."
 msgstr "Für Software aus APT-Repositories oder lokale .deb-Pakete; Abhängigkeiten werden automatisch installiert."
 
-#: lib/minios_module_manager/ui.py:45 lib/minios_module_manager/ui.py:2394
+#: lib/minios_module_manager/ui.py:45 lib/minios_module_manager/ui.py:2395
 msgid "Installation Script"
 msgstr "Installationsskript"
 
@@ -530,7 +530,7 @@ msgstr "Installationsskript"
 msgid "For repeatable setup that can be expressed as commands without interactive input."
 msgstr "Für wiederholbare Setups, die als Befehle ohne interaktive Eingaben ausgeführt werden können."
 
-#: lib/minios_module_manager/ui.py:47 lib/minios_module_manager/ui.py:2648
+#: lib/minios_module_manager/ui.py:47 lib/minios_module_manager/ui.py:2649
 msgid "Interactive Chroot"
 msgstr "Interaktives Chroot"
 
@@ -539,7 +539,7 @@ msgid "For manual or interactive setup in a temporary root shell."
 msgstr "Für manuelle oder interaktive Einrichtung in einer temporären Root-Shell."
 
 #: lib/minios_module_manager/ui.py:49 lib/minios_module_manager/ui.py:1429
-#: lib/minios_module_manager/ui.py:1820
+#: lib/minios_module_manager/ui.py:1821
 msgid "Folder"
 msgstr "Ordner"
 
@@ -547,7 +547,7 @@ msgstr "Ordner"
 msgid "For an already prepared filesystem tree that should become the module contents."
 msgstr "Für einen bereits vorbereiteten Dateisystembaum, der als Modulinhalt verwendet werden soll."
 
-#: lib/minios_module_manager/ui.py:51 lib/minios_module_manager/ui.py:3072
+#: lib/minios_module_manager/ui.py:51 lib/minios_module_manager/ui.py:3073
 msgid "Current Session Changes"
 msgstr "Aktuelle Sitzungsänderungen"
 
@@ -684,11 +684,11 @@ msgstr "Dateien und Konfigurationsänderungen aus der aktuellen Sitzung werden g
 msgid "Extract Module"
 msgstr "Modul extrahieren"
 
-#: lib/minios_module_manager/ui.py:128 lib/minios_module_manager/ui.py:1964
-#: lib/minios_module_manager/ui.py:1993 lib/minios_module_manager/ui.py:2305
-#: lib/minios_module_manager/ui.py:2333 lib/minios_module_manager/ui.py:2560
-#: lib/minios_module_manager/ui.py:2588 lib/minios_module_manager/ui.py:2776
-#: lib/minios_module_manager/ui.py:3177
+#: lib/minios_module_manager/ui.py:128 lib/minios_module_manager/ui.py:1965
+#: lib/minios_module_manager/ui.py:1994 lib/minios_module_manager/ui.py:2306
+#: lib/minios_module_manager/ui.py:2334 lib/minios_module_manager/ui.py:2561
+#: lib/minios_module_manager/ui.py:2589 lib/minios_module_manager/ui.py:2777
+#: lib/minios_module_manager/ui.py:3178
 msgid "Preparing…"
 msgstr "Vorbereitung…"
 
@@ -708,9 +708,9 @@ msgstr "Modul wird extrahiert…"
 msgid "Publishing extracted files…"
 msgstr "Extrahierte Dateien werden veröffentlicht…"
 
-#: lib/minios_module_manager/ui.py:163 lib/minios_module_manager/ui.py:2017
-#: lib/minios_module_manager/ui.py:2360 lib/minios_module_manager/ui.py:2613
-#: lib/minios_module_manager/ui.py:3242
+#: lib/minios_module_manager/ui.py:163 lib/minios_module_manager/ui.py:2018
+#: lib/minios_module_manager/ui.py:2361 lib/minios_module_manager/ui.py:2614
+#: lib/minios_module_manager/ui.py:3243
 msgid "Finishing…"
 msgstr "Abschluss…"
 
@@ -748,14 +748,14 @@ msgstr "Alle aktiven Module"
 msgid "The selected build base is no longer active."
 msgstr "Die ausgewählte Build-Basis ist nicht mehr aktiv."
 
-#: lib/minios_module_manager/ui.py:591 lib/minios_module_manager/ui.py:1846
-#: lib/minios_module_manager/ui.py:1925 lib/minios_module_manager/ui.py:2032
-#: lib/minios_module_manager/ui.py:2109 lib/minios_module_manager/ui.py:2259
-#: lib/minios_module_manager/ui.py:2376 lib/minios_module_manager/ui.py:2434
-#: lib/minios_module_manager/ui.py:2517 lib/minios_module_manager/ui.py:2629
-#: lib/minios_module_manager/ui.py:2674 lib/minios_module_manager/ui.py:2739
-#: lib/minios_module_manager/ui.py:2994 lib/minios_module_manager/ui.py:3091
-#: lib/minios_module_manager/ui.py:3136
+#: lib/minios_module_manager/ui.py:591 lib/minios_module_manager/ui.py:1847
+#: lib/minios_module_manager/ui.py:1926 lib/minios_module_manager/ui.py:2033
+#: lib/minios_module_manager/ui.py:2110 lib/minios_module_manager/ui.py:2260
+#: lib/minios_module_manager/ui.py:2377 lib/minios_module_manager/ui.py:2435
+#: lib/minios_module_manager/ui.py:2518 lib/minios_module_manager/ui.py:2630
+#: lib/minios_module_manager/ui.py:2675 lib/minios_module_manager/ui.py:2740
+#: lib/minios_module_manager/ui.py:2995 lib/minios_module_manager/ui.py:3092
+#: lib/minios_module_manager/ui.py:3137
 msgid "Compression"
 msgstr "Komprimierung"
 
@@ -795,8 +795,8 @@ msgstr ""
 msgid "Which compression should I choose?"
 msgstr "Welche Komprimierung sollte ich wählen?"
 
-#: lib/minios_module_manager/ui.py:604 lib/minios_module_manager/ui.py:2114
-#: lib/minios_module_manager/ui.py:2438 lib/minios_module_manager/ui.py:2678
+#: lib/minios_module_manager/ui.py:604 lib/minios_module_manager/ui.py:2115
+#: lib/minios_module_manager/ui.py:2439 lib/minios_module_manager/ui.py:2679
 msgid "Build base level"
 msgstr "Build-Basisstufe"
 
@@ -832,7 +832,7 @@ msgstr "Die Basismodule werden niemals verändert oder zusammengeführt. Es werd
 msgid "How does the build level work?"
 msgstr "Wie funktioniert die Build-Ebene?"
 
-#: lib/minios_module_manager/ui.py:619 lib/minios_module_manager/ui.py:2261
+#: lib/minios_module_manager/ui.py:619 lib/minios_module_manager/ui.py:2262
 msgid "Recommended packages"
 msgstr "Empfohlene Pakete"
 
@@ -860,7 +860,7 @@ msgstr "Der Modul-Manager übergibt --install-recommends und überschreibt damit
 msgid "How are recommended packages handled?"
 msgstr "Wie werden empfohlene Pakete behandelt?"
 
-#: lib/minios_module_manager/ui.py:632 lib/minios_module_manager/ui.py:2262
+#: lib/minios_module_manager/ui.py:632 lib/minios_module_manager/ui.py:2263
 msgid "Suggested packages"
 msgstr "Vorgeschlagene Pakete"
 
@@ -953,8 +953,8 @@ msgstr "Worin unterscheiden sich 'Jetzt aktiv' und 'Nächster Start'?"
 msgid "Manage Modules"
 msgstr "Module verwalten"
 
-#: lib/minios_module_manager/ui.py:827 lib/minios_module_manager/ui.py:1935
-#: lib/minios_module_manager/ui.py:2273 lib/minios_module_manager/ui.py:2808
+#: lib/minios_module_manager/ui.py:827 lib/minios_module_manager/ui.py:1936
+#: lib/minios_module_manager/ui.py:2274 lib/minios_module_manager/ui.py:2809
 msgid "Create Module"
 msgstr "Modul erstellen"
 
@@ -992,7 +992,7 @@ msgid "Module Details"
 msgstr "Modul-Details"
 
 #: lib/minios_module_manager/ui.py:961 lib/minios_module_manager/ui.py:964
-#: lib/minios_module_manager/ui.py:1594
+#: lib/minios_module_manager/ui.py:1595
 msgid "Delete Module"
 msgstr "Modul löschen"
 
@@ -1012,7 +1012,7 @@ msgstr "Name"
 msgid "Type"
 msgstr "Typ"
 
-#: lib/minios_module_manager/ui.py:1035 lib/minios_module_manager/ui.py:2031
+#: lib/minios_module_manager/ui.py:1035 lib/minios_module_manager/ui.py:2032
 msgid "Size"
 msgstr "Größe"
 
@@ -1144,13 +1144,13 @@ msgstr "Modul zum Next Boot hinzufügen"
 msgid "MiniOS modules"
 msgstr "MiniOS-Module"
 
-#: lib/minios_module_manager/ui.py:1313 lib/minios_module_manager/ui.py:1878
-#: lib/minios_module_manager/ui.py:1883 lib/minios_module_manager/ui.py:2455
-#: lib/minios_module_manager/ui.py:2467 lib/minios_module_manager/ui.py:2695
+#: lib/minios_module_manager/ui.py:1313 lib/minios_module_manager/ui.py:1879
+#: lib/minios_module_manager/ui.py:1884 lib/minios_module_manager/ui.py:2456
+#: lib/minios_module_manager/ui.py:2468 lib/minios_module_manager/ui.py:2696
 msgid "Select"
 msgstr "Auswählen"
 
-#: lib/minios_module_manager/ui.py:1317 lib/minios_module_manager/ui.py:1575
+#: lib/minios_module_manager/ui.py:1317 lib/minios_module_manager/ui.py:1576
 msgid "Add {} to Next Boot? The running system will not change."
 msgstr "{} zum Next Boot hinzufügen? Das laufende System wird nicht verändert."
 
@@ -1237,615 +1237,619 @@ msgid "Unmount {} from the running MiniOS session? Next Boot will not change."
 msgstr "{} aus der laufenden MiniOS-Sitzung aushängen? Der nächste Start wird nicht geändert."
 
 #: lib/minios_module_manager/ui.py:1574
+msgid "Install Module"
+msgstr "Modul installieren"
+
+#: lib/minios_module_manager/ui.py:1575
 msgid "Add to Next Boot"
 msgstr "Zu Next Boot hinzufügen"
 
-#: lib/minios_module_manager/ui.py:1581
+#: lib/minios_module_manager/ui.py:1582
 msgid "Remove from Next Boot"
 msgstr "Von Next Boot entfernen"
 
-#: lib/minios_module_manager/ui.py:1582
+#: lib/minios_module_manager/ui.py:1583
 msgid "Remove {} from Next Boot? Its file will be kept in the disabled module store so it can be restored later. The running system will not change."
 msgstr "{} beim nächsten Start entfernen? Die Datei bleibt im Speicher für deaktivierte Module erhalten und kann später wiederhergestellt werden. Das laufende System bleibt unverändert."
 
-#: lib/minios_module_manager/ui.py:1588
+#: lib/minios_module_manager/ui.py:1589
 msgid "Include in Next Boot"
 msgstr "Beim nächsten Start einbeziehen"
 
-#: lib/minios_module_manager/ui.py:1589
+#: lib/minios_module_manager/ui.py:1590
 msgid "Include {} in Next Boot? The running system will not change."
 msgstr "{} beim nächsten Start einbeziehen? Das laufende System bleibt unverändert."
 
-#: lib/minios_module_manager/ui.py:1595
+#: lib/minios_module_manager/ui.py:1596
 msgid "Permanently delete {}? This cannot be undone."
 msgstr "{} dauerhaft löschen? Dies kann nicht rückgängig gemacht werden."
 
-#: lib/minios_module_manager/ui.py:1605
+#: lib/minios_module_manager/ui.py:1606
 msgid "Continue"
 msgstr "Weiter"
 
-#: lib/minios_module_manager/ui.py:1622
+#: lib/minios_module_manager/ui.py:1623
 msgid "Applying module change…"
 msgstr "Moduländerung wird angewendet…"
 
-#: lib/minios_module_manager/ui.py:1637
+#: lib/minios_module_manager/ui.py:1638
 msgid "Module change failed."
 msgstr "Moduländerung fehlgeschlagen."
 
-#: lib/minios_module_manager/ui.py:1646
+#: lib/minios_module_manager/ui.py:1647
 msgid "Module state updated."
 msgstr "Modulstatus aktualisiert."
 
-#: lib/minios_module_manager/ui.py:1659
+#: lib/minios_module_manager/ui.py:1660
 msgid "Extract Module to Folder"
 msgstr "Modul in Ordner extrahieren"
 
-#: lib/minios_module_manager/ui.py:1660
+#: lib/minios_module_manager/ui.py:1661
 msgid "Extract"
 msgstr "Extrahieren"
 
-#: lib/minios_module_manager/ui.py:1681
+#: lib/minios_module_manager/ui.py:1682
 msgid "Extracted to {}"
 msgstr "Extrahiert nach {}"
 
-#: lib/minios_module_manager/ui.py:1683
+#: lib/minios_module_manager/ui.py:1684
 msgid "Extraction cancelled."
 msgstr "Extraktion abgebrochen."
 
-#: lib/minios_module_manager/ui.py:1687
+#: lib/minios_module_manager/ui.py:1688
 msgid "Could not extract the module."
 msgstr "Das Modul konnte nicht extrahiert werden."
 
-#: lib/minios_module_manager/ui.py:1688
+#: lib/minios_module_manager/ui.py:1689
 msgid "The module operation failed."
 msgstr "Der Modulvorgang ist fehlgeschlagen."
 
-#: lib/minios_module_manager/ui.py:1761
+#: lib/minios_module_manager/ui.py:1762
 msgid "Create a Module"
 msgstr "Modul erstellen"
 
-#: lib/minios_module_manager/ui.py:1765
+#: lib/minios_module_manager/ui.py:1766
 msgid "Choose what the new immutable module should contain."
 msgstr "Wählen Sie aus, was das neue, unveränderliche Modul enthalten soll."
 
-#: lib/minios_module_manager/ui.py:1829 lib/minios_module_manager/ui.py:1923
+#: lib/minios_module_manager/ui.py:1830 lib/minios_module_manager/ui.py:1924
 msgid "Source folder"
 msgstr "Quellordner"
 
-#: lib/minios_module_manager/ui.py:1831 lib/minios_module_manager/ui.py:1836
-#: lib/minios_module_manager/ui.py:2099 lib/minios_module_manager/ui.py:2403
-#: lib/minios_module_manager/ui.py:2413 lib/minios_module_manager/ui.py:2424
-#: lib/minios_module_manager/ui.py:2657 lib/minios_module_manager/ui.py:2665
-#: lib/minios_module_manager/ui.py:3081
+#: lib/minios_module_manager/ui.py:1832 lib/minios_module_manager/ui.py:1837
+#: lib/minios_module_manager/ui.py:2100 lib/minios_module_manager/ui.py:2404
+#: lib/minios_module_manager/ui.py:2414 lib/minios_module_manager/ui.py:2425
+#: lib/minios_module_manager/ui.py:2658 lib/minios_module_manager/ui.py:2666
+#: lib/minios_module_manager/ui.py:3082
 msgid "Choose…"
 msgstr "Auswählen…"
 
-#: lib/minios_module_manager/ui.py:1834 lib/minios_module_manager/ui.py:1924
-#: lib/minios_module_manager/ui.py:2030 lib/minios_module_manager/ui.py:2097
-#: lib/minios_module_manager/ui.py:2258 lib/minios_module_manager/ui.py:2372
-#: lib/minios_module_manager/ui.py:2422 lib/minios_module_manager/ui.py:2516
-#: lib/minios_module_manager/ui.py:2625 lib/minios_module_manager/ui.py:2663
-#: lib/minios_module_manager/ui.py:2738 lib/minios_module_manager/ui.py:2990
-#: lib/minios_module_manager/ui.py:3079 lib/minios_module_manager/ui.py:3135
-#: lib/minios_module_manager/ui.py:3275
+#: lib/minios_module_manager/ui.py:1835 lib/minios_module_manager/ui.py:1925
+#: lib/minios_module_manager/ui.py:2031 lib/minios_module_manager/ui.py:2098
+#: lib/minios_module_manager/ui.py:2259 lib/minios_module_manager/ui.py:2373
+#: lib/minios_module_manager/ui.py:2423 lib/minios_module_manager/ui.py:2517
+#: lib/minios_module_manager/ui.py:2626 lib/minios_module_manager/ui.py:2664
+#: lib/minios_module_manager/ui.py:2739 lib/minios_module_manager/ui.py:2991
+#: lib/minios_module_manager/ui.py:3080 lib/minios_module_manager/ui.py:3136
+#: lib/minios_module_manager/ui.py:3276
 msgid "Output module"
 msgstr "Ausgabemodul"
 
-#: lib/minios_module_manager/ui.py:1854 lib/minios_module_manager/ui.py:2140
-#: lib/minios_module_manager/ui.py:2446 lib/minios_module_manager/ui.py:2686
-#: lib/minios_module_manager/ui.py:3099
+#: lib/minios_module_manager/ui.py:1855 lib/minios_module_manager/ui.py:2141
+#: lib/minios_module_manager/ui.py:2447 lib/minios_module_manager/ui.py:2687
+#: lib/minios_module_manager/ui.py:3100
 msgid "Review"
 msgstr "Überprüfen"
 
-#: lib/minios_module_manager/ui.py:1877
+#: lib/minios_module_manager/ui.py:1878
 msgid "Choose Output Module"
 msgstr "Ausgabemodul auswählen"
 
-#: lib/minios_module_manager/ui.py:1883
+#: lib/minios_module_manager/ui.py:1884
 msgid "Choose Source Folder"
 msgstr "Quellordner auswählen"
 
-#: lib/minios_module_manager/ui.py:1904
+#: lib/minios_module_manager/ui.py:1905
 msgid "Choose both a source folder and an output module."
 msgstr "Wählen Sie sowohl einen Quellordner als auch ein Ausgabemodul aus."
 
-#: lib/minios_module_manager/ui.py:1909
+#: lib/minios_module_manager/ui.py:1910
 msgid "Source folder is not readable."
 msgstr "Quellordner ist nicht lesbar."
 
-#: lib/minios_module_manager/ui.py:1911 lib/minios_module_manager/ui.py:2238
-#: lib/minios_module_manager/ui.py:2496 lib/minios_module_manager/ui.py:2720
-#: lib/minios_module_manager/ui.py:3119
+#: lib/minios_module_manager/ui.py:1912 lib/minios_module_manager/ui.py:2239
+#: lib/minios_module_manager/ui.py:2497 lib/minios_module_manager/ui.py:2721
+#: lib/minios_module_manager/ui.py:3120
 msgid "Output module already exists."
 msgstr "Ausgabemodul existiert bereits."
 
-#: lib/minios_module_manager/ui.py:1914 lib/minios_module_manager/ui.py:2241
-#: lib/minios_module_manager/ui.py:2499 lib/minios_module_manager/ui.py:2723
-#: lib/minios_module_manager/ui.py:3122
+#: lib/minios_module_manager/ui.py:1915 lib/minios_module_manager/ui.py:2242
+#: lib/minios_module_manager/ui.py:2500 lib/minios_module_manager/ui.py:2724
+#: lib/minios_module_manager/ui.py:3123
 msgid "Output directory is not writable."
 msgstr "Ausgabeverzeichnis ist nicht beschreibbar."
 
-#: lib/minios_module_manager/ui.py:1920
+#: lib/minios_module_manager/ui.py:1921
 msgid "Review Folder Module"
 msgstr "Ordner-Modul überprüfen"
 
-#: lib/minios_module_manager/ui.py:1926 lib/minios_module_manager/ui.py:2263
-#: lib/minios_module_manager/ui.py:2519 lib/minios_module_manager/ui.py:2741
-#: lib/minios_module_manager/ui.py:3138
+#: lib/minios_module_manager/ui.py:1927 lib/minios_module_manager/ui.py:2264
+#: lib/minios_module_manager/ui.py:2520 lib/minios_module_manager/ui.py:2742
+#: lib/minios_module_manager/ui.py:3139
 msgid "Privileges"
 msgstr "Berechtigungen"
 
-#: lib/minios_module_manager/ui.py:1931
+#: lib/minios_module_manager/ui.py:1932
 msgid "The source folder is not modified. A new module is created rootlessly; an existing output is never replaced."
 msgstr "Der Quellordner wird nicht verändert. Ein neues Modul wird rootlos erstellt; eine vorhandene Ausgabe wird niemals ersetzt."
 
-#: lib/minios_module_manager/ui.py:1954 lib/minios_module_manager/ui.py:2288
-#: lib/minios_module_manager/ui.py:2289 lib/minios_module_manager/ui.py:2546
-#: lib/minios_module_manager/ui.py:2766
+#: lib/minios_module_manager/ui.py:1955 lib/minios_module_manager/ui.py:2289
+#: lib/minios_module_manager/ui.py:2290 lib/minios_module_manager/ui.py:2547
+#: lib/minios_module_manager/ui.py:2767
 msgid "None"
 msgstr "Keine"
 
-#: lib/minios_module_manager/ui.py:1960
+#: lib/minios_module_manager/ui.py:1961
 msgid "Creating Module"
 msgstr "Modul wird erstellt"
 
-#: lib/minios_module_manager/ui.py:1971 lib/minios_module_manager/ui.py:2312
-#: lib/minios_module_manager/ui.py:2567
+#: lib/minios_module_manager/ui.py:1972 lib/minios_module_manager/ui.py:2313
+#: lib/minios_module_manager/ui.py:2568
 msgid "Module Result"
 msgstr "Modul-Ergebnis"
 
-#: lib/minios_module_manager/ui.py:1978 lib/minios_module_manager/ui.py:2042
+#: lib/minios_module_manager/ui.py:1979 lib/minios_module_manager/ui.py:2043
 msgid "Back to Folder"
 msgstr "Zurück zum Ordner"
 
-#: lib/minios_module_manager/ui.py:2013
+#: lib/minios_module_manager/ui.py:2014
 msgid "Preparing source…"
 msgstr "Quelle wird vorbereitet…"
 
-#: lib/minios_module_manager/ui.py:2014
+#: lib/minios_module_manager/ui.py:2015
 msgid "Compressing folder…"
 msgstr "Ordner wird komprimiert…"
 
-#: lib/minios_module_manager/ui.py:2015 lib/minios_module_manager/ui.py:3240
+#: lib/minios_module_manager/ui.py:2016 lib/minios_module_manager/ui.py:3241
 msgid "Verifying module…"
 msgstr "Modul wird überprüft…"
 
-#: lib/minios_module_manager/ui.py:2016 lib/minios_module_manager/ui.py:3241
+#: lib/minios_module_manager/ui.py:2017 lib/minios_module_manager/ui.py:3242
 msgid "Publishing module…"
 msgstr "Modul wird veröffentlicht…"
 
-#: lib/minios_module_manager/ui.py:2027 lib/minios_module_manager/ui.py:2369
-#: lib/minios_module_manager/ui.py:2622 lib/minios_module_manager/ui.py:2987
-#: lib/minios_module_manager/ui.py:3272
+#: lib/minios_module_manager/ui.py:2028 lib/minios_module_manager/ui.py:2370
+#: lib/minios_module_manager/ui.py:2623 lib/minios_module_manager/ui.py:2988
+#: lib/minios_module_manager/ui.py:3273
 msgid "Module Created"
 msgstr "Modul erstellt"
 
-#: lib/minios_module_manager/ui.py:2033 lib/minios_module_manager/ui.py:2377
-#: lib/minios_module_manager/ui.py:2631 lib/minios_module_manager/ui.py:2995
-#: lib/minios_module_manager/ui.py:3279
+#: lib/minios_module_manager/ui.py:2034 lib/minios_module_manager/ui.py:2378
+#: lib/minios_module_manager/ui.py:2632 lib/minios_module_manager/ui.py:2996
+#: lib/minios_module_manager/ui.py:3280
 msgid "SHA-256"
 msgstr "SHA-256"
 
-#: lib/minios_module_manager/ui.py:2035 lib/minios_module_manager/ui.py:2379
-#: lib/minios_module_manager/ui.py:2633 lib/minios_module_manager/ui.py:2825
+#: lib/minios_module_manager/ui.py:2036 lib/minios_module_manager/ui.py:2380
+#: lib/minios_module_manager/ui.py:2634 lib/minios_module_manager/ui.py:2826
 msgid "Create Another"
 msgstr "Weiteres erstellen"
 
-#: lib/minios_module_manager/ui.py:2037 lib/minios_module_manager/ui.py:2381
-#: lib/minios_module_manager/ui.py:2635
+#: lib/minios_module_manager/ui.py:2038 lib/minios_module_manager/ui.py:2382
+#: lib/minios_module_manager/ui.py:2636
 msgid "Module Creation Failed"
 msgstr "Modulerstellung fehlgeschlagen"
 
-#: lib/minios_module_manager/ui.py:2058
+#: lib/minios_module_manager/ui.py:2059
 msgid "Update Package Lists"
 msgstr "Paketlisten aktualisieren"
 
-#: lib/minios_module_manager/ui.py:2079 lib/minios_module_manager/ui.py:2256
+#: lib/minios_module_manager/ui.py:2080 lib/minios_module_manager/ui.py:2257
 msgid "Repository packages"
 msgstr "Repository-Pakete"
 
-#: lib/minios_module_manager/ui.py:2083 lib/minios_module_manager/ui.py:2214
+#: lib/minios_module_manager/ui.py:2084 lib/minios_module_manager/ui.py:2215
 msgid "No local .deb files selected"
 msgstr "Keine lokalen .deb-Dateien ausgewählt"
 
-#: lib/minios_module_manager/ui.py:2085 lib/minios_module_manager/ui.py:2257
+#: lib/minios_module_manager/ui.py:2086 lib/minios_module_manager/ui.py:2258
 msgid "Local packages"
 msgstr "Lokale Pakete"
 
-#: lib/minios_module_manager/ui.py:2088
+#: lib/minios_module_manager/ui.py:2089
 msgid "Add .deb…"
 msgstr ".deb hinzufügen…"
 
-#: lib/minios_module_manager/ui.py:2091 lib/minios_module_manager/ui.py:2416
+#: lib/minios_module_manager/ui.py:2092 lib/minios_module_manager/ui.py:2417
 msgid "Clear"
 msgstr "Leeren"
 
-#: lib/minios_module_manager/ui.py:2119
+#: lib/minios_module_manager/ui.py:2120
 msgid "Allow installation of recommended packages"
 msgstr "Installation empfohlener Pakete erlauben"
 
-#: lib/minios_module_manager/ui.py:2128
+#: lib/minios_module_manager/ui.py:2129
 msgid "Allow installation of suggested packages"
 msgstr "Installation vorgeschlagener Pakete erlauben"
 
-#: lib/minios_module_manager/ui.py:2156
+#: lib/minios_module_manager/ui.py:2157
 msgid "Package lists have not been downloaded. Update them to enable autocomplete for repository package names."
 msgstr "Die Paketlisten wurden nicht heruntergeladen. Aktualisieren Sie sie, um die Autovervollständigung für Paketnamen aus den Repositories zu aktivieren."
 
-#: lib/minios_module_manager/ui.py:2167
+#: lib/minios_module_manager/ui.py:2168
 msgid "Updating package lists…"
 msgstr "Paketlisten werden aktualisiert …"
 
-#: lib/minios_module_manager/ui.py:2187
+#: lib/minios_module_manager/ui.py:2188
 msgid "Could not update package lists. Check the network connection and try again."
 msgstr "Die Paketlisten konnten nicht aktualisiert werden. Überprüfen Sie die Netzwerkverbindung und versuchen Sie es erneut."
 
-#: lib/minios_module_manager/ui.py:2195
+#: lib/minios_module_manager/ui.py:2196
 msgid "Choose Local Debian Packages"
 msgstr "Lokale Debian-Pakete auswählen"
 
-#: lib/minios_module_manager/ui.py:2196
+#: lib/minios_module_manager/ui.py:2197
 msgid "Debian packages"
 msgstr "Debian-Pakete"
 
-#: lib/minios_module_manager/ui.py:2197
+#: lib/minios_module_manager/ui.py:2198
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: lib/minios_module_manager/ui.py:2227
+#: lib/minios_module_manager/ui.py:2228
 msgid "Choose at least one repository package or local .deb file."
 msgstr "Wählen Sie mindestens ein Repository-Paket oder eine lokale .deb-Datei aus."
 
-#: lib/minios_module_manager/ui.py:2229
+#: lib/minios_module_manager/ui.py:2230
 msgid "Use Add .deb… for local package paths."
 msgstr "Verwenden Sie „.deb hinzufügen…“ für lokale Paketpfade."
 
-#: lib/minios_module_manager/ui.py:2232
+#: lib/minios_module_manager/ui.py:2233
 msgid "A selected local .deb file is no longer readable."
 msgstr "Eine ausgewählte lokale .deb-Datei ist nicht mehr lesbar."
 
-#: lib/minios_module_manager/ui.py:2235 lib/minios_module_manager/ui.py:2493
-#: lib/minios_module_manager/ui.py:2717 lib/minios_module_manager/ui.py:3116
+#: lib/minios_module_manager/ui.py:2236 lib/minios_module_manager/ui.py:2494
+#: lib/minios_module_manager/ui.py:2718 lib/minios_module_manager/ui.py:3117
 msgid "Choose an output module."
 msgstr "Wählen Sie ein Ausgabemodul aus."
 
-#: lib/minios_module_manager/ui.py:2252
+#: lib/minios_module_manager/ui.py:2253
 msgid "Review Package Module"
 msgstr "Paket-Modul überprüfen"
 
-#: lib/minios_module_manager/ui.py:2260 lib/minios_module_manager/ui.py:2518
-#: lib/minios_module_manager/ui.py:2740
+#: lib/minios_module_manager/ui.py:2261 lib/minios_module_manager/ui.py:2519
+#: lib/minios_module_manager/ui.py:2741
 msgid "Build base"
 msgstr "Build-Basis"
 
-#: lib/minios_module_manager/ui.py:2269
+#: lib/minios_module_manager/ui.py:2270
 msgid "APT and package maintainer scripts run as root inside a temporary MiniOS build union. The running system and Next Boot are not changed."
 msgstr "APT- und Paket-Maintainer-Skripte werden als root in einem temporären MiniOS-Build-Union ausgeführt. Das laufende System und Next Boot werden nicht verändert."
 
-#: lib/minios_module_manager/ui.py:2293 lib/minios_module_manager/ui.py:2294
-#: lib/minios_module_manager/ui.py:2630
+#: lib/minios_module_manager/ui.py:2294 lib/minios_module_manager/ui.py:2295
+#: lib/minios_module_manager/ui.py:2631
 msgid "Yes"
 msgstr "Ja"
 
-#: lib/minios_module_manager/ui.py:2293 lib/minios_module_manager/ui.py:2294
-#: lib/minios_module_manager/ui.py:2630
+#: lib/minios_module_manager/ui.py:2294 lib/minios_module_manager/ui.py:2295
+#: lib/minios_module_manager/ui.py:2631
 msgid "No"
 msgstr "Nein"
 
-#: lib/minios_module_manager/ui.py:2295 lib/minios_module_manager/ui.py:2550
-#: lib/minios_module_manager/ui.py:2770 lib/minios_module_manager/ui.py:3167
+#: lib/minios_module_manager/ui.py:2296 lib/minios_module_manager/ui.py:2551
+#: lib/minios_module_manager/ui.py:2771 lib/minios_module_manager/ui.py:3168
 msgid "Administrator authentication required"
 msgstr "Administrator-Authentifizierung erforderlich"
 
-#: lib/minios_module_manager/ui.py:2301
+#: lib/minios_module_manager/ui.py:2302
 msgid "Creating Package Module"
 msgstr "Paketmodul wird erstellt"
 
-#: lib/minios_module_manager/ui.py:2319 lib/minios_module_manager/ui.py:2386
+#: lib/minios_module_manager/ui.py:2320 lib/minios_module_manager/ui.py:2387
 msgid "Back to Packages"
 msgstr "Zurück zu den Paketen"
 
-#: lib/minios_module_manager/ui.py:2356 lib/minios_module_manager/ui.py:2609
+#: lib/minios_module_manager/ui.py:2357 lib/minios_module_manager/ui.py:2610
 msgid "Preparing build environment…"
 msgstr "Build-Umgebung wird vorbereitet…"
 
-#: lib/minios_module_manager/ui.py:2357
+#: lib/minios_module_manager/ui.py:2358
 msgid "Updating package indexes…"
 msgstr "Paketindizes werden aktualisiert…"
 
-#: lib/minios_module_manager/ui.py:2358
+#: lib/minios_module_manager/ui.py:2359
 msgid "Installing packages…"
 msgstr "Pakete werden installiert…"
 
-#: lib/minios_module_manager/ui.py:2359 lib/minios_module_manager/ui.py:2612
+#: lib/minios_module_manager/ui.py:2360 lib/minios_module_manager/ui.py:2613
 msgid "Capturing module…"
 msgstr "Modul wird erfasst…"
 
-#: lib/minios_module_manager/ui.py:2373 lib/minios_module_manager/ui.py:2626
-#: lib/minios_module_manager/ui.py:2991 lib/minios_module_manager/ui.py:3276
+#: lib/minios_module_manager/ui.py:2374 lib/minios_module_manager/ui.py:2627
+#: lib/minios_module_manager/ui.py:2992 lib/minios_module_manager/ui.py:3277
 msgid "Compressed size"
 msgstr "Komprimierte Größe"
 
-#: lib/minios_module_manager/ui.py:2374 lib/minios_module_manager/ui.py:2627
-#: lib/minios_module_manager/ui.py:2992 lib/minios_module_manager/ui.py:3277
+#: lib/minios_module_manager/ui.py:2375 lib/minios_module_manager/ui.py:2628
+#: lib/minios_module_manager/ui.py:2993 lib/minios_module_manager/ui.py:3278
 msgid "Uncompressed size"
 msgstr "Unkomprimierte Größe"
 
-#: lib/minios_module_manager/ui.py:2375 lib/minios_module_manager/ui.py:2628
-#: lib/minios_module_manager/ui.py:2993 lib/minios_module_manager/ui.py:3278
+#: lib/minios_module_manager/ui.py:2376 lib/minios_module_manager/ui.py:2629
+#: lib/minios_module_manager/ui.py:2994 lib/minios_module_manager/ui.py:3279
 msgid "Entries"
 msgstr "Einträge"
 
-#: lib/minios_module_manager/ui.py:2401 lib/minios_module_manager/ui.py:2514
+#: lib/minios_module_manager/ui.py:2402 lib/minios_module_manager/ui.py:2515
 msgid "Installation script"
 msgstr "Installationsskript"
 
-#: lib/minios_module_manager/ui.py:2409
+#: lib/minios_module_manager/ui.py:2410
 msgid "Optional"
 msgstr "Optional"
 
-#: lib/minios_module_manager/ui.py:2410 lib/minios_module_manager/ui.py:2515
-#: lib/minios_module_manager/ui.py:2630 lib/minios_module_manager/ui.py:2737
+#: lib/minios_module_manager/ui.py:2411 lib/minios_module_manager/ui.py:2516
+#: lib/minios_module_manager/ui.py:2631 lib/minios_module_manager/ui.py:2738
 msgid "Seed folder"
 msgstr "Seed-Ordner"
 
-#: lib/minios_module_manager/ui.py:2455
+#: lib/minios_module_manager/ui.py:2456
 msgid "Choose Installation Script"
 msgstr "Installationsskript auswählen"
 
-#: lib/minios_module_manager/ui.py:2467 lib/minios_module_manager/ui.py:2695
+#: lib/minios_module_manager/ui.py:2468 lib/minios_module_manager/ui.py:2696
 msgid "Choose Seed Folder"
 msgstr "Seed-Ordner auswählen"
 
-#: lib/minios_module_manager/ui.py:2484
+#: lib/minios_module_manager/ui.py:2485
 msgid "Installation script is not readable."
 msgstr "Installationsskript ist nicht lesbar."
 
-#: lib/minios_module_manager/ui.py:2490 lib/minios_module_manager/ui.py:2714
+#: lib/minios_module_manager/ui.py:2491 lib/minios_module_manager/ui.py:2715
 msgid "Seed folder is not readable."
 msgstr "Seed-Ordner ist nicht lesbar."
 
-#: lib/minios_module_manager/ui.py:2510
+#: lib/minios_module_manager/ui.py:2511
 msgid "Review Installation Script"
 msgstr "Installationsskript überprüfen"
 
-#: lib/minios_module_manager/ui.py:2525
+#: lib/minios_module_manager/ui.py:2526
 msgid "The installation script runs as root inside a temporary MiniOS build union and may execute arbitrary code. The running system and Next Boot are not changed."
 msgstr "Das Installationsskript wird als root in einem temporären MiniOS-Build-Union ausgeführt und kann beliebigen Code ausführen. Das laufende System und Next Boot werden nicht verändert."
 
-#: lib/minios_module_manager/ui.py:2529
+#: lib/minios_module_manager/ui.py:2530
 msgid "Run Script and Create Module"
 msgstr "Skript ausführen und Modul erstellen"
 
-#: lib/minios_module_manager/ui.py:2556
+#: lib/minios_module_manager/ui.py:2557
 msgid "Running Installation Script"
 msgstr "Installationsskript wird ausgeführt"
 
-#: lib/minios_module_manager/ui.py:2574 lib/minios_module_manager/ui.py:2640
+#: lib/minios_module_manager/ui.py:2575 lib/minios_module_manager/ui.py:2641
 msgid "Back to Script"
 msgstr "Zurück zum Skript"
 
-#: lib/minios_module_manager/ui.py:2610 lib/minios_module_manager/ui.py:2864
+#: lib/minios_module_manager/ui.py:2611 lib/minios_module_manager/ui.py:2865
 msgid "Copying seed folder…"
 msgstr "Seed-Ordner wird kopiert…"
 
-#: lib/minios_module_manager/ui.py:2611
+#: lib/minios_module_manager/ui.py:2612
 msgid "Running installation script…"
 msgstr "Installationsskript wird ausgeführt…"
 
-#: lib/minios_module_manager/ui.py:2655
+#: lib/minios_module_manager/ui.py:2656
 msgid "Seed folder (optional)"
 msgstr "Seed-Ordner (optional)"
 
-#: lib/minios_module_manager/ui.py:2733
+#: lib/minios_module_manager/ui.py:2734
 msgid "Review Interactive Chroot"
 msgstr "Interaktives Chroot überprüfen"
 
-#: lib/minios_module_manager/ui.py:2746
+#: lib/minios_module_manager/ui.py:2747
 msgid "A root shell will run inside a temporary MiniOS build union. Exit the shell when finished; you can then create the module or discard all chroot changes."
 msgstr "Eine Root-Shell wird in einem temporären MiniOS-Build-Union ausgeführt. Beenden Sie die Shell nach Abschluss; anschließend können Sie das Modul erstellen oder alle Chroot-Änderungen verwerfen."
 
-#: lib/minios_module_manager/ui.py:2750
+#: lib/minios_module_manager/ui.py:2751
 msgid "Open Interactive Chroot"
 msgstr "Interaktives Chroot öffnen"
 
-#: lib/minios_module_manager/ui.py:2781
+#: lib/minios_module_manager/ui.py:2782
 msgid "Make your changes, then type exit to leave the chroot shell."
 msgstr "Nehmen Sie Ihre Änderungen vor und geben Sie dann exit ein, um die Chroot-Shell zu verlassen."
 
-#: lib/minios_module_manager/ui.py:2797
+#: lib/minios_module_manager/ui.py:2798
 msgid "Reopen Shell"
 msgstr "Shell erneut öffnen"
 
-#: lib/minios_module_manager/ui.py:2802 lib/minios_module_manager/ui.py:3062
+#: lib/minios_module_manager/ui.py:2803 lib/minios_module_manager/ui.py:3063
 msgid "Discard Changes"
 msgstr "Änderungen verwerfen"
 
-#: lib/minios_module_manager/ui.py:2818
+#: lib/minios_module_manager/ui.py:2819
 msgid "Interactive Chroot Result"
 msgstr "Ergebnis des interaktiven Chroot"
 
-#: lib/minios_module_manager/ui.py:2843
+#: lib/minios_module_manager/ui.py:2844
 msgid "Preparing interactive chroot…"
 msgstr "Interaktives Chroot wird vorbereitet…"
 
-#: lib/minios_module_manager/ui.py:2863
+#: lib/minios_module_manager/ui.py:2864
 msgid "Preparing protected chroot session…"
 msgstr "Geschützte Chroot-Sitzung wird vorbereitet…"
 
-#: lib/minios_module_manager/ui.py:2873
+#: lib/minios_module_manager/ui.py:2874
 msgid "Chroot Preparation Failed"
 msgstr "Chroot-Vorbereitung fehlgeschlagen"
 
-#: lib/minios_module_manager/ui.py:2899
+#: lib/minios_module_manager/ui.py:2900
 msgid "Opening privileged chroot shell…"
 msgstr "Privilegierte chroot-Shell wird geöffnet…"
 
-#: lib/minios_module_manager/ui.py:2905
+#: lib/minios_module_manager/ui.py:2906
 msgid "VTE could not start the chroot shell."
 msgstr "VTE konnte die chroot-Shell nicht starten."
 
-#: lib/minios_module_manager/ui.py:2909
+#: lib/minios_module_manager/ui.py:2910
 msgid "Could not open chroot shell: {}"
 msgstr "Chroot-Shell konnte nicht geöffnet werden: {}"
 
-#: lib/minios_module_manager/ui.py:2916
+#: lib/minios_module_manager/ui.py:2917
 msgid "Interactive chroot is active. Type exit when finished."
 msgstr "Interaktives chroot ist aktiv. Geben Sie exit ein, wenn Sie fertig sind."
 
-#: lib/minios_module_manager/ui.py:2922
+#: lib/minios_module_manager/ui.py:2923
 msgid "exit status {}"
 msgstr "Exit-Status {}"
 
-#: lib/minios_module_manager/ui.py:2924
+#: lib/minios_module_manager/ui.py:2925
 msgid "signal {}"
 msgstr "Signal {}"
 
-#: lib/minios_module_manager/ui.py:2926
+#: lib/minios_module_manager/ui.py:2927
 msgid "status {}"
 msgstr "Status {}"
 
-#: lib/minios_module_manager/ui.py:2928
+#: lib/minios_module_manager/ui.py:2929
 msgid "Chroot shell closed ({}). Create the module, reopen the shell, or discard the session."
 msgstr "Chroot-Shell geschlossen ({}). Erstellen Sie das Modul, öffnen Sie die Shell erneut oder verwerfen Sie die Sitzung."
 
-#: lib/minios_module_manager/ui.py:2952 lib/minios_module_manager/ui.py:2971
+#: lib/minios_module_manager/ui.py:2953 lib/minios_module_manager/ui.py:2972
 msgid "Capturing chroot changes…"
 msgstr "Chroot-Änderungen werden erfasst…"
 
-#: lib/minios_module_manager/ui.py:2972
+#: lib/minios_module_manager/ui.py:2973
 msgid "Cleaning chroot session…"
 msgstr "Chroot-Sitzung wird bereinigt…"
 
-#: lib/minios_module_manager/ui.py:3007
+#: lib/minios_module_manager/ui.py:3008
 msgid "Discarding chroot session…"
 msgstr "Chroot-Sitzung wird verworfen…"
 
-#: lib/minios_module_manager/ui.py:3033
+#: lib/minios_module_manager/ui.py:3034
 msgid "Session Discarded"
 msgstr "Sitzung verworfen"
 
-#: lib/minios_module_manager/ui.py:3037
+#: lib/minios_module_manager/ui.py:3038
 msgid "Interactive chroot changes were discarded. No module was created."
 msgstr "Interaktive chroot-Änderungen wurden verworfen. Es wurde kein Modul erstellt."
 
-#: lib/minios_module_manager/ui.py:3044
+#: lib/minios_module_manager/ui.py:3045
 msgid "Current session capture is still running."
 msgstr "Die aktuelle Sitzungserfassung läuft noch."
 
-#: lib/minios_module_manager/ui.py:3045
+#: lib/minios_module_manager/ui.py:3046
 msgid "Cancel the capture or wait for it to finish before closing MiniOS Module Manager."
 msgstr "Brechen Sie die Aufnahme ab oder warten Sie, bis sie abgeschlossen ist, bevor Sie MiniOS Modulmanager schließen."
 
-#: lib/minios_module_manager/ui.py:3049
+#: lib/minios_module_manager/ui.py:3050
 msgid "A chroot operation is still in progress."
 msgstr "Ein chroot-Vorgang läuft noch."
 
-#: lib/minios_module_manager/ui.py:3050
+#: lib/minios_module_manager/ui.py:3051
 msgid "Wait for it to finish before closing MiniOS Module Manager."
 msgstr "Warten Sie, bis der Vorgang abgeschlossen ist, bevor Sie MiniOS Modulmanager schließen."
 
-#: lib/minios_module_manager/ui.py:3054
+#: lib/minios_module_manager/ui.py:3055
 msgid "Exit the interactive chroot before closing."
 msgstr "Beenden Sie das interaktive chroot, bevor Sie schließen."
 
-#: lib/minios_module_manager/ui.py:3055
+#: lib/minios_module_manager/ui.py:3056
 msgid "Type exit in the embedded terminal, then create the module or discard the session."
 msgstr "Geben Sie exit im eingebetteten Terminal ein, dann erstellen Sie das Modul oder verwerfen Sie die Sitzung."
 
-#: lib/minios_module_manager/ui.py:3060
+#: lib/minios_module_manager/ui.py:3061
 msgid "Discard the prepared chroot session and close?"
 msgstr "Vorbereitete chroot-Sitzung verwerfen und schließen?"
 
-#: lib/minios_module_manager/ui.py:3061
+#: lib/minios_module_manager/ui.py:3062
 msgid "No module will be created from the current interactive chroot changes."
 msgstr "Aus den aktuellen interaktiven chroot-Änderungen wird kein Modul erstellt."
 
-#: lib/minios_module_manager/ui.py:3130
+#: lib/minios_module_manager/ui.py:3131
 msgid "Review Current Session Changes"
 msgstr "Aktuelle Sitzungsänderungen überprüfen"
 
-#: lib/minios_module_manager/ui.py:3137
+#: lib/minios_module_manager/ui.py:3138
 msgid "Capture policy"
 msgstr "Erfassungsrichtlinie"
 
-#: lib/minios_module_manager/ui.py:3143
+#: lib/minios_module_manager/ui.py:3144
 msgid "MiniOS will capture the authoritative current writable layer using its standard savechanges policy. Runtime paths, logs, caches and other predefined noise are excluded. The running system and Next Boot are not changed."
 msgstr "MiniOS erfasst die maßgebliche aktuelle beschreibbare Ebene gemäß der Standardrichtlinie für savechanges. Laufzeitpfade, Protokolle, Caches und andere vordefinierte Störquellen werden ausgeschlossen. Das laufende System und der nächste Start werden nicht verändert."
 
-#: lib/minios_module_manager/ui.py:3148
+#: lib/minios_module_manager/ui.py:3149
 msgid "Capture Changes"
 msgstr "Änderungen erfassen"
 
-#: lib/minios_module_manager/ui.py:3166
+#: lib/minios_module_manager/ui.py:3167
 msgid "Standard MiniOS savechanges"
 msgstr "Standard-MiniOS-Änderungen speichern"
 
-#: lib/minios_module_manager/ui.py:3173
+#: lib/minios_module_manager/ui.py:3174
 msgid "Capturing Current Session Changes"
 msgstr "Aktuelle Sitzungsänderungen werden erfasst"
 
-#: lib/minios_module_manager/ui.py:3180
+#: lib/minios_module_manager/ui.py:3181
 msgid "Cancel Capture"
 msgstr "Erfassung abbrechen"
 
-#: lib/minios_module_manager/ui.py:3188
+#: lib/minios_module_manager/ui.py:3189
 msgid "Session Capture Result"
 msgstr "Erfassungsergebnis der Sitzung"
 
-#: lib/minios_module_manager/ui.py:3195
+#: lib/minios_module_manager/ui.py:3196
 msgid "Capture Again"
 msgstr "Erneut erfassen"
 
-#: lib/minios_module_manager/ui.py:3211
+#: lib/minios_module_manager/ui.py:3212
 msgid "Preparing current session capture…"
 msgstr "Vorbereitung der aktuellen Sitzungserfassung…"
 
-#: lib/minios_module_manager/ui.py:3236
+#: lib/minios_module_manager/ui.py:3237
 msgid "Preparing capture…"
 msgstr "Erfassung wird vorbereitet…"
 
-#: lib/minios_module_manager/ui.py:3237
+#: lib/minios_module_manager/ui.py:3238
 msgid "Inspecting current changes…"
 msgstr "Aktuelle Änderungen werden geprüft…"
 
-#: lib/minios_module_manager/ui.py:3238
+#: lib/minios_module_manager/ui.py:3239
 msgid "Copying current changes…"
 msgstr "Aktuelle Änderungen werden kopiert…"
 
-#: lib/minios_module_manager/ui.py:3239
+#: lib/minios_module_manager/ui.py:3240
 msgid "Compressing module…"
 msgstr "Modul wird komprimiert…"
 
-#: lib/minios_module_manager/ui.py:3259
+#: lib/minios_module_manager/ui.py:3260
 msgid "Could not request cancellation: {}"
 msgstr "Abbruch konnte nicht angefordert werden: {}"
 
-#: lib/minios_module_manager/ui.py:3262
+#: lib/minios_module_manager/ui.py:3263
 msgid "Cancelling capture…"
 msgstr "Erfassung wird abgebrochen…"
 
-#: lib/minios_module_manager/ui.py:3282
+#: lib/minios_module_manager/ui.py:3283
 msgid "Capture Cancelled"
 msgstr "Erfassung abgebrochen"
 
-#: lib/minios_module_manager/ui.py:3286
+#: lib/minios_module_manager/ui.py:3287
 msgid "Current session capture was cancelled. No completed module was reported."
 msgstr "Die aktuelle Sitzungserfassung wurde abgebrochen. Es wurde kein abgeschlossenes Modul gemeldet."
 
-#: lib/minios_module_manager/ui.py:3289
+#: lib/minios_module_manager/ui.py:3290
 msgid "Session Capture Failed"
 msgstr "Sitzungserfassung fehlgeschlagen"
 
-#: lib/minios_module_manager/ui.py:3302
+#: lib/minios_module_manager/ui.py:3303
 msgid "The selected module file is unavailable."
 msgstr "Die ausgewählte Moduldatei ist nicht verfügbar."
 
-#: lib/minios_module_manager/ui.py:3372
+#: lib/minios_module_manager/ui.py:3373
 msgid "These dropped items cannot be opened together."
 msgstr "Diese abgelegten Elemente können nicht gemeinsam geöffnet werden."
 
-#: lib/minios_module_manager/ui.py:3373
+#: lib/minios_module_manager/ui.py:3374
 msgid "Drop one module, script, or folder, or one or more local .deb files."
 msgstr "Ziehen Sie ein Modul, Skript oder Verzeichnis oder eine oder mehrere lokale .deb-Dateien hierher."
 
