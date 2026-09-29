@@ -32,6 +32,6 @@ Exec=minios-module-manager %f
 TryExec=minios-module-manager
 Icon=office-database
 Terminal=false
-Categories=System;
+Categories=System;X-MiniOS;
 MimeType=application/x-sb;
 StartupNotify=true
