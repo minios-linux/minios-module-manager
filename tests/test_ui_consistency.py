@@ -21,7 +21,7 @@ class ReleaseMetadataTests(unittest.TestCase):
         self.assertIn(
             'MiniOS Module Manager {}"'.format(version), manpage.splitlines()[0])
         self.assertIn('python3-minios-gui >= 1.4.0', readme)
-        self.assertIn('minios-tools >= 1.7.0', readme)
+        self.assertIn('minios-tools >= 1.8.0', readme)
         self.assertIn('owned and installed by `minios-tools`', readme)
 
 

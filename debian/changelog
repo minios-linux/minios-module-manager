@@ -1,3 +1,12 @@
+minios-module-manager (1.3.0) unstable; urgency=medium
+
+  * Preserve ownership and special files during privileged module extraction
+    and folder conversion, with cancellation across the privilege boundary.
+  * Offer explicit ownership preservation for older extracted folders.
+  * Require minios-tools 1.8.0 for the new conversion workflow.
+
+ -- crims0n <crims0n@minios.dev>  Wed, 30 Sep 2026 21:36:38 +0300
+
 minios-module-manager (1.2.1) unstable; urgency=medium
 
   * Group the Module Manager launcher in the MiniOS desktop category.

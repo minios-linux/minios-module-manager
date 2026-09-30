@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: minios-module-manager 1.0.7\n"
+"Project-Id-Version: minios-module-manager 1.3.0\n"
 "POT-Creation-Date: 2026-09-23 18:06+0300\n"
 "PO-Revision-Date: 2026-09-22 17:43+0000\n"
 "Last-Translator: Automatically generated\n"
@@ -31,8 +31,8 @@ msgstr "septiembre de 2026"
 #. type: TH
 #: en/minios-module-manager.1:1
 #, no-wrap
-msgid "MiniOS Module Manager 1.2.1"
-msgstr "Gestor de módulos de MiniOS 1.2.1"
+msgid "MiniOS Module Manager 1.3.0"
+msgstr "Gestor de módulos de MiniOS 1.3.0"
 
 #. type: TH
 #: en/minios-module-manager.1:1
@@ -71,7 +71,7 @@ msgstr "DESCRIPCIÓN"
 #. type: Plain text
 #: en/minios-module-manager.1:12
 msgid ""
-"B<MiniOS Module Manager 1.2.1> is a GTK 3 interface for MiniOS module "
+"B<MiniOS Module Manager 1.3.0> is a GTK 3 interface for MiniOS module "
 "composition and module creation.  It runs as the desktop user and delegates "
 "privileged or filesystem-sensitive operations to MiniOS Tools through fixed "
 "argument vectors."
@@ -293,10 +293,10 @@ msgstr "REQUISITOS"
 #: en/minios-module-manager.1:77
 msgid ""
 "The shared interface requires python3-minios-gui 1.4.0 or newer. Backend "
-"module management and creation require minios-tools 1.7.0 or newer."
+"module management and creation require minios-tools 1.8.0 or newer."
 msgstr ""
 "La interfaz compartida requiere python3-minios-gui 1.4.0 o superior. La "
-"gestión y creación de módulos en el backend requiere minios-tools 1.7.0 o "
+"gestión y creación de módulos en el backend requiere minios-tools 1.8.0 o "
 "superior."
 
 #. type: SH

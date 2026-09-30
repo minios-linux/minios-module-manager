@@ -228,14 +228,16 @@ class ExtractModuleTests(unittest.TestCase):
         process = mock.Mock()
         process.communicate.return_value = ('{"event":"phase","phase":"complete"}\n', '')
         process.returncode = 0
-        with mock.patch.object(backend.shutil, 'which', return_value='/usr/bin/sb2dir'), \
+        with mock.patch.object(backend.os, 'geteuid', return_value=1000), \
+                mock.patch.object(backend.shutil, 'which', side_effect=lambda name: '/usr/bin/' + name), \
                 mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
             success, result_value = backend.extract_module(
                 '/modules/example.sb', '/tmp/example')
         self.assertTrue(success)
         self.assertEqual(result_value, '/tmp/example')
         popen.assert_called_once_with(
-            ['/usr/bin/sb2dir', '--json', '--',
+            ['/usr/bin/pkexec', '/usr/bin/sb2dir', '--json',
+             '--keep-ownership', '--allow-special', '--',
              '/modules/example.sb', '/tmp/example'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -324,7 +326,8 @@ class FolderCreationTests(unittest.TestCase):
         process.wait.return_value = 0
         phases = []
         logs = []
-        with mock.patch.object(backend.shutil, 'which', return_value='/usr/bin/dir2sb'), \
+        with mock.patch.object(backend.os, 'geteuid', return_value=1000), \
+                mock.patch.object(backend.shutil, 'which', side_effect=lambda name: '/usr/bin/' + name), \
                 mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
             success, result = backend.create_module_from_folder(
                 '/source dir', '/tmp/out.sb', 'zstd', phases.append, logs.append)
@@ -334,8 +337,23 @@ class FolderCreationTests(unittest.TestCase):
         self.assertEqual(logs, ['mksquashfs: working\n'])
         argv = popen.call_args[0][0]
         self.assertEqual(argv, [
-            '/usr/bin/dir2sb', '--json', '--comp', 'zstd', '--',
+            '/usr/bin/pkexec', '/usr/bin/dir2sb', '--json', '--allow-special',
+            '--comp', 'zstd', '--',
             '/source dir', '/tmp/out.sb'])
+
+    def test_older_extracted_folder_can_request_preserved_ownership(self):
+        process = mock.Mock()
+        process.stdout = io.StringIO('')
+        process.stderr = io.StringIO('')
+        process.wait.return_value = 1
+        with mock.patch.object(backend.os, 'geteuid', return_value=0), \
+                mock.patch.object(backend.shutil, 'which', return_value='/usr/bin/dir2sb'), \
+                mock.patch.object(backend.subprocess, 'Popen', return_value=process) as popen:
+            backend.create_module_from_folder(
+                '/source', '/tmp/out.sb', keep_ownership=True)
+        self.assertEqual(popen.call_args[0][0], [
+            '/usr/bin/dir2sb', '--json', '--allow-special', '--comp', 'zstd',
+            '--keep-ownership', '--', '/source', '/tmp/out.sb'])
 
     def test_backend_failure_preserves_diagnostics(self):
         process = mock.Mock()

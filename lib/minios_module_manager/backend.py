@@ -358,11 +358,14 @@ def extract_module(source, target):
     return True, target
 
 
-def module_extraction_argv(source, target):
+def module_extraction_argv(source, target, cancel_file=None):
     executable = shutil.which('sb2dir')
     if not executable:
         return None
-    return [executable, '--json', '--', source, target]
+    argv = [executable, '--json', '--keep-ownership', '--allow-special']
+    if cancel_file is not None:
+        argv.extend(['--cancel-file', cancel_file])
+    return _privileged_argv(argv + ['--', source, target])
 
 
 def _run_privileged_sb(arguments):
@@ -436,14 +439,19 @@ def _folder_result(value):
 
 
 def create_module_from_folder(source, target, compression='zstd', phase_callback=None,
-                              log_callback=None):
+                              log_callback=None, keep_ownership=False):
     executable = shutil.which('dir2sb')
     if not executable:
         return False, _('MiniOS Tools is not installed.')
     if compression not in ('zstd', 'gzip', 'lzo', 'lz4', 'xz'):
         return False, _('Unsupported compression type.')
-    argv = [
-        executable, '--json', '--comp', compression, '--', source, target]
+    argv = _privileged_argv([
+        executable, '--json', '--allow-special', '--comp', compression])
+    if argv is None:
+        return False, _('pkexec is not available.')
+    if keep_ownership:
+        argv.append('--keep-ownership')
+    argv.extend(['--', source, target])
     final_result = None
     protocol_error = None
     try:

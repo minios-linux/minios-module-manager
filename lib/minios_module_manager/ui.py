@@ -25,7 +25,8 @@ from minios_gui import (
 
 from .backend import (
     CAPTURE_CANCELLED, activate_for_session, add_to_next_boot, cancel_chroot_session,
-    capture_current_session, chroot_shell_argv, create_module_from_folder,
+    capture_current_session, chroot_shell_argv, cleanup_capture_cancel_marker,
+    create_module_from_folder,
     create_module_from_packages, create_module_from_script,
     deactivate_for_session, delete_disabled_module, enable_for_next_boot,
     finish_chroot_session,
@@ -102,7 +103,7 @@ CREATE_HELP = {
             (_('What to enter'),
              _('• <b>Source folder</b> — its contents become the root of the module. The source folder name itself is not added.\n• <b>Output module</b> — choose the new <tt>.sb</tt> file.\n• <b>Compression</b> — leave <tt>zstd</tt> unless you need another format.')),
             (_('Result'),
-             _('The source folder is not modified and an existing output file is never overwritten. Ordinary conversion does not need administrator privileges. File ownership inside the module is normalized to <b>root</b>. The new module is not loaded automatically.')),
+             _('The source folder is not modified and an existing output file is never overwritten. Administrator privileges preserve protected files and filesystem attributes. Folders extracted by MiniOS Tools are recognized by their origin record and keep their owners. For other folders, user and group IDs 1000–60000 become <b>root</b> outside <tt>/home</tt> and <tt>/opt</tt>; system IDs are preserved, and standard top-level directories become root:root. Enable <b>Preserve source ownership</b> for an older extracted folder without an origin record. Owners already lost during unprivileged extraction cannot be recovered. The new module is not loaded automatically.')),
         )),
     'session': (
         _('Save changes already made in the current MiniOS session as a module.'),
@@ -130,7 +131,9 @@ class ModuleExtractionJob(object):
         self.dialog.set_default_size(520, 260)
         self.dialog.set_deletable(False)
         self.dialog.connect('response', self._on_response)
-        argv = module_extraction_argv(source, target)
+        self.cancel_context = new_capture_cancel_marker()
+        self.cancel_requested = False
+        argv = module_extraction_argv(source, target, self.cancel_context[1])
         self.runner = None if argv is None else CommandRunner(
             argv, self._handle_stdout, self._finished,
             stderr_callback=self._handle_stderr,
@@ -138,6 +141,8 @@ class ModuleExtractionJob(object):
 
     def start(self):
         if self.runner is None:
+            cleanup_capture_cancel_marker(self.cancel_context)
+            self.dialog.destroy()
             self.finished_callback(
                 False, False, _('MiniOS Tools is not installed.'))
             return
@@ -146,12 +151,16 @@ class ModuleExtractionJob(object):
         try:
             self.runner.start()
         except Exception as error:
+            cleanup_capture_cancel_marker(self.cancel_context)
             self.dialog.destroy()
             self.finished_callback(False, False, str(error))
 
     def _on_response(self, _dialog, response):
         if response != Gtk.ResponseType.CANCEL or self.runner is None:
             return
+        if not self.cancel_requested:
+            request_capture_cancel(self.cancel_context[1])
+            self.cancel_requested = True
         self.dialog.operation_view.set_status(_('Cancelling…'))
         self.runner.cancel()
 
@@ -205,6 +214,7 @@ class ModuleExtractionJob(object):
         self.dialog.operation_view.feed(line)
 
     def _finished(self, returncode, cancelled):
+        cleanup_capture_cancel_marker(self.cancel_context)
         details = '\n'.join(self.stderr).strip()
         if self.protocol_error:
             details = '{}{}{}'.format(
@@ -1846,6 +1856,12 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         grid.attach(self._field_label_with_help(
             _('Compression'), self._compression_help_button()), 0, 2, 1, 1)
         grid.attach(self.folder_compression, 1, 2, 2, 1)
+        self.folder_keep_ownership = Gtk.CheckButton(
+            label=_('Preserve source ownership'))
+        self.folder_keep_ownership.set_tooltip_text(_(
+            'For older extracted modules without an origin record. Newly '
+            'extracted modules are recognized automatically.'))
+        grid.attach(self.folder_keep_ownership, 1, 3, 2, 1)
         outer.pack_start(grid, False, False, 0)
 
         self.folder_config_status = Gtk.Label(xalign=0)
@@ -1906,14 +1922,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         source = os.path.abspath(os.path.expanduser(source_text))
         target = os.path.abspath(os.path.expanduser(target_text))
         compression = self.folder_compression.get_active_text() or 'zstd'
-        if not os.path.isdir(source) or not os.access(source, os.R_OK | os.X_OK):
-            return None, _('Source folder is not readable.')
+        if not os.path.isdir(source):
+            return None, _('Source folder does not exist.')
         if os.path.lexists(target):
             return None, _('Output module already exists.')
         parent = os.path.dirname(target)
         if not os.path.isdir(parent) or not os.access(parent, os.W_OK | os.X_OK):
             return None, _('Output directory is not writable.')
-        return (source, target, compression), ''
+        return (source, target, compression,
+                self.folder_keep_ownership.get_active()), ''
 
     def _build_folder_review(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -1924,13 +1941,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             ('source', _('Source folder')),
             ('target', _('Output module')),
             ('compression', _('Compression')),
+            ('ownership', _('Ownership')),
             ('privileges', _('Privileges')),
         ))
         self.folder_review_values = values
         outer.pack_start(card, False, False, 0)
         effect = StatusBanner(
             _('The source folder is not modified. A new module is created '
-              'rootlessly; an existing output is never replaced.'),
+              'with administrator privileges to preserve filesystem '
+              'attributes; an existing output is never replaced.'),
             intent='info')
         outer.pack_start(effect, False, False, 0)
         run = Gtk.Button(label=_('Create Module'))
@@ -1946,13 +1965,15 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
             self.folder_config_status.set_text(error)
             return
         self._folder_config = configuration
-        source, target, compression = configuration
+        source, target, compression, keep_ownership = configuration
         self.folder_config_status.set_text('')
         self._set_review_values(self.folder_review_values, (
             ('source', source),
             ('target', target),
             ('compression', compression),
-            ('privileges', _('None')),
+            ('ownership', _('Preserve source ownership') if keep_ownership else
+             _('Automatic: preserve extracted modules, normalize new folders')),
+            ('privileges', _('Administrator authentication required')),
         ))
         self.create_pages.set_visible_child_name('folder-review')
 
@@ -2000,13 +2021,14 @@ class ModuleManagerWindow(Gtk.ApplicationWindow):
         thread.daemon = True
         thread.start()
 
-    def _folder_creation_worker(self, source, target, compression):
+    def _folder_creation_worker(self, source, target, compression, keep_ownership):
         def phase_callback(phase):
             GLib.idle_add(self._apply_folder_phase, phase)
         def log_callback(text):
             GLib.idle_add(self.folder_run_log.feed, text)
         success, result = create_module_from_folder(
-            source, target, compression, phase_callback, log_callback)
+            source, target, compression, phase_callback, log_callback,
+            keep_ownership=keep_ownership)
         GLib.idle_add(self._apply_folder_result, success, result)
 
     def _apply_folder_phase(self, phase):
